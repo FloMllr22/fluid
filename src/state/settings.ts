@@ -9,9 +9,11 @@ export interface Settings {
 	appIds: string[] | null;
 	/** ordered input appIds (com.webos.app.hdmiN) for the Sources row; null → all inputs */
 	sourceIds: string[] | null;
+	/** apps marked as favourites; they lead the Apps row */
+	favoriteIds: string[];
 }
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 /** Holds {version, settings}. */
 export const SETTINGS_KEY = 'fluid-settings';
@@ -24,11 +26,13 @@ type Data = Record<string, unknown>;
 /** MIGRATIONS[n] turns the data of version n - 1 into that of version n. */
 export const MIGRATIONS: Record<number, (data: Data) => Data> = {
 	// fluid 0.1 → 1: the same choices; the Homebrew option went when root became a requirement
-	1: (data) => ({appIds: data.appIds, sourceIds: data.sourceIds})
+	1: (data) => ({appIds: data.appIds, sourceIds: data.sourceIds}),
+	// 2: favourites, none yet
+	2: (data) => ({...data, favoriteIds: []})
 };
 
 export function defaultSettings(): Settings {
-	return {appIds: null, sourceIds: null};
+	return {appIds: null, sourceIds: null, favoriteIds: []};
 }
 
 export interface LoadedSettings {
@@ -86,7 +90,7 @@ export function saveSettings(settings: Settings): boolean {
 }
 
 function sanitize(data: Data): Settings {
-	return {appIds: idList(data.appIds), sourceIds: idList(data.sourceIds)};
+	return {appIds: idList(data.appIds), sourceIds: idList(data.sourceIds), favoriteIds: idList(data.favoriteIds) || []};
 }
 
 /** A copy of a list of IDs, or null for anything else. */

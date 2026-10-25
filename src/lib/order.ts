@@ -16,3 +16,23 @@ export function moveItem<T>(list: T[], from: number, to: number): T[] {
 export function toggleId(ids: string[], id: string): string[] {
 	return ids.indexOf(id) === -1 ? ids.concat(id) : ids.filter((x) => x !== id);
 }
+
+/** `ids` with the favourites first; each group keeps its order. */
+export function favoritesFirst(ids: string[], favoriteIds: string[]): string[] {
+	const isFavorite = (id: string) => favoriteIds.indexOf(id) !== -1;
+	return ids.filter(isFavorite).concat(ids.filter((id) => !isFavorite(id)));
+}
+
+/** Makes `id` a favourite, placed after the other favourites, or takes it back, placed
+ *  first after them. `order` is the row as shown; returns the new order and favourites. */
+export function setFavorite(
+	order: string[],
+	favoriteIds: string[],
+	id: string,
+	favorite: boolean
+): {order: string[]; favoriteIds: string[]} {
+	const others = favoriteIds.filter((f) => f !== id);
+	const next = favoritesFirst(order, favoriteIds).filter((x) => x !== id);
+	next.splice(next.filter((x) => others.indexOf(x) !== -1).length, 0, id);
+	return {order: next, favoriteIds: favorite ? others.concat(id) : others};
+}

@@ -46,16 +46,16 @@ describe('loadSettings', () => {
 	});
 
 	it('reads back what was saved', () => {
-		const settings = {appIds: ['b', 'a'], sourceIds: ['com.webos.app.hdmi2']};
+		const settings = {appIds: ['b', 'a'], sourceIds: ['com.webos.app.hdmi2'], favoriteIds: ['a']};
 		expect(saveSettings(settings)).toBe(true);
 		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false});
 	});
 
 	it('replaces each field of the wrong type with its default', () => {
-		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5]}));
+		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5], favoriteIds: null}));
 		expect(loadSettings().settings).toEqual(defaultSettings());
 		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: {}}));
-		expect(loadSettings().settings).toEqual({appIds: ['a'], sourceIds: null});
+		expect(loadSettings().settings).toEqual({appIds: ['a'], sourceIds: null, favoriteIds: []});
 	});
 
 	it('reports settings that are not readable, and uses the defaults', () => {
@@ -71,12 +71,16 @@ describe('loadSettings', () => {
 	});
 
 	it('reads what it knows from settings of a newer fluid', () => {
-		useStorage(stored(SETTINGS_VERSION + 1, {appIds: ['a'], sourceIds: null, futureOption: true}));
-		expect(loadSettings()).toEqual({settings: {appIds: ['a'], sourceIds: null}, unreadable: false, migrated: false});
+		useStorage(stored(SETTINGS_VERSION + 1, {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], futureOption: true}));
+		expect(loadSettings()).toEqual({
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a']},
+			unreadable: false,
+			migrated: false
+		});
 	});
 
 	it('hands out fresh objects and arrays', () => {
-		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: null}));
+		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: null, favoriteIds: []}));
 		const first = loadSettings().settings;
 		first.appIds?.push('changed');
 		expect(loadSettings().settings.appIds).toEqual(['a']);
@@ -90,7 +94,7 @@ describe('migration from fluid 0.1', () => {
 	it('keeps the chosen apps and sources, and drops the Homebrew option', () => {
 		useStorage(legacy);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['b', 'a'], sourceIds: null},
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: []},
 			unreadable: false,
 			migrated: true
 		});
@@ -102,7 +106,7 @@ describe('migration from fluid 0.1', () => {
 		expect(data[LEGACY_KEY]).toBeUndefined();
 		expect(JSON.parse(data[SETTINGS_KEY])).toEqual({
 			version: SETTINGS_VERSION,
-			settings: {appIds: ['b', 'a'], sourceIds: null}
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: []}
 		});
 		expect(loadSettings().migrated).toBe(false);
 	});
@@ -110,6 +114,17 @@ describe('migration from fluid 0.1', () => {
 	it('reports old settings that are not readable', () => {
 		useStorage({[LEGACY_KEY]: '{broken'});
 		expect(loadSettings()).toMatchObject({unreadable: true, migrated: false});
+	});
+});
+
+describe('migration from version 1', () => {
+	it('keeps the choices and starts without favourites', () => {
+		useStorage(stored(1, {appIds: ['a'], sourceIds: null}));
+		expect(loadSettings()).toEqual({
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: []},
+			unreadable: false,
+			migrated: true
+		});
 	});
 });
 
