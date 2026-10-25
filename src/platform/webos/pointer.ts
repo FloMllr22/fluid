@@ -28,12 +28,20 @@ export function hidePointer(): void {
 	}
 }
 
+/** Coming back from the background fires both events below; they count as one return. */
+const SAME_RETURN_MS = 1000;
+
 /** Calls back whenever fluid comes to the foreground: the page becomes visible again, or
  *  webOS relaunches the running app (e.g. from a remapped HOME button). Returns a
  *  function that stops it. */
 export function onForeground(callback: () => void): () => void {
+	let last = Number.NEGATIVE_INFINITY;
 	const onVisible = () => {
-		if (!document.hidden) callback();
+		if (document.hidden) return;
+		const now = Date.now();
+		if (now - last < SAME_RETURN_MS) return;
+		last = now;
+		callback();
 	};
 	document.addEventListener('visibilitychange', onVisible);
 	document.addEventListener('webOSRelaunch', onVisible);
