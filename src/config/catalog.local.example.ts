@@ -1,8 +1,8 @@
 // Example of a local catalogue override. Copy to catalog.local.ts (git-ignored) and edit.
 // Both exports are optional. Rebuild after changing it.
 //
-// Find an app's ID with `ares-launch --device <tv> --listApp`, or on a rooted TV:
-//   luna-send -n 1 luna://com.webos.applicationManager/listLaunchPoints '{}'
+// Find an app's ID with `ares-launch --device <tv> --listApp`, or on a rooted TV by
+// calling applicationManager/listLaunchPoints with luna-send.
 
 import type {CatalogApp} from './catalog';
 
