@@ -1,8 +1,8 @@
 {
-	"name": "webos-launcher",
-	"version": "1.0.0",
+	"name": "fluid",
+	"version": "0.1.0",
 	"private": true,
-	"description": "Minimalist home-screen launcher for LG webOS TVs (webOS 6 / Chrome 79 compatible)",
+	"description": "Home-screen launcher for rooted LG webOS TVs (webOS 4 / Chromium 53 and later)",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

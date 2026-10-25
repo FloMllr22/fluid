@@ -1,6 +1,10 @@
 // App-wide constants that are not visual tokens (see theme/tokens.ts for those).
 
-export const APP_ID = 'works.partridge.webos-launcher';
+import appInfo from '../../public/appinfo.json';
+
+/** fluid's own app ID, read from appinfo.json. It never changes: settings stored on the TV,
+ *  the Homebrew repository entry and remote-button mappings depend on it. */
+export const APP_ID: string = appInfo.id;
 
 /** webOS app IDs the launcher itself needs. */
 export const SYSTEM_APP = {
@@ -39,4 +43,4 @@ export const TIMING = {
 } as const;
 
 /** localStorage key for the user's selections. Bump the suffix on breaking changes. */
-export const STORAGE_KEY = 'launcher-config-v1';
+export const STORAGE_KEY = 'fluid-config-v1';

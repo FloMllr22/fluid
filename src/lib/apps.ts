@@ -71,7 +71,7 @@ interface LaunchPoint {
 /** Apps LG lists but that make no sense on a launcher (ourselves, promos). */
 const HIDDEN_IDS = [APP_ID, 'google.assistant.promo', 'com.webos.app.discovery'];
 
-const ICON_CACHE_KEY = 'launcher-icon-cache-v1';
+const ICON_CACHE_KEY = 'fluid-icon-cache-v1';
 
 /** Icon paths must be plain absolute paths. Anything else (quotes, spaces, control
  *  characters, shell syntax) is skipped rather than passed to a root shell. */
