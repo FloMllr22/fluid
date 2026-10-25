@@ -6,20 +6,11 @@
 // the user shakes or moves the remote. So hiding on launch/foreground doesn't stop the
 // user switching back to pointer mode.
 
-interface WebOSSystemCursor {
-	setCursorHidden?(hidden: boolean): void;
-}
-
-declare global {
-	interface Window {
-		webOSSystem?: WebOSSystemCursor;
-		PalmSystem?: WebOSSystemCursor;
-	}
-}
+import {systemObject} from './system-object';
 
 /** Hide the pointer now. No-op on firmware without the API. */
 export function hidePointer(): void {
-	const sys = window.webOSSystem || window.PalmSystem;
+	const sys = systemObject();
 	if (!sys || typeof sys.setCursorHidden !== 'function') return;
 	try {
 		sys.setCursorHidden(true);

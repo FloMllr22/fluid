@@ -4,7 +4,7 @@
 // uses for each port. fluid draws its own glyph for that name (see inputGlyph in
 // lib/tiles.ts); LG's images are not shipped.
 
-import type {InputSource} from '../types';
+import {type InputSource, LIVE_TV_ID} from '../types';
 import {LUNA, SYSTEM_APP} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
 import {appExists} from './system';
@@ -25,9 +25,9 @@ interface EimResponse extends LunaResponse {
 /** Live TV isn't an EIM device, but launching its app switches to the tuner, so it
  *  behaves like any other source. Port 0 sorts it ahead of HDMI 1. */
 const LIVE_TV: InputSource = {
-	id: 'LIVE_TV',
+	id: LIVE_TV_ID,
 	appId: SYSTEM_APP.liveTv,
-	label: 'Live TV',
+	label: 'Live TV', // the UI shows its own, translated name
 	port: 0,
 	connected: true,
 	icon: 'tv.png'

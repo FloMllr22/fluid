@@ -14,6 +14,7 @@ export {
 	type AppList,
 	DEFAULT_TIME_FORMAT,
 	type InputSource,
+	LIVE_TV_ID,
 	type Platform,
 	type TimeFormat
 } from './types';

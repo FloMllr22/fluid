@@ -5,12 +5,16 @@ import {PLATFORM_ERROR_CODES, PlatformError, type PlatformErrorCode} from '../er
 import {DEFAULT_TIME_FORMAT, type Platform} from '../types';
 import {MOCK_APPS, MOCK_INPUTS} from './data';
 
+/** A parameter from the page address, e.g. `?lang=de`; null outside a browser. */
+function urlParam(name: string): string | null {
+	return typeof location === 'undefined' ? null : new URLSearchParams(location.search).get(name);
+}
+
 /** `npm run dev` with ?apps-error=<code> (no-homebrew, no-root, timeout …) makes the app
  *  list fail with that code, to see how fluid explains it: on a real TV that is hard to
  *  bring about. */
 function appsErrorFromUrl(): PlatformErrorCode | undefined {
-	if (typeof location === 'undefined') return undefined;
-	const code = new URLSearchParams(location.search).get('apps-error');
+	const code = urlParam('apps-error');
 	return PLATFORM_ERROR_CODES.find((c) => c === code);
 }
 
@@ -31,6 +35,8 @@ export function createMockPlatform(): Platform {
 			console.info('[mock] would open LG Home');
 			return Promise.resolve();
 		},
+		// the browser's language; ?lang=de (or en-US …) picks another
+		getLocale: () => urlParam('lang') || (typeof navigator === 'undefined' ? '' : navigator.language) || 'en',
 		getTimeFormat: () => Promise.resolve(DEFAULT_TIME_FORMAT),
 		hidePointer: () => {
 			/* a desktop browser has no Magic Remote pointer */

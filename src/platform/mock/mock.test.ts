@@ -45,6 +45,17 @@ describe('outside webOS', () => {
 		await expect(platform.listApps()).resolves.toEqual({apps: MOCK_APPS, failedIcons: 0});
 	});
 
+	it('takes the language from the address, to try each one in a browser', () => {
+		vi.stubGlobal('location', {search: '?lang=de-DE'});
+		expect(platform.getLocale()).toBe('de-DE');
+	});
+
+	it('otherwise uses the language of the browser', () => {
+		vi.stubGlobal('location', {search: ''});
+		vi.stubGlobal('navigator', {language: 'en-GB'});
+		expect(platform.getLocale()).toBe('en-GB');
+	});
+
 	it('only logs what it would launch', async () => {
 		const log = vi.spyOn(console, 'info').mockImplementation(() => {});
 		await platform.launch('com.example.movies');

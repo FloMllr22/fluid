@@ -4,7 +4,7 @@ import type {Platform} from '../types';
 import {listApps} from './apps';
 import {listInputs} from './inputs';
 import {hidePointer, onForeground} from './pointer';
-import {getTimeFormat, launch, launchLgHome} from './system';
+import {getLocale, getTimeFormat, launch, launchLgHome} from './system';
 
 export {isWebOS} from './luna';
 
@@ -15,6 +15,7 @@ export function createWebOSPlatform(): Platform {
 		listInputs,
 		launch,
 		launchLgHome,
+		getLocale,
 		getTimeFormat,
 		hidePointer,
 		onForeground

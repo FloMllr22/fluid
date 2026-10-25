@@ -20,6 +20,10 @@ export interface AppList {
 	failedIcons: number;
 }
 
+/** ID of the Live TV entry. fluid adds it itself (it is not an external input), so the
+ *  UI names it in the user's language; other inputs carry the names set on the TV. */
+export const LIVE_TV_ID = 'LIVE_TV';
+
 /** Live TV or an external input; switching to it means launching its app. */
 export interface InputSource {
 	id: string; // e.g. HDMI_1
@@ -47,6 +51,9 @@ export interface Platform {
 	launch(appId: string): Promise<void>;
 	/** Opens LG's own home screen */
 	launchLgHome(): Promise<void>;
+	/** The TV's UI language as a locale such as "de-DE". Synchronous, so the first frame is
+	 *  already in the right language. */
+	getLocale(): string;
 	/** The TV's 12/24-hour setting. Never rejects: falls back to DEFAULT_TIME_FORMAT. */
 	getTimeFormat(): Promise<TimeFormat>;
 	/** Hides the Magic Remote pointer; the user brings it back by moving the remote. */
