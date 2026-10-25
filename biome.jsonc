@@ -36,6 +36,14 @@
 				"useKeyWithClickEvents": "off",
 				"useFocusableInteractive": "off"
 			},
+			// These rules (and their automatic fixes) rewrite code to APIs that Chromium 53
+			// lacks: Object.hasOwn (Chromium 93) and Array.prototype.flatMap (Chromium 69).
+			"suspicious": {
+				"noPrototypeBuiltins": "off"
+			},
+			"complexity": {
+				"useFlatMap": "off"
+			},
 			"style": {
 				// Browser APIs Chromium 53 (webOS 4) lacks. TypeScript can't catch these because
 				// the DOM types always describe the newest browsers. Newer ECMAScript APIs
