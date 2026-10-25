@@ -6,8 +6,8 @@
 
 import type {CatalogApp} from './catalog';
 
-/** Added to the catalogue; an entry with an existing id replaces it. For an icon, put a
- *  PNG in public/icons/apps/ and name it here, or omit `icon` for a monogram tile. */
+/** Added to the catalogue; an entry with an existing id replaces it. Shown as a letter
+ *  tile in `color`. */
 export const EXTRA_APPS: CatalogApp[] = [{id: 'com.example.myapp', title: 'My App', color: '#444444'}];
 
 /** Replaces the default Apps row for a fresh install (before anything is edited in Settings). */

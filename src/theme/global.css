@@ -192,15 +192,6 @@ body {
 	height: 100%;
 	object-fit: cover;
 }
-.tile__image--glyph {
-	/* LG's input glyphs are dark grey line art on transparency: lift them to light grey. */
-	left: 18%;
-	top: 18%;
-	width: 64%;
-	height: 64%;
-	object-fit: contain;
-	filter: brightness(2.4);
-}
 .tile__glyph {
 	position: absolute;
 	left: 25%;

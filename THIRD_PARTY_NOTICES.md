@@ -15,14 +15,13 @@ Both licence texts are included in the installed app under `licenses/`.
 
 ## App and input icons
 
-`public/icons/apps/` contains the icons of third-party TV apps, and `public/icons/inputs/`
-contains input-type icons from LG's webOS software. They are trademarks or copyright of
-their respective owners. This project is not affiliated with, endorsed by or sponsored by
-any of them.
+fluid ships no third-party app logos or LG artwork. The input glyphs are drawn for this
+project (`src/components/Glyph.tsx`) and covered by the MIT licence. On the TV, app icons
+are read from the TV itself at runtime, through the Homebrew Channel option, and never
+become part of this repository or the package.
 
-They are included in good faith, only so the launcher can show recognisable tiles for apps
-and inputs already installed on the user's own TV. Rights holders who would like an icon
-removed can open an issue on this repository and it will be removed. Every app tile falls
-back to a plain text tile without its icon, so removal doesn't break anything.
+App names and IDs in `src/config/catalog.ts` only identify apps already installed on the
+user's TV. They are trademarks of their respective owners. This project is not affiliated
+with, endorsed by or sponsored by any of them.
 
 "LG" and "webOS" are trademarks of LG Electronics.

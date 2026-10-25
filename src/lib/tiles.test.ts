@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {appTile, inputTile, pickInOrder} from './tiles';
+import {appTile, inputGlyph, inputTile, pickInOrder} from './tiles';
 
 describe('pickInOrder', () => {
 	const items = [{id: 'x'}, {id: 'y'}, {id: 'z'}];
@@ -28,17 +28,40 @@ describe('tile adapters', () => {
 		});
 	});
 
-	it('maps an input to a tile keyed by the app that switches to it', () => {
+	it('maps an input to a tile keyed by the app that switches to it, with its glyph', () => {
 		const tile = inputTile({
 			id: 'HDMI_1',
 			appId: 'com.webos.app.hdmi1',
 			label: 'Console',
 			port: 1,
 			connected: true,
-			icon: 'hdmigeneric.png'
+			icon: 'gameconsole.png'
 		});
-		expect(tile.key).toBe('com.webos.app.hdmi1');
-		expect(tile.label).toBe('Console');
-		expect(tile.glyphImageUrl).toBe('icons/inputs/hdmigeneric.png');
+		expect(tile).toEqual({key: 'com.webos.app.hdmi1', label: 'Console', glyph: 'console'});
+	});
+});
+
+describe('inputGlyph', () => {
+	it('picks a device glyph from the icon name EIM reports', () => {
+		expect(inputGlyph('tv.png')).toBe('tv');
+		expect(inputGlyph('streamingbox.png')).toBe('player');
+		expect(inputGlyph('hometheater.png')).toBe('speaker');
+		expect(inputGlyph('pc.png')).toBe('monitor');
+	});
+
+	it('ignores case and a missing extension', () => {
+		expect(inputGlyph('mediaServer.png')).toBe('player');
+		expect(inputGlyph('Camera')).toBe('camera');
+	});
+
+	it('falls back to the generic input glyph', () => {
+		expect(inputGlyph('HDMI_1.png')).toBe('input');
+		expect(inputGlyph('')).toBe('input');
+		expect(inputGlyph('something-new.png')).toBe('input');
+	});
+
+	it('is not fooled by names of built-in object properties', () => {
+		expect(inputGlyph('constructor')).toBe('input');
+		expect(inputGlyph('__proto__')).toBe('input');
 	});
 });

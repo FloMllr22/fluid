@@ -4,11 +4,9 @@ import {CheckMark, Glyph, type GlyphName} from './Glyph';
 export interface TileModel {
 	key: string;
 	label: string;
-	/** full-bleed artwork (app icons) */
+	/** full-bleed artwork (app icons read from the TV) */
 	imageUrl?: string;
-	/** LG's grey line-art input icons, drawn smaller and lightened */
-	glyphImageUrl?: string;
-	/** built-in vector icon */
+	/** built-in vector icon (input sources, the More row) */
 	glyph?: GlyphName;
 	/** monogram background when there is no artwork */
 	color?: string;
@@ -36,8 +34,6 @@ export function Tile({model, focused, lifted, checked, dimmed, onHover, onActiva
 			<div class="tile__box" style={model.color && !model.imageUrl ? {background: model.color} : undefined}>
 				{model.imageUrl ? (
 					<img class="tile__image" src={model.imageUrl} alt="" />
-				) : model.glyphImageUrl ? (
-					<img class="tile__image tile__image--glyph" src={model.glyphImageUrl} alt="" />
 				) : model.glyph ? (
 					<Glyph name={model.glyph} />
 				) : (

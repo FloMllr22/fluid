@@ -3,6 +3,8 @@
 
 import {DEFAULT_APP_IDS} from '../config/catalog';
 import {STORAGE_KEY} from '../config/constants';
+import {isWebOS} from './luna';
+import {MOCK_DEFAULT_APP_IDS} from './mock';
 
 export interface UserConfig {
 	/** ordered app IDs for the Apps row */
@@ -14,7 +16,8 @@ export interface UserConfig {
 }
 
 export const DEFAULT_CONFIG: UserConfig = {
-	appIds: DEFAULT_APP_IDS.slice(),
+	// In a desktop browser the neutral sample apps stand in for the TV's apps.
+	appIds: (isWebOS() ? DEFAULT_APP_IDS : MOCK_DEFAULT_APP_IDS).slice(),
 	sourceIds: null,
 	useHomebrew: false
 };

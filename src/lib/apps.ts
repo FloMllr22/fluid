@@ -6,11 +6,14 @@
 //     in Settings, off by default) we use it to run `luna-send listLaunchPoints`, which
 //     gives the live list with LG's own titles, and to read each icon as base64. If the
 //     service isn't there, we fall back to the catalogue.
+//
+// In a desktop browser the neutral sample apps from mock.ts stand in for both.
 
 import {APP_CATALOG, type CatalogApp} from '../config/catalog';
 import {APP_ID, LUNA} from '../config/constants';
 import {appExists} from './launch';
 import {isWebOS, type LunaResponse, lunaCall} from './luna';
+import {MOCK_APPS} from './mock';
 
 export interface AppEntry {
 	id: string;
@@ -20,7 +23,7 @@ export interface AppEntry {
 	color?: string;
 }
 
-export type AppSource = 'catalog' | 'homebrew';
+export type AppSource = 'catalog' | 'homebrew' | 'mock';
 
 export interface AppList {
 	apps: AppEntry[];
@@ -28,10 +31,8 @@ export interface AppList {
 	source: AppSource;
 }
 
-const ICON_DIR = 'icons/apps/';
-
 export function listApps(useHomebrew: boolean): Promise<AppList> {
-	if (!isWebOS()) return Promise.resolve({apps: catalogEntries(APP_CATALOG), source: 'catalog'});
+	if (!isWebOS()) return Promise.resolve({apps: MOCK_APPS.slice(), source: 'mock'});
 	const catalog = () => listViaCatalog().then((apps): AppList => ({apps, source: 'catalog'}));
 	if (!useHomebrew) return catalog();
 	return listViaHomebrew()
@@ -42,12 +43,7 @@ export function listApps(useHomebrew: boolean): Promise<AppList> {
 // ---------- provider 1: catalogue ----------
 
 function catalogEntries(apps: CatalogApp[]): AppEntry[] {
-	return apps.map((a) => ({
-		id: a.id,
-		title: a.title,
-		iconUrl: a.icon ? ICON_DIR + a.icon : undefined,
-		color: a.color
-	}));
+	return apps.map((a) => ({id: a.id, title: a.title, color: a.color}));
 }
 
 function listViaCatalog(): Promise<AppEntry[]> {
@@ -98,7 +94,7 @@ function listViaHomebrew(): Promise<AppEntry[]> {
 					id: p.id,
 					// the catalogue's titles are shorter than LG's ("IPTV Player" vs "webOS IPTV Player")
 					title: known ? known.title : p.title,
-					iconUrl: icons[p.id] || (known?.icon ? ICON_DIR + known.icon : undefined),
+					iconUrl: icons[p.id],
 					color: known?.color
 				};
 			})

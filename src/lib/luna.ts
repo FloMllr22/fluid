@@ -22,8 +22,9 @@ export interface LunaResponse {
 	[key: string]: unknown;
 }
 
+/** False in a desktop browser, and in Node, where the unit tests run. */
 export function isWebOS(): boolean {
-	return typeof window.PalmServiceBridge === 'function';
+	return typeof window !== 'undefined' && typeof window.PalmServiceBridge === 'function';
 }
 
 /** One-shot call. Resolves with the parsed payload; rejects on returnValue:false,
