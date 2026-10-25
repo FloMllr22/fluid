@@ -41,7 +41,8 @@ const manifest = {
 	appDescription: appinfo.appDescription,
 	iconUri: `https://raw.githubusercontent.com/${repo}/main/public/largeIcon.png`,
 	sourceUrl: `https://github.com/${repo}`,
-	rootRequired: false,
+	// fluid reads the app list and icons through the Homebrew Channel's root shell
+	rootRequired: true,
 	ipkUrl: basename(ipkPath),
 	ipkHash: {sha256: createHash('sha256').update(readFileSync(ipkPath)).digest('hex')}
 };
