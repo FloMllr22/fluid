@@ -14,7 +14,7 @@ interface Props {
 }
 
 /** Vertical list of on/off options. */
-export function OptionList ({options, focused, selected, onSelect, onActivate}: Props) {
+export function OptionList({options, focused, selected, onSelect, onActivate}: Props) {
 	return (
 		<div class="options">
 			{options.map((o, i) => (

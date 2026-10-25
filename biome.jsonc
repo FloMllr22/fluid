@@ -1,0 +1,48 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		// Markdown is written by hand (aligned tables would turn every one-row change into a
+		// whole-table diff).
+		"includes": ["**", "!**/*.md", "!package-lock.json"]
+	},
+	"formatter": {
+		"indentStyle": "tab",
+		"lineWidth": 120,
+		"lineEnding": "lf"
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "double",
+			"bracketSpacing": false,
+			"trailingCommas": "none",
+			"semicolons": "always",
+			"arrowParentheses": "always"
+		}
+	},
+	"linter": {
+		"rules": {
+			"preset": "recommended",
+			"a11y": {
+				// Focus is app state moved by the remote's D-pad, not DOM focus, and the Magic
+				// Remote pointer works through mouseenter/click. These rules assume a keyboard-
+				// driven web page and don't fit a TV launcher.
+				"noStaticElementInteractions": "off",
+				"useKeyWithClickEvents": "off",
+				"useFocusableInteractive": "off"
+			}
+		}
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	}
+}

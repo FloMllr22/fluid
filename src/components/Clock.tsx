@@ -1,6 +1,6 @@
-import {dateText, dayName, timeParts, type TimeFormat} from '../lib/clock';
+import {dateText, dayName, type TimeFormat, timeParts} from '../lib/clock';
 
-export function Clock ({now, format}: {now: Date; format: TimeFormat}) {
+export function Clock({now, format}: {now: Date; format: TimeFormat}) {
 	const {time, period} = timeParts(now, format);
 	return (
 		<div class="clock">

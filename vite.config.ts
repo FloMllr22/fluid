@@ -1,5 +1,5 @@
-import {defineConfig, type Plugin} from 'vite';
 import preact from '@preact/preset-vite';
+import {defineConfig, type Plugin} from 'vite';
 
 // webOS 6.x runs Chrome 79. Two things matter for that engine:
 //  1. Module scripts (`<script type="module">`) are refused when loaded from file://
@@ -10,11 +10,11 @@ import preact from '@preact/preset-vite';
 const BROWSER_TARGET = 'chrome79';
 
 /** Rewrites Vite's module entry tag into a classic deferred script tag. */
-function classicScriptTag (): Plugin {
+function classicScriptTag(): Plugin {
 	return {
 		name: 'classic-script-tag',
 		enforce: 'post',
-		transformIndexHtml (html) {
+		transformIndexHtml(html) {
 			return html
 				.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/g, '<script defer src="$1"></script>')
 				.replace(/<link rel="stylesheet" crossorigin href="/g, '<link rel="stylesheet" href="');
@@ -23,7 +23,7 @@ function classicScriptTag (): Plugin {
 }
 
 export default defineConfig({
-	base: './',            // the app is loaded from a local file path on the TV
+	base: './', // the app is loaded from a local file path on the TV
 	plugins: [preact(), classicScriptTag()],
 	build: {
 		target: BROWSER_TARGET,

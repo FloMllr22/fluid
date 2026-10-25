@@ -7,7 +7,7 @@
 // user switching back to pointer mode.
 
 interface WebOSSystemCursor {
-	setCursorHidden? (hidden: boolean): void;
+	setCursorHidden?(hidden: boolean): void;
 }
 
 declare global {
@@ -18,18 +18,23 @@ declare global {
 }
 
 /** Hide the pointer now. No-op off webOS or on firmware without the API. */
-export function hidePointer (): void {
+export function hidePointer(): void {
 	const sys = window.webOSSystem || window.PalmSystem;
 	if (!sys || typeof sys.setCursorHidden !== 'function') return;
-	try { sys.setCursorHidden(true); }
-	catch { /* best effort */ }
+	try {
+		sys.setCursorHidden(true);
+	} catch {
+		/* best effort */
+	}
 }
 
 /** Hide the pointer on launch and every time the app comes back to the foreground
  *  (including relaunches while already running, e.g. from a remapped HOME button).
  *  Returns an unsubscribe function. */
-export function hidePointerOnForeground (): () => void {
-	const onVisible = () => { if (!document.hidden) hidePointer(); };
+export function hidePointerOnForeground(): () => void {
+	const onVisible = () => {
+		if (!document.hidden) hidePointer();
+	};
 	hidePointer();
 	document.addEventListener('visibilitychange', onVisible);
 	document.addEventListener('webOSRelaunch', onVisible);

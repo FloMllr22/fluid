@@ -1,8 +1,8 @@
 // The user's choices: which apps and which inputs appear on the home rows, in order,
 // plus options. Persisted in localStorage (private to this app on the TV).
 
-import {STORAGE_KEY} from '../config/constants';
 import {DEFAULT_APP_IDS} from '../config/catalog';
+import {STORAGE_KEY} from '../config/constants';
 
 export interface UserConfig {
 	/** ordered app IDs for the Apps row */
@@ -19,7 +19,7 @@ export const DEFAULT_CONFIG: UserConfig = {
 	useHomebrew: false
 };
 
-export function loadConfig (): UserConfig {
+export function loadConfig(): UserConfig {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
 		if (!raw) return {...DEFAULT_CONFIG};
@@ -34,12 +34,15 @@ export function loadConfig (): UserConfig {
 	}
 }
 
-export function saveConfig (config: UserConfig): void {
-	try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
-	catch { /* nothing sensible to do on a TV */ }
+export function saveConfig(config: UserConfig): void {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+	} catch {
+		/* nothing sensible to do on a TV */
+	}
 }
 
 /** Toggle an ID in an ordered list: remove if present, else append. */
-export function toggleId (ids: string[], id: string): string[] {
+export function toggleId(ids: string[], id: string): string[] {
 	return ids.indexOf(id) === -1 ? ids.concat(id) : ids.filter((x) => x !== id);
 }

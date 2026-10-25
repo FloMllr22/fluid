@@ -72,15 +72,21 @@ const BASE_CATALOG: CatalogApp[] = [
 
 /** Apps shown on a fresh install, in row order. Anything not installed is skipped. */
 const BASE_DEFAULT_APP_IDS: string[] = [
-	'youtube.leanback.v4', 'netflix', 'amazon', 'com.disney.disneyplus-prod',
-	'com.apple.appletv', 'com.wbd.stream', 'cdp-30', 'spotify-beehive'
+	'youtube.leanback.v4',
+	'netflix',
+	'amazon',
+	'com.disney.disneyplus-prod',
+	'com.apple.appletv',
+	'com.wbd.stream',
+	'cdp-30',
+	'spotify-beehive'
 ];
 
 // Vite resolves this at build time; it's an empty object when the file doesn't exist.
 const localModules = import.meta.glob<LocalCatalog>('./catalog.local.ts', {eager: true});
 const local: LocalCatalog = localModules['./catalog.local.ts'] || {};
 
-function mergeCatalog (base: CatalogApp[], extra: CatalogApp[]): CatalogApp[] {
+function mergeCatalog(base: CatalogApp[], extra: CatalogApp[]): CatalogApp[] {
 	const extraIds = extra.map((a) => a.id);
 	return base.filter((a) => extraIds.indexOf(a.id) === -1).concat(extra);
 }

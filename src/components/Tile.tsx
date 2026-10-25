@@ -27,19 +27,27 @@ interface Props {
 	onActivate?: () => void;
 }
 
-export function Tile ({model, focused, lifted, checked, dimmed, onHover, onActivate}: Props) {
-	const classes = ['tile', focused && 'tile--focused', lifted && 'tile--lifted', dimmed && 'tile--dimmed'].filter(Boolean).join(' ');
+export function Tile({model, focused, lifted, checked, dimmed, onHover, onActivate}: Props) {
+	const classes = ['tile', focused && 'tile--focused', lifted && 'tile--lifted', dimmed && 'tile--dimmed']
+		.filter(Boolean)
+		.join(' ');
 	return (
 		<div class={classes} onMouseEnter={onHover} onClick={onActivate}>
 			<div class="tile__box" style={model.color && !model.imageUrl ? {background: model.color} : undefined}>
-				{model.imageUrl
-					? <img class="tile__image" src={model.imageUrl} alt="" />
-					: model.glyphImageUrl
-						? <img class="tile__image tile__image--glyph" src={model.glyphImageUrl} alt="" />
-						: model.glyph
-							? <Glyph name={model.glyph} />
-							: <div class="tile__monogram">{model.label.charAt(0).toUpperCase()}</div>}
-				{checked && <div class="tile__badge"><CheckMark /></div>}
+				{model.imageUrl ? (
+					<img class="tile__image" src={model.imageUrl} alt="" />
+				) : model.glyphImageUrl ? (
+					<img class="tile__image tile__image--glyph" src={model.glyphImageUrl} alt="" />
+				) : model.glyph ? (
+					<Glyph name={model.glyph} />
+				) : (
+					<div class="tile__monogram">{model.label.charAt(0).toUpperCase()}</div>
+				)}
+				{checked && (
+					<div class="tile__badge">
+						<CheckMark />
+					</div>
+				)}
 			</div>
 			<div class="tile__label">{model.label}</div>
 		</div>

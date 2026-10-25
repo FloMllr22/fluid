@@ -22,17 +22,20 @@ export const LUNA = {
 
 /** Remote-control key codes as delivered to a webOS web app. */
 export const KEY = {
-	left: 37, up: 38, right: 39, down: 40,
+	left: 37,
+	up: 38,
+	right: 39,
+	down: 40,
 	enter: 13,
-	back: 461,          // webOS "BACK" (needs disableBackHistoryAPI in appinfo.json)
-	escape: 27          // handy when developing in a desktop browser
+	back: 461, // webOS "BACK" (needs disableBackHistoryAPI in appinfo.json)
+	escape: 27 // handy when developing in a desktop browser
 } as const;
 
 export const TIMING = {
 	lunaTimeoutMs: 4000,
 	toastMs: 2200,
 	clockTickMs: 1000,
-	longPressMs: 600        // OK held this long enters/leaves re-order mode
+	longPressMs: 600 // OK held this long enters/leaves re-order mode
 } as const;
 
 /** localStorage key for the user's selections. Bump the suffix on breaking changes. */

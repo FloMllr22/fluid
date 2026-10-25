@@ -6,7 +6,7 @@
 // as a release asset next to the .ipk, so `ipkUrl` is relative to it (the same layout
 // the Homebrew Channel itself uses).
 import {createHash} from 'node:crypto';
-import {readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {readdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {basename, join} from 'node:path';
 
 const arg = (name) => {
@@ -47,5 +47,5 @@ const manifest = {
 };
 
 const out = join('build', `${appinfo.id}.manifest.json`);
-writeFileSync(out, JSON.stringify(manifest, null, 2) + '\n');
+writeFileSync(out, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`Wrote ${out}`);

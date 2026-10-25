@@ -4,4 +4,6 @@ import {applyTokens} from './theme/tokens';
 import './theme/global.css';
 
 applyTokens();
-render(<App />, document.getElementById('root')!);
+const root = document.getElementById('root');
+if (!root) throw new Error('index.html has no #root element');
+render(<App />, root);

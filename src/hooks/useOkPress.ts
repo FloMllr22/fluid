@@ -11,7 +11,7 @@ interface Handlers {
 /** Distinguishes a short OK press from a long one. Short presses act on key *up*, so a
  *  hold never triggers the short action first. A key-up without a matching key-down
  *  (e.g. the OK that opened this screen) is ignored. Auto-repeat key-downs are ignored. */
-export function useOkPress (handlers: Handlers, active = true): void {
+export function useOkPress(handlers: Handlers, active = true): void {
 	// Latest handlers in a ref, so a re-render mid-press doesn't reset the hold timer.
 	const latest = useRef(handlers);
 	latest.current = handlers;

@@ -1,5 +1,5 @@
-import {LAYOUT} from '../theme/tokens';
 import {clamp} from '../hooks/useKeys';
+import {LAYOUT} from '../theme/tokens';
 import {Tile, type TileModel} from './Tile';
 
 interface Props {
@@ -15,18 +15,20 @@ interface Props {
 	onActivate: (index: number) => void;
 }
 
-const VIEWPORT_HEIGHT = 720;          // matches .grid__viewport height in global.css
-const LABEL_HEIGHT = 60;              // two-line tile label + its top margin (see .tile__label)
-const GRID_ROW_GAP = 40;              // matches .grid__track grid-row-gap
+const VIEWPORT_HEIGHT = 720; // matches .grid__viewport height in global.css
+const LABEL_HEIGHT = 60; // two-line tile label + its top margin (see .tile__label)
+const GRID_ROW_GAP = 40; // matches .grid__track grid-row-gap
 const ROW_STEP = LAYOUT.tileSize + LABEL_HEIGHT + GRID_ROW_GAP;
 
 /** Full grid of tiles; scrolls vertically to keep the focused row in view. */
-export function Grid ({items, mode, checkedKeys, liftedIndex, focused, selected, onSelect, onActivate}: Props) {
+export function Grid({items, mode, checkedKeys, liftedIndex, focused, selected, onSelect, onActivate}: Props) {
 	const rows = Math.ceil(items.length / LAYOUT.gridColumns);
 	const total = rows * ROW_STEP - GRID_ROW_GAP;
 	const rowIndex = Math.floor(selected / LAYOUT.gridColumns);
-	const offset = total <= VIEWPORT_HEIGHT ? 0
-		: clamp(rowIndex * ROW_STEP - (VIEWPORT_HEIGHT - ROW_STEP) / 2, 0, total - VIEWPORT_HEIGHT);
+	const offset =
+		total <= VIEWPORT_HEIGHT
+			? 0
+			: clamp(rowIndex * ROW_STEP - (VIEWPORT_HEIGHT - ROW_STEP) / 2, 0, total - VIEWPORT_HEIGHT);
 
 	return (
 		<div class="grid__viewport">
