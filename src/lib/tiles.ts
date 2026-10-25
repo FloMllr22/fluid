@@ -2,7 +2,8 @@
 
 import type {GlyphName} from '../components/Glyph';
 import type {TileModel} from '../components/Tile';
-import type {AppEntry, InputSource} from '../platform';
+import {t} from '../i18n';
+import {type AppEntry, type InputSource, LIVE_TV_ID} from '../platform';
 
 /** EIM's icon names (LG's images, which fluid does not ship) → fluid's own glyphs.
  *  Anything not listed, such as HDMI_1 … HDMI_4, AV, USB, gets the generic input glyph. */
@@ -37,8 +38,11 @@ export function appTile(app: AppEntry): TileModel {
 	return {key: app.id, label: app.title, imageUrl: app.iconUrl, color: app.color};
 }
 
+/** Inputs keep the names set on the TV; Live TV, which fluid adds itself, is named in the
+ *  user's language. */
 export function inputTile(input: InputSource): TileModel {
-	return {key: input.appId, label: input.label, glyph: inputGlyph(input.icon)};
+	const label = input.id === LIVE_TV_ID ? t('inputs.liveTv') : input.label;
+	return {key: input.appId, label, glyph: inputGlyph(input.icon)};
 }
 
 /** Order `items` by an ID list, dropping IDs that no longer exist. */

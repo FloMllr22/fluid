@@ -11,7 +11,7 @@ clock, a row of your apps, a row of your inputs, and a way back to LG's own home
 - **Apps**: the apps you pick, in your order
 - **Sources**: Live TV and the HDMI inputs, with the names set in the TV's input settings
 - **More**: LG's own home screen, and Settings
-- Follows the TV's 12/24-hour clock setting
+- Speaks English and German, following the TV's language, and the TV's 12/24-hour clock setting
 - Works with the remote's arrow keys and with the Magic Remote pointer
 - No network access, no telemetry: your settings stay in the app's storage on the TV
 
@@ -116,7 +116,7 @@ luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.f
 
 | Command | Does |
 |---|---|
-| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs |
+| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list |
 | `npm run check` | Lint (Biome), type check (TypeScript) and unit tests (Vitest) |
 | `npm run format` | Formats the code and applies safe lint fixes |
 | `npm run build` | Type-checks, builds `dist/` and checks the bundle's syntax and CSS for webOS 4 |
@@ -146,6 +146,12 @@ pull requests.
   is missing or running without root.
 - **Pointer.** The system draws the pointer, so CSS cannot hide it; fluid calls
   `webOSSystem.setCursorHidden(true)` whenever it comes to the foreground.
+- **Language.** fluid follows the TV's UI language (`webOSSystem.locale`) and falls back
+  to English. Dates come from `Intl` where the engine has the locale, otherwise from the
+  names in the locale file; plural rules are fluid's own, as `Intl.PluralRules` only
+  arrived in Chromium 63. To add a language, translate `src/i18n/locales/en.json` and add
+  it to `LANGUAGES` and `PLURAL_RULES` in `src/i18n/index.ts`; the tests check that every
+  key and placeholder is there.
 - **Debugging.** A rooted TV exposes the web inspector on port 9998.
 
 ### Project layout
@@ -156,6 +162,7 @@ src/
                mock/ (neutral sample data for the desktop browser)
   config/      constants (app ID, key codes, timings)
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
+  i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
   lib/         storage, clock, ordering, tile adapters
   hooks/       remote keys, OK press/hold, clock tick, time format
   components/  Header, Clock, Row, Grid, Tile, OptionList, Glyph, Toast

@@ -1,0 +1,65 @@
+{
+	"rows.apps": "Apps",
+	"rows.sources": "Quellen",
+	"rows.more": "Mehr",
+	"rows.empty": "Noch nichts da",
+
+	"home.greeting.morning": "Guten Morgen",
+	"home.greeting.afternoon": "Guten Tag",
+	"home.greeting.evening": "Guten Abend",
+	"home.lgHome": "LG Home",
+	"home.settings": "Einstellungen",
+
+	"clock.am": "AM",
+	"clock.pm": "PM",
+	"clock.weekdays": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+	"clock.months": [
+		"Januar",
+		"Februar",
+		"März",
+		"April",
+		"Mai",
+		"Juni",
+		"Juli",
+		"August",
+		"September",
+		"Oktober",
+		"November",
+		"Dezember"
+	],
+	"clock.dayMonth": "{day}. {month}",
+
+	"apps.loading": "Apps werden geladen …",
+	"apps.noneSelected": "Keine Apps ausgewählt – in den Einstellungen hinzufügen",
+	"apps.noneFound": "Der TV meldet keine Apps",
+	"apps.loadFailed": "fluid konnte deine Apps nicht lesen.",
+	"apps.retryHint": "fluid versucht es erneut, sobald du zurückkommst.",
+	"apps.iconsFailed_one": "{count} App-Icon konnte nicht geladen werden",
+	"apps.iconsFailed_other": "{count} App-Icons konnten nicht geladen werden",
+
+	"inputs.liveTv": "Live TV",
+	"inputs.noneSelected": "Keine Quellen ausgewählt",
+	"inputs.noneFound": "Der TV meldet keine Eingänge",
+	"inputs.loadFailed": "fluid konnte die Eingänge nicht lesen.",
+
+	"launch.failed": "{name} konnte nicht geöffnet werden.",
+
+	"settings.title": "Einstellungen",
+	"settings.options": "Optionen",
+	"settings.reorder.apps": "Apps verschieben",
+	"settings.reorder.sources": "Quellen verschieben",
+	"settings.done": "Fertig",
+	"settings.reorderEmpty": "Noch nichts auf dem Home-Screen.",
+	"settings.hint.select": "OK hinzufügen oder entfernen · OK halten zum Verschieben · Zurück zum Home-Screen",
+	"settings.hint.reorder": "OK aufnehmen · OK halten oder „Fertig“ zum Beenden",
+	"settings.hint.holding": "Pfeile verschieben · OK ablegen · Zurück bricht ab",
+	"settings.hint.options": "OK ein- oder ausschalten · Zurück zum Home-Screen",
+
+	"error.unavailable": "Der Dienst des TVs ist nicht erreichbar.",
+	"error.timeout": "Der TV hat nicht rechtzeitig geantwortet.",
+	"error.rejected": "Der TV hat die Anfrage abgelehnt.",
+	"error.invalid-reply": "Die Antwort des TVs war nicht lesbar.",
+	"error.no-homebrew": "fluid braucht den Homebrew Channel, um deine Apps zu lesen. Installiere ihn auf einem gerooteten TV.",
+	"error.no-root": "Der Homebrew Channel hat keinen Root-Zugriff, daher kann fluid deine Apps nicht lesen. Ein Firmware-Update hat Root vielleicht entfernt: Roote den TV erneut.",
+	"error.unknown": "Etwas ist schiefgelaufen."
+}

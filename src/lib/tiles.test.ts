@@ -1,4 +1,6 @@
 import {describe, expect, it} from 'vitest';
+import {t} from '../i18n';
+import {LIVE_TV_ID} from '../platform';
 import {appTile, inputGlyph, inputTile, pickInOrder} from './tiles';
 
 describe('pickInOrder', () => {
@@ -38,6 +40,18 @@ describe('tile adapters', () => {
 			icon: 'gameconsole.png'
 		});
 		expect(tile).toEqual({key: 'com.webos.app.hdmi1', label: 'Console', glyph: 'console'});
+	});
+
+	it('names Live TV, which fluid adds itself, in the language of the UI', () => {
+		const tile = inputTile({
+			id: LIVE_TV_ID,
+			appId: 'com.webos.app.livetv',
+			label: 'tuner',
+			port: 0,
+			connected: true,
+			icon: 'tv.png'
+		});
+		expect(tile.label).toBe(t('inputs.liveTv'));
 	});
 });
 

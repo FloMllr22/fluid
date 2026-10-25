@@ -3,6 +3,7 @@ import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
+import {errorMessage, t, tn} from './i18n';
 import {loadConfig, saveConfig, toggleId, type UserConfig} from './lib/storage';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
@@ -17,38 +18,25 @@ type AppsState = {status: 'loading'} | {status: 'ready'; apps: AppEntry[]} | {st
 const ROW = {apps: 'apps', sources: 'sources', misc: 'misc'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings'} as const;
 
-const MISC_TILES: TileModel[] = [
-	{key: MISC.lgHome, label: 'LG Home', glyph: 'house'},
-	{key: MISC.settings, label: 'Settings', glyph: 'gear'}
-];
-
 /** No options at the moment: the Homebrew option went when root became a requirement,
  *  and the Options tab stays hidden until the next ones arrive. */
 const OPTIONS: OptionItem[] = [];
 
-const APPS_TEXT = {
-	loading: 'Loading apps…',
-	none: 'No apps selected — add some in Settings',
-	noneFound: 'The TV lists no apps',
-	noHomebrew: 'fluid needs the Homebrew Channel to show your apps. Install it on a rooted TV, then come back to fluid.',
-	noRoot:
-		'The Homebrew Channel has no root access, so fluid cannot read your apps. A firmware update may have removed root: root the TV again, then come back to fluid.',
-	failed: "Couldn't read your apps. fluid tries again when you come back to it."
-} as const;
-
-const INPUTS_TEXT = {
-	none: 'No sources selected',
-	noneFound: 'The TV reports no inputs'
-} as const;
-
-/** Why there are no apps to show yet, or undefined once they are read. */
+/** Why there are no apps to show yet, or undefined once they are read. A missing Homebrew
+ *  Channel or root explains itself; any other failure says that the apps could not be
+ *  read, and why. */
 function appsProblem(state: AppsState): string | undefined {
-	if (state.status === 'loading') return APPS_TEXT.loading;
+	if (state.status === 'loading') return t('apps.loading');
 	if (state.status === 'ready') return undefined;
 	const code = state.error instanceof PlatformError ? state.error.code : undefined;
-	if (code === 'no-homebrew') return APPS_TEXT.noHomebrew;
-	if (code === 'no-root') return APPS_TEXT.noRoot;
-	return APPS_TEXT.failed;
+	const reason = errorMessage(state.error);
+	const what = code === 'no-homebrew' || code === 'no-root' ? reason : `${t('apps.loadFailed')} ${reason}`;
+	return `${what} ${t('apps.retryHint')}`;
+}
+
+/** A toast text: what failed, then why. */
+function failure(what: string, error: unknown): string {
+	return `${what} ${errorMessage(error)}`;
 }
 
 export function App() {
@@ -82,7 +70,7 @@ export function App() {
 			platform.listApps().then(
 				(list) => {
 					setAppsState({status: 'ready', apps: list.apps});
-					if (list.failedIcons > 0) showToast('Some app icons could not be loaded', 'error');
+					if (list.failedIcons > 0) showToast(tn('apps.iconsFailed', list.failedIcons), 'error');
 				},
 				(error: unknown) => {
 					failed = true;
@@ -103,7 +91,7 @@ export function App() {
 			platform
 				.listInputs()
 				.then(setInputs)
-				.catch(() => showToast('Could not read the inputs', 'error'));
+				.catch((error: unknown) => showToast(failure(t('inputs.loadFailed'), error), 'error'));
 		};
 		refresh();
 		return platform.onForeground(refresh);
@@ -128,9 +116,26 @@ export function App() {
 
 	const rows: HomeRow[] = useMemo(
 		() => [
-			{id: ROW.apps, label: 'Apps', items: shownApps.map(appTile), emptyText: appsText || APPS_TEXT.none},
-			{id: ROW.sources, label: 'Sources', items: shownInputs.map(inputTile), emptyText: INPUTS_TEXT.none},
-			{id: ROW.misc, label: 'More', items: MISC_TILES}
+			{
+				id: ROW.apps,
+				label: t('rows.apps'),
+				items: shownApps.map(appTile),
+				emptyText: appsText || t('apps.noneSelected')
+			},
+			{
+				id: ROW.sources,
+				label: t('rows.sources'),
+				items: shownInputs.map(inputTile),
+				emptyText: t('inputs.noneSelected')
+			},
+			{
+				id: ROW.misc,
+				label: t('rows.more'),
+				items: [
+					{key: MISC.lgHome, label: t('home.lgHome'), glyph: 'house'},
+					{key: MISC.settings, label: t('home.settings'), glyph: 'gear'}
+				]
+			}
 		],
 		[shownApps, shownInputs, appsText]
 	);
@@ -139,19 +144,19 @@ export function App() {
 		() => [
 			{
 				id: ROW.apps,
-				label: 'Apps',
-				noun: 'apps',
+				label: t('rows.apps'),
+				reorderLabel: t('settings.reorder.apps'),
 				items: apps.map(appTile),
 				shown: shownApps.map(appTile),
-				emptyText: appsText || APPS_TEXT.noneFound
+				emptyText: appsText || t('apps.noneFound')
 			},
 			{
 				id: ROW.sources,
-				label: 'Sources',
-				noun: 'sources',
+				label: t('rows.sources'),
+				reorderLabel: t('settings.reorder.sources'),
 				items: inputs.map(inputTile),
 				shown: shownInputs.map(inputTile),
-				emptyText: INPUTS_TEXT.noneFound
+				emptyText: t('inputs.noneFound')
 			}
 		],
 		[apps, inputs, shownApps, shownInputs, appsText]
@@ -159,7 +164,9 @@ export function App() {
 
 	// ----- actions -----
 	const open = (id: string, label: string) => {
-		platform.launch(id).catch(() => showToast(`Couldn't open ${label}`, 'error'));
+		platform
+			.launch(id)
+			.catch((error: unknown) => showToast(failure(t('launch.failed', {name: label}), error), 'error'));
 	};
 
 	const onActivate = useCallback(
@@ -167,7 +174,11 @@ export function App() {
 			if (rowId === ROW.misc) {
 				if (item.key === MISC.settings) setScreen('settings');
 				else if (item.key === MISC.lgHome)
-					platform.launchLgHome().catch(() => showToast("Couldn't open LG Home", 'error'));
+					platform
+						.launchLgHome()
+						.catch((error: unknown) =>
+							showToast(failure(t('launch.failed', {name: t('home.lgHome')}), error), 'error')
+						);
 				return;
 			}
 			open(item.key, item.label);

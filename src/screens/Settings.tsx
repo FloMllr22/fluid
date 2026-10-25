@@ -4,14 +4,15 @@ import {type OptionItem, OptionList} from '../components/OptionList';
 import type {TileModel} from '../components/Tile';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
+import {t} from '../i18n';
 import {moveItem} from '../lib/order';
 import {LAYOUT} from '../theme/tokens';
 
 export interface SettingsTab {
 	id: string;
 	label: string;
-	/** noun for the re-order button, e.g. "apps" → "Re-order apps" */
-	noun: string;
+	/** the re-order button, e.g. "Re-order apps" */
+	reorderLabel: string;
 	/** everything available */
 	items: TileModel[];
 	/** what's on the home screen, in home-screen order */
@@ -38,15 +39,6 @@ interface Held {
 	index: number;
 	original: string[];
 }
-
-const OPTIONS_LABEL = 'Options';
-
-const HINT = {
-	select: 'OK adds or removes an item · Hold OK to re-order · Back returns home',
-	reorder: 'OK picks up an item · Hold OK or choose Done to finish',
-	holding: 'Arrows move it · OK puts it down · Back cancels',
-	options: 'OK turns an option on or off · Back returns home'
-} as const;
 
 /** Settings: pick which apps and sources appear on the home rows and their order, plus options.
  *
@@ -218,8 +210,16 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 
 	useKeys(handleKey, active);
 
-	const hint = onOptions ? HINT.options : held ? HINT.holding : reordering ? HINT.reorder : HINT.select;
-	const labels = tabs.map((t) => t.label).concat(hasOptions ? [OPTIONS_LABEL] : []);
+	const hint = t(
+		onOptions
+			? 'settings.hint.options'
+			: held
+				? 'settings.hint.holding'
+				: reordering
+					? 'settings.hint.reorder'
+					: 'settings.hint.select'
+	);
+	const labels = tabs.map((tb) => tb.label).concat(hasOptions ? [t('settings.options')] : []);
 	const buttonClass = [
 		'settings__button',
 		reordering && 'settings__button--active',
@@ -231,7 +231,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	return (
 		<div class="screen">
 			<div class="settings">
-				<h1 class="settings__title">Settings</h1>
+				<h1 class="settings__title">{t('settings.title')}</h1>
 				<p class="settings__hint">{hint}</p>
 				<div class="settings__tabs">
 					{labels.map((label, i) => (
@@ -257,7 +257,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 					))}
 					{tab && (
 						<div class={buttonClass} onMouseEnter={() => setZone('button')} onClick={() => setMode(!reordering)}>
-							{reordering ? 'Done' : `Re-order ${tab.noun}`}
+							{reordering ? t('settings.done') : tab.reorderLabel}
 						</div>
 					)}
 				</div>
@@ -296,9 +296,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 						}}
 					/>
 				)}
-				{tab && count === 0 && (
-					<p class="settings__hint">{reordering ? 'Nothing on the home screen yet.' : tab.emptyText}</p>
-				)}
+				{tab && count === 0 && <p class="settings__hint">{reordering ? t('settings.reorderEmpty') : tab.emptyText}</p>}
 			</div>
 		</div>
 	);

@@ -1,0 +1,65 @@
+{
+	"rows.apps": "Apps",
+	"rows.sources": "Sources",
+	"rows.more": "More",
+	"rows.empty": "Nothing here yet",
+
+	"home.greeting.morning": "Good morning",
+	"home.greeting.afternoon": "Good afternoon",
+	"home.greeting.evening": "Good evening",
+	"home.lgHome": "LG Home",
+	"home.settings": "Settings",
+
+	"clock.am": "AM",
+	"clock.pm": "PM",
+	"clock.weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+	"clock.months": [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December"
+	],
+	"clock.dayMonth": "{day} {month}",
+
+	"apps.loading": "Loading apps…",
+	"apps.noneSelected": "No apps selected — add some in Settings",
+	"apps.noneFound": "The TV lists no apps",
+	"apps.loadFailed": "fluid couldn't read your apps.",
+	"apps.retryHint": "fluid tries again when you come back to it.",
+	"apps.iconsFailed_one": "{count} app icon could not be loaded",
+	"apps.iconsFailed_other": "{count} app icons could not be loaded",
+
+	"inputs.liveTv": "Live TV",
+	"inputs.noneSelected": "No sources selected",
+	"inputs.noneFound": "The TV reports no inputs",
+	"inputs.loadFailed": "fluid couldn't read the inputs.",
+
+	"launch.failed": "Couldn't open {name}.",
+
+	"settings.title": "Settings",
+	"settings.options": "Options",
+	"settings.reorder.apps": "Re-order apps",
+	"settings.reorder.sources": "Re-order sources",
+	"settings.done": "Done",
+	"settings.reorderEmpty": "Nothing on the home screen yet.",
+	"settings.hint.select": "OK adds or removes an item · Hold OK to re-order · Back returns home",
+	"settings.hint.reorder": "OK picks up an item · Hold OK or choose Done to finish",
+	"settings.hint.holding": "Arrows move it · OK puts it down · Back cancels",
+	"settings.hint.options": "OK turns an option on or off · Back returns home",
+
+	"error.unavailable": "The TV's service isn't available.",
+	"error.timeout": "The TV didn't answer in time.",
+	"error.rejected": "The TV refused the request.",
+	"error.invalid-reply": "The TV's answer couldn't be read.",
+	"error.no-homebrew": "fluid needs the Homebrew Channel to read your apps. Install it on a rooted TV.",
+	"error.no-root": "The Homebrew Channel has no root access, so fluid cannot read your apps. A firmware update may have removed root: root the TV again.",
+	"error.unknown": "Something went wrong."
+}

@@ -1,4 +1,5 @@
 import {clamp} from '../hooks/useKeys';
+import {t} from '../i18n';
 import {LAYOUT} from '../theme/tokens';
 import {Tile, type TileModel} from './Tile';
 
@@ -29,7 +30,7 @@ export function Row({label, items, focused, selected, emptyText, onSelect, onAct
 			<h2 class="row__label">{label}</h2>
 			<div class="row__viewport">
 				{items.length === 0 ? (
-					<div class="row__empty">{emptyText || 'Nothing here yet'}</div>
+					<div class="row__empty">{emptyText || t('rows.empty')}</div>
 				) : (
 					<div
 						class={`row__track${fits ? ' row__track--centered' : ''}`}
