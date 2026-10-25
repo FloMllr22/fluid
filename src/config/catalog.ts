@@ -27,6 +27,9 @@ export interface LocalCatalog {
 	DEFAULT_APP_IDS?: string[];
 }
 
+// Deliberately incomplete: only some entries have a colour, the rest are grey letter
+// tiles. Not worth finishing: root is required, so fluid will read the app list and the
+// real icons from the TV, and this catalogue goes away.
 const BASE_CATALOG: CatalogApp[] = [
 	// Global streaming
 	{id: 'youtube.leanback.v4', title: 'YouTube'},
