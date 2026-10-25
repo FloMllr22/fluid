@@ -15,9 +15,6 @@ export const MOCK_APPS: AppEntry[] = [
 	{id: 'com.example.news', title: 'News', color: '#4B5563'}
 ];
 
-/** The Apps row on a fresh start in the browser. */
-export const MOCK_DEFAULT_APP_IDS: string[] = MOCK_APPS.slice(0, 6).map((app) => app.id);
-
 /** Inputs as the TV reports them; the icon names pick fluid's own glyphs. */
 export const MOCK_INPUTS: InputSource[] = [
 	{id: 'LIVE_TV', appId: 'com.webos.app.livetv', label: 'Live TV', port: 0, connected: true, icon: 'tv.png'},

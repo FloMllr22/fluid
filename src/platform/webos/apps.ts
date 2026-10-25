@@ -1,38 +1,14 @@
-// Available apps. Two providers:
-//
-//  1. Catalogue (default, no root): config/catalog.ts filtered by getAppLoadStatus.
-//  2. Homebrew Channel (opt-in, rooted TVs only): with the user's consent (an option in
-//     Settings, off by default) the launch points are read through the Homebrew Channel,
-//     which gives the live list with LG's own titles, and each icon is read as base64
-//     (both commands are in shell.ts). If the service isn't there, the catalogue is used.
+// Installed apps, read through the Homebrew Channel. A sideloaded web app may not list
+// the installed apps or read their icon files, so fluid asks the Homebrew Channel's root
+// shell for the launch points (the live list with LG's own titles) and for each icon as
+// base64 (both commands are in shell.ts). This is why fluid requires root.
 
-import {APP_CATALOG, type CatalogApp} from '../../config/catalog';
 import {APP_ID} from '../../config/constants';
-import type {AppEntry, AppList} from '../types';
+import {PlatformError} from '../errors';
+import type {AppList} from '../types';
+import {HOMEBREW_APP, LUNA} from './constants';
+import {type LunaResponse, lunaCall} from './luna';
 import {isSafePath, readIcons, readLaunchPoints} from './shell';
-import {appExists} from './system';
-
-export function listApps(useHomebrew: boolean): Promise<AppList> {
-	const catalog = () => listViaCatalog().then((apps): AppList => ({apps, source: 'catalog'}));
-	if (!useHomebrew) return catalog();
-	return listViaHomebrew()
-		.then((apps): AppList => ({apps, source: 'homebrew'}))
-		.catch(catalog);
-}
-
-// ---------- provider 1: catalogue ----------
-
-function catalogEntries(apps: CatalogApp[]): AppEntry[] {
-	return apps.map((a) => ({id: a.id, title: a.title, color: a.color}));
-}
-
-function listViaCatalog(): Promise<AppEntry[]> {
-	return Promise.all(APP_CATALOG.map((a) => appExists(a.id))).then((present) =>
-		catalogEntries(APP_CATALOG.filter((_, i) => present[i]))
-	);
-}
-
-// ---------- provider 2: Homebrew Channel (opt-in) ----------
 
 interface LaunchPoint {
 	id: string;
@@ -46,24 +22,54 @@ const HIDDEN_IDS = [APP_ID, 'google.assistant.promo', 'com.webos.app.discovery']
 
 const ICON_CACHE_KEY = 'fluid-icon-cache-v1';
 
-function listViaHomebrew(): Promise<AppEntry[]> {
-	return readLaunchPoints().then((out) => {
-		const parsed = JSON.parse(out) as {launchPoints?: LaunchPoint[]};
-		const points = (parsed.launchPoints || []).filter((p) => p.id && p.title && HIDDEN_IDS.indexOf(p.id) === -1);
-		if (!points.length) throw new Error('no launch points');
-		return loadIcons(points).then((icons) =>
-			points.map((p) => {
-				const known = APP_CATALOG.find((c) => c.id === p.id);
-				return {
-					id: p.id,
-					// the catalogue's titles are shorter than LG's ("IPTV Player" vs "webOS IPTV Player")
-					title: known ? known.title : p.title,
-					iconUrl: icons[p.id],
-					color: known?.color
-				};
-			})
+export function listApps(): Promise<AppList> {
+	return readLaunchPoints()
+		.catch(explainFailure)
+		.then(parseLaunchPoints)
+		.then((points) =>
+			loadIcons(points).then(
+				(icons): AppList => ({
+					apps: points.map((p) => ({id: p.id, title: p.title, iconUrl: icons[p.id]})),
+					failedIcons: 0
+				})
+			)
 		);
-	});
+}
+
+function parseLaunchPoints(out: string): LaunchPoint[] {
+	let parsed: {launchPoints?: LaunchPoint[]};
+	try {
+		parsed = JSON.parse(out);
+	} catch {
+		throw new PlatformError('invalid-reply', 'Unreadable list of launch points');
+	}
+	const points = (parsed.launchPoints || []).filter((p) => p.id && p.title && HIDDEN_IDS.indexOf(p.id) === -1);
+	if (!points.length) throw new PlatformError('invalid-reply', 'No launch points');
+	return points;
+}
+
+interface AppLoadStatus extends LunaResponse {
+	exist?: boolean;
+}
+
+interface HomebrewConfig extends LunaResponse {
+	root?: boolean;
+}
+
+/** The Homebrew Channel's shell failed. Find out whether the Homebrew Channel is missing
+ *  or has lost root (e.g. through a firmware update), so the user can be told what to do.
+ *  If neither is the case, or it can't be told, the original error stands. */
+function explainFailure(error: unknown): Promise<never> {
+	const original = (): never => {
+		throw error;
+	};
+	return lunaCall<AppLoadStatus>(LUNA.appLoadStatus, {appId: HOMEBREW_APP}).then((status) => {
+		if (status.exist === false) throw new PlatformError('no-homebrew', 'The Homebrew Channel is not installed');
+		return lunaCall<HomebrewConfig>(LUNA.homebrewConfig).then((config) => {
+			if (config.root === false) throw new PlatformError('no-root', 'The Homebrew Channel runs without root');
+			return original();
+		}, original);
+	}, original);
 }
 
 /** Read the icons as data URIs in one shell round-trip, cached in localStorage by path.

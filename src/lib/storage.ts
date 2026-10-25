@@ -1,33 +1,31 @@
-// The user's choices: which apps and which inputs appear on the home rows, in order,
-// plus options. Persisted in localStorage (private to this app on the TV).
+// The user's choices: which apps and which inputs appear on the home rows, in order.
+// Persisted in localStorage (private to this app on the TV).
 
 import {STORAGE_KEY} from '../config/constants';
-import {platform} from '../platform';
 
 export interface UserConfig {
-	/** ordered app IDs for the Apps row */
-	appIds: string[];
+	/** ordered app IDs for the Apps row; null → every app, in the order of LG's launcher */
+	appIds: string[] | null;
 	/** ordered input appIds (com.webos.app.hdmiN) for the Sources row; null → all inputs */
 	sourceIds: string[] | null;
-	/** read the live app list through the Homebrew Channel (root). Off by default. */
-	useHomebrew: boolean;
 }
 
 export const DEFAULT_CONFIG: UserConfig = {
-	appIds: platform.defaultAppIds.slice(),
-	sourceIds: null,
-	useHomebrew: false
+	appIds: null,
+	sourceIds: null
 };
 
+/** Reads the stored choices. Fields of the wrong type fall back to their defaults, and
+ *  fields fluid no longer has (such as the Homebrew option before root was required) are
+ *  dropped. */
 export function loadConfig(): UserConfig {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
 		if (!raw) return {...DEFAULT_CONFIG};
 		const parsed = JSON.parse(raw) as Partial<UserConfig>;
 		return {
-			appIds: Array.isArray(parsed.appIds) ? parsed.appIds : DEFAULT_CONFIG.appIds,
-			sourceIds: Array.isArray(parsed.sourceIds) ? parsed.sourceIds : null,
-			useHomebrew: parsed.useHomebrew === true
+			appIds: Array.isArray(parsed.appIds) ? parsed.appIds : null,
+			sourceIds: Array.isArray(parsed.sourceIds) ? parsed.sourceIds : null
 		};
 	} catch {
 		return {...DEFAULT_CONFIG};

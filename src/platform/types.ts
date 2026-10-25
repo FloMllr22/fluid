@@ -12,12 +12,12 @@ export interface AppEntry {
 	color?: string;
 }
 
-/** Where an app list came from (the Homebrew Channel falls back to the catalogue). */
-export type AppSource = 'catalog' | 'homebrew' | 'mock';
-
 export interface AppList {
+	/** in the order of LG's own launcher */
 	apps: AppEntry[];
-	source: AppSource;
+	/** Icons that could not be read; those apps show a letter tile, and the next listing
+	 *  tries again. */
+	failedIcons: number;
 }
 
 /** Live TV or an external input; switching to it means launching its app. */
@@ -38,10 +38,9 @@ export const DEFAULT_TIME_FORMAT: TimeFormat = '24h';
 export interface Platform {
 	/** 'webos' on the TV; 'mock' in a desktop browser and in unit tests */
 	readonly kind: 'webos' | 'mock';
-	/** The Apps row of a fresh install */
-	readonly defaultAppIds: readonly string[];
-	/** Apps that can be shown. With `useHomebrew`, the live list read through the Homebrew Channel. */
-	listApps(options: {useHomebrew: boolean}): Promise<AppList>;
+	/** Every app on the TV's launcher, read through the Homebrew Channel (root). Rejects
+	 *  with `no-homebrew` or `no-root` when that is why it failed. */
+	listApps(): Promise<AppList>;
 	/** Live TV (when the TV has a tuner) and the external inputs, in port order */
 	listInputs(): Promise<InputSource[]>;
 	/** Opens an app, or switches to an input */

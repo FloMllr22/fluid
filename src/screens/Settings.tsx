@@ -16,6 +16,8 @@ export interface SettingsTab {
 	items: TileModel[];
 	/** what's on the home screen, in home-screen order */
 	shown: TileModel[];
+	/** says why `items` is empty: still loading, failed, or nothing there */
+	emptyText: string;
 }
 
 interface Props {
@@ -48,7 +50,7 @@ const HINT = {
 
 /** Settings: pick which apps and sources appear on the home rows and their order, plus options.
  *
- *  Tabs: one grid tab per row (Apps, Sources), then Options.
+ *  Tabs: one grid tab per row (Apps, Sources), then Options if there are any.
  *  Grid tabs, select mode: everything available; OK adds/removes an item.
  *  Grid tabs, re-order mode (hold OK, or the button): only what's on the home screen, in order;
  *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave. */
@@ -60,7 +62,8 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	const [reordering, setReordering] = useState(false);
 	const [held, setHeld] = useState<Held | null>(null);
 
-	const tabCount = tabs.length + 1; // grid tabs + Options
+	const hasOptions = options.length > 0;
+	const tabCount = tabs.length + (hasOptions ? 1 : 0); // grid tabs + Options
 	const onOptions = tabIndex === tabs.length;
 	const tab: SettingsTab | undefined = onOptions ? undefined : tabs[tabIndex];
 	const items = tab ? (reordering ? tab.shown : tab.items) : [];
@@ -216,7 +219,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	useKeys(handleKey, active);
 
 	const hint = onOptions ? HINT.options : held ? HINT.holding : reordering ? HINT.reorder : HINT.select;
-	const labels = tabs.map((t) => t.label).concat(OPTIONS_LABEL);
+	const labels = tabs.map((t) => t.label).concat(hasOptions ? [OPTIONS_LABEL] : []);
 	const buttonClass = [
 		'settings__button',
 		reordering && 'settings__button--active',
@@ -293,7 +296,9 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 						}}
 					/>
 				)}
-				{reordering && count === 0 && <p class="settings__hint">Nothing on the home screen yet.</p>}
+				{tab && count === 0 && (
+					<p class="settings__hint">{reordering ? 'Nothing on the home screen yet.' : tab.emptyText}</p>
+				)}
 			</div>
 		</div>
 	);

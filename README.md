@@ -41,10 +41,11 @@ reports (TV model, webOS version, firmware version) are welcome.
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
 Pointing selects, clicking opens.
 
-**Which apps can be picked.** By default fluid offers a built-in list of well-known apps,
-shown as letter tiles, limited to the ones installed on the TV. Turn on *Settings →
-Options → Live app list via Homebrew Channel* to list every installed app with its real
-icon, read from the TV itself.
+**Where the apps come from.** fluid reads every app on the TV's launcher, with its real
+icon, from the TV itself, through the Homebrew Channel. That is why it needs root. Until you
+pick apps in Settings, the Apps row shows all of them in the order of LG's launcher. If the
+Homebrew Channel is missing or has lost root (a firmware update can do that), the Apps row
+says so; Sources and LG Home keep working, and fluid tries again when you come back to it.
 
 fluid does not take over the HOME button yet. You can map a remote button to it with
 [LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID
@@ -138,9 +139,11 @@ pull requests.
   builds a single IIFE and the HTML loads it with `defer`.
 - **Luna calls** without root: `applicationManager/launch` and `getAppLoadStatus`,
   `eim/getAllInputStatus`, `systemservice/getPreferences` (clock format).
-- **Live app list** (opt-in): asks the Homebrew Channel's service, which runs commands as
-  root, for `listLaunchPoints` and for each icon as base64. fluid only sends fixed
-  commands; icon paths are validated and shell-quoted, and app IDs never reach the shell.
+- **App list** (root): asks the Homebrew Channel's service, which runs commands as root,
+  for `listLaunchPoints` and for each icon as base64. fluid only sends fixed commands;
+  icon paths are validated and shell-quoted, and app IDs never reach the shell. When that
+  fails, `getAppLoadStatus` and the Homebrew Channel's `getConfiguration` tell whether it
+  is missing or running without root.
 - **Pointer.** The system draws the pointer, so CSS cannot hide it; fluid calls
   `webOSSystem.setCursorHidden(true)` whenever it comes to the foreground.
 - **Debugging.** A rooted TV exposes the web inspector on port 9998.
@@ -149,9 +152,11 @@ pull requests.
 
 ```
 src/
-  config/      constants (IDs, key codes, Luna URIs) and the built-in app list
+  platform/    the only way to the TV: one interface, webos/ (Luna, Homebrew shell) and
+               mock/ (neutral sample data for the desktop browser)
+  config/      constants (app ID, key codes, timings)
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
-  lib/         Luna bridge, launching, inputs, app list, storage, clock, pointer, sample data
+  lib/         storage, clock, ordering, tile adapters
   hooks/       remote keys, OK press/hold, clock tick, time format
   components/  Header, Clock, Row, Grid, Tile, OptionList, Glyph, Toast
   screens/     Home, Settings

@@ -8,11 +8,10 @@ import {createWebOSPlatform, isWebOS} from './webos';
 
 export const platform: Platform = isWebOS() ? createWebOSPlatform() : createMockPlatform();
 
-export {PlatformError, type PlatformErrorCode} from './errors';
+export {PLATFORM_ERROR_CODES, PlatformError, type PlatformErrorCode} from './errors';
 export {
 	type AppEntry,
 	type AppList,
-	type AppSource,
 	DEFAULT_TIME_FORMAT,
 	type InputSource,
 	type Platform,

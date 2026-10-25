@@ -16,9 +16,6 @@ tv.env.*
 id_rsa*
 id_ed25519*
 
-# local, per-person settings
-src/config/catalog.local.ts
-
 # local only: AI assistant files, and notes (plan, decisions, design mockups); the
 # repository holds code plus README.md and THIRD_PARTY_NOTICES.md
 CLAUDE.md

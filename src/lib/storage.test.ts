@@ -55,13 +55,19 @@ describe('loadConfig', () => {
 	});
 
 	it('replaces fields of the wrong type with their defaults', () => {
-		vi.stubGlobal('localStorage', fakeStorage({[STORAGE_KEY]: '{"appIds":"x","sourceIds":5,"useHomebrew":"yes"}'}));
+		vi.stubGlobal('localStorage', fakeStorage({[STORAGE_KEY]: '{"appIds":"x","sourceIds":5}'}));
 		expect(loadConfig()).toEqual(DEFAULT_CONFIG);
+	});
+
+	it('keeps the apps of an older version and drops its Homebrew option', () => {
+		const stored = '{"appIds":["b","a"],"sourceIds":null,"useHomebrew":true}';
+		vi.stubGlobal('localStorage', fakeStorage({[STORAGE_KEY]: stored}));
+		expect(loadConfig()).toEqual({appIds: ['b', 'a'], sourceIds: null});
 	});
 
 	it('reads back what was saved', () => {
 		vi.stubGlobal('localStorage', fakeStorage());
-		const config = {appIds: ['b', 'a'], sourceIds: ['com.webos.app.hdmi2'], useHomebrew: true};
+		const config = {appIds: ['b', 'a'], sourceIds: ['com.webos.app.hdmi2']};
 		saveConfig(config);
 		expect(loadConfig()).toEqual(config);
 	});

@@ -33,11 +33,11 @@ code ends up in the installed app.
 
 fluid ships no third-party app logos or LG artwork. The input glyphs are drawn for this
 project (`src/components/Glyph.tsx`) and covered by the MIT licence. On the TV, app icons
-are read from the TV itself at runtime, through the Homebrew Channel option, and never
-become part of this repository or the package.
+are read from the TV itself at runtime, through the Homebrew Channel, and never become
+part of this repository or the package.
 
-App names and IDs in `src/config/catalog.ts` only identify apps already installed on the
-user's TV. They are trademarks of their respective owners. This project is not affiliated
-with, endorsed by or sponsored by any of them.
+App names, like the icons, are read from the user's TV at runtime. They are trademarks of
+their respective owners. This project is not affiliated with, endorsed by or sponsored by
+any of them.
 
 "LG" and "webOS" are trademarks of LG Electronics.
