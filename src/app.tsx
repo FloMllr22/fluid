@@ -1,10 +1,11 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
+import {AppMenu, type AppMenuAction} from './components/AppMenu';
 import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
 import {errorMessage, t, tn} from './i18n';
-import {toggleId} from './lib/order';
+import {favoritesFirst, setFavorite, toggleId} from './lib/order';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
 import {Home, type HomeRow} from './screens/Home';
@@ -42,6 +43,8 @@ function failure(what: string, error: unknown): string {
 
 export function App() {
 	const [screen, setScreen] = useState<Screen>('home');
+	/** the app whose menu is open (OK held on it) */
+	const [menuAppId, setMenuAppId] = useState<string | null>(null);
 	const [loaded] = useState(loadSettings);
 	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
@@ -118,10 +121,18 @@ export function App() {
 	// ----- derived rows -----
 	const apps = useMemo(() => (appsState.status === 'ready' ? appsState.apps : []), [appsState]);
 	const appsText = appsProblem(appsState);
-	const shownApps = useMemo(
-		() => (settings.appIds ? pickInOrder(apps, settings.appIds, (a) => a.id) : apps),
-		[apps, settings.appIds]
-	);
+	// the chosen apps in their order, favourites first
+	const shownApps = useMemo(() => {
+		const chosen = settings.appIds ? pickInOrder(apps, settings.appIds, (a) => a.id) : apps;
+		const order = favoritesFirst(
+			chosen.map((a) => a.id),
+			settings.favoriteIds
+		);
+		return pickInOrder(chosen, order, (a) => a.id);
+	}, [apps, settings.appIds, settings.favoriteIds]);
+	const isFavorite = (id: string) => settings.favoriteIds.indexOf(id) !== -1;
+	const tileOf = (app: AppEntry) => appTile(app, isFavorite(app.id));
+	const favoriteCount = shownApps.filter((a) => isFavorite(a.id)).length;
 	const shownInputs = useMemo(
 		() => (settings.sourceIds ? pickInOrder(inputs, settings.sourceIds, (s) => s.appId) : inputs),
 		[inputs, settings.sourceIds]
@@ -132,7 +143,7 @@ export function App() {
 			{
 				id: ROW.apps,
 				label: t('rows.apps'),
-				items: shownApps.map(appTile),
+				items: shownApps.map(tileOf),
 				emptyText: appsText || t('apps.noneSelected')
 			},
 			{
@@ -150,7 +161,7 @@ export function App() {
 				]
 			}
 		],
-		[shownApps, shownInputs, appsText]
+		[shownApps, shownInputs, appsText, settings.favoriteIds]
 	);
 
 	const tabs: SettingsTab[] = useMemo(
@@ -159,8 +170,9 @@ export function App() {
 				id: ROW.apps,
 				label: t('rows.apps'),
 				reorderLabel: t('settings.reorder.apps'),
-				items: apps.map(appTile),
-				shown: shownApps.map(appTile),
+				items: apps.map(tileOf),
+				shown: shownApps.map(tileOf),
+				pinned: favoriteCount,
 				emptyText: appsText || t('apps.noneFound')
 			},
 			{
@@ -172,7 +184,7 @@ export function App() {
 				emptyText: t('inputs.noneFound')
 			}
 		],
-		[apps, inputs, shownApps, shownInputs, appsText]
+		[apps, inputs, shownApps, shownInputs, appsText, settings.favoriteIds, favoriteCount]
 	);
 
 	// ----- actions -----
@@ -202,8 +214,10 @@ export function App() {
 	const onToggle = useCallback(
 		(tabId: string, key: string) => {
 			if (tabId === ROW.apps) {
-				const current = settings.appIds || apps.map((a) => a.id);
-				updateSettings({...settings, appIds: toggleId(current, key)});
+				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key);
+				// a hidden app is no favourite any more
+				const favoriteIds = settings.favoriteIds.filter((id) => appIds.indexOf(id) !== -1);
+				updateSettings({...settings, appIds, favoriteIds});
 			} else {
 				const current = settings.sourceIds || inputs.map((s) => s.appId);
 				updateSettings({...settings, sourceIds: toggleId(current, key)});
@@ -215,6 +229,34 @@ export function App() {
 	const onOption = useCallback(() => {
 		/* no options at the moment, see OPTIONS */
 	}, []);
+
+	/** Holding OK on an app opens its menu; on anything else it simply opens the item. */
+	const onLongPress = useCallback(
+		(rowId: string, item: TileModel) => {
+			if (rowId === ROW.apps) setMenuAppId(item.key);
+			else onActivate(rowId, item);
+		},
+		[onActivate]
+	);
+
+	const menuApp = menuAppId === null ? undefined : shownApps.find((a) => a.id === menuAppId);
+
+	const onMenuChoose = (action: AppMenuAction) => {
+		setMenuAppId(null);
+		if (!menuApp || action === 'cancel') return;
+		const order = shownApps.map((a) => a.id);
+		if (action === 'favorite') {
+			const next = setFavorite(order, settings.favoriteIds, menuApp.id, !isFavorite(menuApp.id));
+			updateSettings({...settings, appIds: next.order, favoriteIds: next.favoriteIds});
+		} else {
+			updateSettings({
+				...settings,
+				appIds: order.filter((id) => id !== menuApp.id),
+				favoriteIds: settings.favoriteIds.filter((id) => id !== menuApp.id)
+			});
+			showToast(t('apps.hidden', {name: menuApp.title}));
+		}
+	};
 
 	/** Replace a row's order with `keys` (the full list of what's shown). */
 	const onReorder = useCallback(
@@ -228,7 +270,10 @@ export function App() {
 	return (
 		<>
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
-			<Home rows={rows} active={screen === 'home'} onActivate={onActivate} />
+			<Home rows={rows} active={screen === 'home' && !menuApp} onActivate={onActivate} onLongPress={onLongPress} />
+			{screen === 'home' && menuApp && (
+				<AppMenu app={tileOf(menuApp)} onChoose={onMenuChoose} onClose={() => setMenuAppId(null)} />
+			)}
 			{screen === 'settings' && (
 				<Settings
 					tabs={tabs}

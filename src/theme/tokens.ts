@@ -24,7 +24,8 @@ export const COLOR = {
 	switchTrackOn: '#EEEEEE',
 	switchKnob: '#AAAAAA',
 	switchKnobOn: '#000000',
-	danger: '#e0564f'
+	danger: '#e0564f',
+	overlay: 'rgba(0, 0, 0, 0.9)' // behind the app menu
 } as const;
 
 export const FONT = {
@@ -40,7 +41,8 @@ export const FONT = {
 	optionLabel: 26,
 	optionDescription: 20,
 	clockPeriod: 22,
-	toast: 24
+	toast: 24,
+	menuAction: 26
 } as const;
 
 export const LAYOUT = {

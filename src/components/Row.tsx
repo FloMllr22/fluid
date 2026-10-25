@@ -11,6 +11,8 @@ interface Props {
 	emptyText?: string;
 	onSelect: (index: number) => void;
 	onActivate: (index: number) => void;
+	/** OK or the pointer's button held on a tile */
+	onLongPress?: (index: number) => void;
 }
 
 /** Width the tiles are laid out in: the screen inside the safe area. Tiles scrolled
@@ -20,7 +22,7 @@ const STEP = LAYOUT.tileSize + LAYOUT.tileGap;
 
 /** Horizontal strip of tiles. Centred when it fits; otherwise a carousel that keeps
  *  the selected tile in the middle (clamped at the ends). */
-export function Row({label, items, focused, selected, emptyText, onSelect, onActivate}: Props) {
+export function Row({label, items, focused, selected, emptyText, onSelect, onActivate, onLongPress}: Props) {
 	const total = items.length * STEP - LAYOUT.tileGap;
 	const fits = total <= SAFE_WIDTH;
 	const offset = fits ? 0 : clamp(selected * STEP + LAYOUT.tileSize / 2 - SAFE_WIDTH / 2, 0, total - SAFE_WIDTH);
@@ -43,6 +45,7 @@ export function Row({label, items, focused, selected, emptyText, onSelect, onAct
 								focused={focused && i === selected}
 								onHover={() => onSelect(i)}
 								onActivate={() => onActivate(i)}
+								onLongPress={onLongPress ? () => onLongPress(i) : undefined}
 							/>
 						))}
 					</div>

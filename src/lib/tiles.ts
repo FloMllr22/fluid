@@ -34,8 +34,10 @@ export function inputGlyph(icon: string): GlyphName {
 	return Object.prototype.hasOwnProperty.call(INPUT_GLYPHS, name) ? INPUT_GLYPHS[name] : 'input';
 }
 
-export function appTile(app: AppEntry): TileModel {
-	return {key: app.id, label: app.title, imageUrl: app.iconUrl, color: app.color};
+export function appTile(app: AppEntry, favorite = false): TileModel {
+	const tile: TileModel = {key: app.id, label: app.title, imageUrl: app.iconUrl, color: app.color};
+	if (favorite) tile.favorite = true;
+	return tile;
 }
 
 /** Inputs keep the names set on the TV; Live TV, which fluid adds itself, is named in the

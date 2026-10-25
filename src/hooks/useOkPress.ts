@@ -10,22 +10,29 @@ interface Handlers {
 
 /** Distinguishes a short OK press from a long one. Short presses act on key *up*, so a
  *  hold never triggers the short action first. A key-up without a matching key-down
- *  (e.g. the OK that opened this screen) is ignored. Auto-repeat key-downs are ignored. */
-export function useOkPress(handlers: Handlers, active = true): void {
+ *  (e.g. the OK that opened this screen) is ignored. Auto-repeat key-downs are ignored.
+ *  With `afterRelease`, for a view opened by holding OK, OK only counts once it has been
+ *  released (or another key pressed): a remote that repeats a held key without marking
+ *  the repeats would otherwise trigger the view at once. */
+export function useOkPress(handlers: Handlers, active = true, afterRelease = false): void {
 	// Latest handlers in a ref, so a re-render mid-press doesn't reset the hold timer.
 	const latest = useRef(handlers);
 	latest.current = handlers;
 
 	useEffect(() => {
 		if (!active) return;
+		let blocked = afterRelease;
 		let armed = false;
 		let fired = false;
 		let timer = 0;
 
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.keyCode !== KEY.enter) return;
+			if (e.keyCode !== KEY.enter) {
+				blocked = false;
+				return;
+			}
 			e.preventDefault();
-			if (armed || e.repeat) return;
+			if (blocked || armed || e.repeat) return;
 			armed = true;
 			fired = false;
 			timer = window.setTimeout(() => {
@@ -37,6 +44,7 @@ export function useOkPress(handlers: Handlers, active = true): void {
 		const onKeyUp = (e: KeyboardEvent) => {
 			if (e.keyCode !== KEY.enter) return;
 			e.preventDefault();
+			blocked = false;
 			if (!armed) return;
 			window.clearTimeout(timer);
 			armed = false;
@@ -50,5 +58,5 @@ export function useOkPress(handlers: Handlers, active = true): void {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
 		};
-	}, [active]);
+	}, [active, afterRelease]);
 }

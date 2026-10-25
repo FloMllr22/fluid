@@ -36,6 +36,7 @@
 	"apps.retryHint": "fluid versucht es erneut, sobald du zurückkommst.",
 	"apps.iconsFailed_one": "{count} App-Icon konnte nicht geladen werden",
 	"apps.iconsFailed_other": "{count} App-Icons konnten nicht geladen werden",
+	"apps.hidden": "{name} ist ausgeblendet. In den Einstellungen wieder einblenden.",
 
 	"inputs.liveTv": "Live TV",
 	"inputs.noneSelected": "Keine Quellen ausgewählt",
@@ -43,6 +44,12 @@
 	"inputs.loadFailed": "fluid konnte die Eingänge nicht lesen.",
 
 	"launch.failed": "{name} konnte nicht geöffnet werden.",
+
+	"menu.favorite": "Zu Favoriten hinzufügen",
+	"menu.unfavorite": "Aus Favoriten entfernen",
+	"menu.hide": "Ausblenden",
+	"menu.cancel": "Abbrechen",
+	"menu.hint": "← → wählen · OK bestätigen · Zurück schließt",
 
 	"settings.title": "Einstellungen",
 	"settings.options": "Optionen",

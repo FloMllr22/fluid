@@ -36,6 +36,7 @@
 	"apps.retryHint": "fluid tries again when you come back to it.",
 	"apps.iconsFailed_one": "{count} app icon could not be loaded",
 	"apps.iconsFailed_other": "{count} app icons could not be loaded",
+	"apps.hidden": "{name} is hidden. Show it again in Settings.",
 
 	"inputs.liveTv": "Live TV",
 	"inputs.noneSelected": "No sources selected",
@@ -43,6 +44,12 @@
 	"inputs.loadFailed": "fluid couldn't read the inputs.",
 
 	"launch.failed": "Couldn't open {name}.",
+
+	"menu.favorite": "Add to favourites",
+	"menu.unfavorite": "Remove from favourites",
+	"menu.hide": "Hide",
+	"menu.cancel": "Cancel",
+	"menu.hint": "← → choose · OK confirms · Back closes",
 
 	"settings.title": "Settings",
 	"settings.options": "Options",

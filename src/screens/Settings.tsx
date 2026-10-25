@@ -17,6 +17,9 @@ export interface SettingsTab {
 	items: TileModel[];
 	/** what's on the home screen, in home-screen order */
 	shown: TileModel[];
+	/** how many items lead `shown` as their own group (favourites); re-ordering keeps each
+	 *  item within its group */
+	pinned?: number;
 	/** says why `items` is empty: still loading, failed, or nothing there */
 	emptyText: string;
 }
@@ -85,7 +88,8 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	/** Move the held tile to `to`, updating the home screen as it goes. */
 	const moveHeld = (to: number) => {
 		if (!tab || !held) return;
-		const dest = clamp(to, 0, count - 1);
+		const pinned = tab.pinned || 0;
+		const dest = held.index < pinned ? clamp(to, 0, pinned - 1) : clamp(to, pinned, count - 1);
 		if (dest === held.index) return;
 		onReorder(tab.id, moveItem(keysOf(tab.shown), held.index, dest));
 		setHeld({...held, index: dest});
