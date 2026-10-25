@@ -2,8 +2,7 @@
 // No real apps, brands or logos: the apps are letter tiles with IDs under the reserved
 // example.com domain.
 
-import type {AppEntry} from './apps';
-import {type InputSource, LIVE_TV} from './inputs';
+import type {AppEntry, InputSource} from '../types';
 
 export const MOCK_APPS: AppEntry[] = [
 	{id: 'com.example.movies', title: 'Movies', color: '#C2410C'},
@@ -19,9 +18,9 @@ export const MOCK_APPS: AppEntry[] = [
 /** The Apps row on a fresh start in the browser. */
 export const MOCK_DEFAULT_APP_IDS: string[] = MOCK_APPS.slice(0, 6).map((app) => app.id);
 
-/** Inputs as EIM reports them; the icon names pick fluid's own glyphs. */
+/** Inputs as the TV reports them; the icon names pick fluid's own glyphs. */
 export const MOCK_INPUTS: InputSource[] = [
-	LIVE_TV,
+	{id: 'LIVE_TV', appId: 'com.webos.app.livetv', label: 'Live TV', port: 0, connected: true, icon: 'tv.png'},
 	{
 		id: 'HDMI_1',
 		appId: 'com.webos.app.hdmi1',

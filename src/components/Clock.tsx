@@ -1,4 +1,5 @@
-import {dateText, dayName, type TimeFormat, timeParts} from '../lib/clock';
+import {dateText, dayName, timeParts} from '../lib/clock';
+import type {TimeFormat} from '../platform';
 
 export function Clock({now, format}: {now: Date; format: TimeFormat}) {
 	const {time, period} = timeParts(now, format);

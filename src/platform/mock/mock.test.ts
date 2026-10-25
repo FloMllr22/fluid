@@ -1,8 +1,12 @@
-import {describe, expect, it} from 'vitest';
-import {APP_CATALOG} from '../config/catalog';
-import {listApps} from './apps';
-import {MOCK_APPS, MOCK_DEFAULT_APP_IDS, MOCK_INPUTS} from './mock';
-import {DEFAULT_CONFIG} from './storage';
+import {afterEach, describe, expect, it, vi} from 'vitest';
+import {APP_CATALOG} from '../../config/catalog';
+import {DEFAULT_CONFIG} from '../../lib/storage';
+import {platform} from '..';
+import {MOCK_APPS, MOCK_DEFAULT_APP_IDS, MOCK_INPUTS} from './data';
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 describe('browser sample data', () => {
 	it('uses only reserved example IDs, no real apps', () => {
@@ -33,8 +37,19 @@ describe('browser sample data', () => {
 });
 
 describe('outside webOS', () => {
-	it('lists the sample apps', async () => {
-		await expect(listApps(false)).resolves.toEqual({apps: MOCK_APPS, source: 'mock'});
+	it('picks the mock platform', () => {
+		expect(platform.kind).toBe('mock');
+	});
+
+	it('lists the sample apps and inputs', async () => {
+		await expect(platform.listApps({useHomebrew: true})).resolves.toEqual({apps: MOCK_APPS, source: 'mock'});
+		await expect(platform.listInputs()).resolves.toEqual(MOCK_INPUTS);
+	});
+
+	it('only logs what it would launch', async () => {
+		const log = vi.spyOn(console, 'info').mockImplementation(() => {});
+		await platform.launch('com.example.movies');
+		expect(log).toHaveBeenCalledWith('[mock] would launch com.example.movies');
 	});
 
 	it('puts sample apps on the home row of a fresh start', () => {

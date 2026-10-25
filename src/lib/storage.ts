@@ -1,10 +1,8 @@
 // The user's choices: which apps and which inputs appear on the home rows, in order,
 // plus options. Persisted in localStorage (private to this app on the TV).
 
-import {DEFAULT_APP_IDS} from '../config/catalog';
 import {STORAGE_KEY} from '../config/constants';
-import {isWebOS} from './luna';
-import {MOCK_DEFAULT_APP_IDS} from './mock';
+import {platform} from '../platform';
 
 export interface UserConfig {
 	/** ordered app IDs for the Apps row */
@@ -16,8 +14,7 @@ export interface UserConfig {
 }
 
 export const DEFAULT_CONFIG: UserConfig = {
-	// In a desktop browser the neutral sample apps stand in for the TV's apps.
-	appIds: (isWebOS() ? DEFAULT_APP_IDS : MOCK_DEFAULT_APP_IDS).slice(),
+	appIds: platform.defaultAppIds.slice(),
 	sourceIds: null,
 	useHomebrew: false
 };

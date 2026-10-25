@@ -2,20 +2,12 @@
 // (HDMI etc.) from the External Input Manager, which is callable from a web app. EIM
 // returns the labels set in the TV's input settings and the name of the icon LG's UI
 // uses for each port. fluid draws its own glyph for that name (see inputGlyph in
-// tiles.ts); LG's images are not shipped.
+// lib/tiles.ts); LG's images are not shipped.
 
-import {LUNA, SYSTEM_APP} from '../config/constants';
-import {appExists} from './launch';
+import type {InputSource} from '../types';
+import {LUNA, SYSTEM_APP} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
-
-export interface InputSource {
-	id: string; // e.g. HDMI_1
-	appId: string; // e.g. com.webos.app.hdmi1 — launch this to switch
-	label: string; // user-visible name from the TV's input settings
-	port: number;
-	connected: boolean;
-	icon: string; // icon name EIM reports, e.g. gameconsole.png; empty when there is none
-}
+import {appExists} from './system';
 
 interface EimDevice {
 	id: string;
@@ -32,7 +24,7 @@ interface EimResponse extends LunaResponse {
 
 /** Live TV isn't an EIM device, but launching its app switches to the tuner, so it
  *  behaves like any other source. Port 0 sorts it ahead of HDMI 1. */
-export const LIVE_TV: InputSource = {
+const LIVE_TV: InputSource = {
 	id: 'LIVE_TV',
 	appId: SYSTEM_APP.liveTv,
 	label: 'Live TV',

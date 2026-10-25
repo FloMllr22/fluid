@@ -2,8 +2,7 @@
 
 import type {GlyphName} from '../components/Glyph';
 import type {TileModel} from '../components/Tile';
-import type {AppEntry} from './apps';
-import type {InputSource} from './inputs';
+import type {AppEntry, InputSource} from '../platform';
 
 /** EIM's icon names (LG's images, which fluid does not ship) → fluid's own glyphs.
  *  Anything not listed, such as HDMI_1 … HDMI_4, AV, USB, gets the generic input glyph. */

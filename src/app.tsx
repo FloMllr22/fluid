@@ -3,14 +3,9 @@ import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
-import {type AppEntry, listApps} from './lib/apps';
-import {type InputSource, listInputs} from './lib/inputs';
-import {launchApp, launchLgHome} from './lib/launch';
-import {isWebOS} from './lib/luna';
-import {MOCK_INPUTS} from './lib/mock';
-import {hidePointerOnForeground} from './lib/pointer';
 import {loadConfig, saveConfig, toggleId, type UserConfig} from './lib/storage';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
+import {type AppEntry, type InputSource, platform} from './platform';
 import {Home, type HomeRow} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
 
@@ -41,12 +36,16 @@ export function App() {
 
 	// Start in remote (5-way) mode: hide the Magic Remote pointer whenever we come to the
 	// front. Shaking the remote still brings it back.
-	useEffect(() => hidePointerOnForeground(), []);
+	useEffect(() => {
+		platform.hidePointer();
+		return platform.onForeground(() => platform.hidePointer());
+	}, []);
 
 	// Load apps at start and whenever the Homebrew option changes; refresh inputs whenever
 	// the app comes back to the foreground (labels or connections may have changed).
 	useEffect(() => {
-		listApps(config.useHomebrew)
+		platform
+			.listApps({useHomebrew: config.useHomebrew})
 			.then(({apps: list, source}) => {
 				setApps(list);
 				if (config.useHomebrew && source !== 'homebrew')
@@ -57,20 +56,13 @@ export function App() {
 
 	useEffect(() => {
 		const refresh = () => {
-			if (!isWebOS()) {
-				setInputs(MOCK_INPUTS);
-				return;
-			}
-			listInputs()
+			platform
+				.listInputs()
 				.then(setInputs)
 				.catch(() => showToast('Could not read the inputs', 'error'));
 		};
 		refresh();
-		const onVisibility = () => {
-			if (!document.hidden) refresh();
-		};
-		document.addEventListener('visibilitychange', onVisibility);
-		return () => document.removeEventListener('visibilitychange', onVisibility);
+		return platform.onForeground(refresh);
 	}, [showToast]);
 
 	const updateConfig = (next: UserConfig) => {
@@ -128,14 +120,15 @@ export function App() {
 
 	// ----- actions -----
 	const open = (id: string, label: string) => {
-		launchApp(id).catch(() => showToast(`Couldn't open ${label}`, 'error'));
+		platform.launch(id).catch(() => showToast(`Couldn't open ${label}`, 'error'));
 	};
 
 	const onActivate = useCallback(
 		(rowId: string, item: TileModel) => {
 			if (rowId === ROW.misc) {
 				if (item.key === MISC.settings) setScreen('settings');
-				else if (item.key === MISC.lgHome) launchLgHome().catch(() => showToast("Couldn't open LG Home", 'error'));
+				else if (item.key === MISC.lgHome)
+					platform.launchLgHome().catch(() => showToast("Couldn't open LG Home", 'error'));
 				return;
 			}
 			open(item.key, item.label);

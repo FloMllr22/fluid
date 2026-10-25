@@ -1,6 +1,6 @@
 // Time-of-day text. Pure functions so they are trivially testable.
 
-export type TimeFormat = '12h' | '24h';
+import type {TimeFormat} from '../platform';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = [

@@ -1,4 +1,4 @@
-// Magic Remote pointer control.
+// Magic Remote pointer and app lifecycle.
 //
 // The pointer is drawn by the TV's compositor, not the page, so CSS `cursor: none` has
 // no effect. webOS gives web apps `webOSSystem.setCursorHidden()` for this: it hides the
@@ -17,25 +17,24 @@ declare global {
 	}
 }
 
-/** Hide the pointer now. No-op off webOS or on firmware without the API. */
+/** Hide the pointer now. No-op on firmware without the API. */
 export function hidePointer(): void {
 	const sys = window.webOSSystem || window.PalmSystem;
 	if (!sys || typeof sys.setCursorHidden !== 'function') return;
 	try {
 		sys.setCursorHidden(true);
 	} catch {
-		/* best effort */
+		/* cosmetic: the pointer just stays visible until the user presses an arrow key */
 	}
 }
 
-/** Hide the pointer on launch and every time the app comes back to the foreground
- *  (including relaunches while already running, e.g. from a remapped HOME button).
- *  Returns an unsubscribe function. */
-export function hidePointerOnForeground(): () => void {
+/** Calls back whenever fluid comes to the foreground: the page becomes visible again, or
+ *  webOS relaunches the running app (e.g. from a remapped HOME button). Returns a
+ *  function that stops it. */
+export function onForeground(callback: () => void): () => void {
 	const onVisible = () => {
-		if (!document.hidden) hidePointer();
+		if (!document.hidden) callback();
 	};
-	hidePointer();
 	document.addEventListener('visibilitychange', onVisible);
 	document.addEventListener('webOSRelaunch', onVisible);
 	return () => {

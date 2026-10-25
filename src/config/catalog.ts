@@ -5,7 +5,7 @@
 // is filtered with applicationManager/getAppLoadStatus, which *is* permitted, so only
 // apps that actually exist on the TV are offered. They are drawn as letter tiles: fluid
 // ships no third-party logos. The real icons come from the TV itself through the
-// Homebrew Channel option (see lib/apps.ts).
+// Homebrew Channel option (see platform/webos/apps.ts).
 //
 // The list is deliberately broad and international: an entry for an app a TV
 // doesn't have costs nothing. To add apps, change the defaults, or both, without
