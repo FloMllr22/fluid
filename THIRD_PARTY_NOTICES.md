@@ -13,6 +13,22 @@ is **not** covered by that licence.
 
 Both licence texts are included in the installed app under `licenses/`.
 
+## Build and test tools (not shipped)
+
+These development dependencies build, check and package fluid. Apart from small helper
+functions that esbuild generates while transpiling for older engines (MIT), none of their
+code ends up in the installed app.
+
+| Tool | Licence | Used for |
+|---|---|---|
+| [Vite](https://vite.dev) with [@preact/preset-vite](https://github.com/preactjs/preset-vite) | MIT | building the app |
+| [esbuild](https://esbuild.github.io) (through Vite) | MIT | transpiling for Chromium 53 |
+| [TypeScript](https://www.typescriptlang.org) | Apache-2.0 | type checking |
+| [Biome](https://biomejs.dev) | MIT or Apache-2.0 | linting and formatting |
+| [Vitest](https://vitest.dev) | MIT | unit tests |
+| [acorn](https://github.com/acornjs/acorn) | MIT | checking the bundle (`scripts/check-bundle.mjs`) |
+| [webOS CLI](https://github.com/webos-tools/cli) (`@webos-tools/cli`, ares-package) | Apache-2.0 | packaging the `.ipk` |
+
 ## App and input icons
 
 fluid ships no third-party app logos or LG artwork. The input glyphs are drawn for this
