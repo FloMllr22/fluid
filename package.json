@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc --noEmit && vite build",
+		"build": "tsc --noEmit && vite build && node scripts/check-bundle.mjs",
 		"lint": "biome check .",
 		"format": "biome check --write .",
 		"typecheck": "tsc --noEmit",
@@ -22,6 +22,7 @@
 		"@biomejs/biome": "2.6.3",
 		"@preact/preset-vite": "^2.10.6",
 		"@webos-tools/cli": "^3.2.6",
+		"acorn": "^8.19.0",
 		"typescript": "^7.0.2",
 		"vite": "^5.4.21",
 		"vitest": "^3.2.7"

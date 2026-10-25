@@ -35,6 +35,20 @@
 				"noStaticElementInteractions": "off",
 				"useKeyWithClickEvents": "off",
 				"useFocusableInteractive": "off"
+			},
+			"style": {
+				// Browser APIs Chromium 53 (webOS 4) lacks. TypeScript can't catch these because
+				// the DOM types always describe the newest browsers. Newer ECMAScript APIs
+				// (Object.fromEntries, Array.prototype.flat …) are caught by `lib` in tsconfig.json.
+				"noRestrictedGlobals": {
+					"level": "error",
+					"options": {
+						"deniedGlobals": {
+							"ResizeObserver": "Not in Chromium 53 (webOS 4). Measure on demand or add a fallback.",
+							"structuredClone": "Not in Chromium 53 (webOS 4). Copy explicitly instead."
+						}
+					}
+				}
 			}
 		}
 	},
