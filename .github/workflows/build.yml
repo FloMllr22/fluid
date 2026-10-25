@@ -10,31 +10,34 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Windows as well as Linux: development happens on both, and the Node scripts and
+    # the line-ending rules have to work on each.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - run: npm ci
 
-      # Type-check + Vite build (chrome79 target, classic script)
-      - run: npm run build
+      # Lint + typecheck + unit tests
+      - run: npm run check
 
-      # Guard: webOS 6 (Chrome 79) cannot parse optional chaining / nullish coalescing
-      - name: Check bundle has no ES2020+ syntax
-        run: |
-          if grep -qE '\?\.[A-Za-z_$(\[]|\?\?' dist/assets/app.js; then
-            echo "dist/assets/app.js contains syntax Chrome 79 cannot parse" >&2
-            exit 1
-          fi
+      # Typecheck, Vite build for chrome53, then scripts/check-bundle.mjs fails the build
+      # if Chromium 53 (webOS 4) could not run it
+      - run: npm run build
 
       - run: npm run package
 
-      - uses: actions/upload-artifact@v7
+      - if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
         with:
           name: ipk
           path: build/*.ipk

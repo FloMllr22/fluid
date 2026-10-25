@@ -1,7 +1,8 @@
 name: Release
 
 # Push a tag matching the version in public/appinfo.json, e.g.:
-#   git tag v1.0.0 && git push origin v1.0.0
+#   git tag v0.1.0
+#   git push origin v0.1.0
 on:
   push:
     tags: ["v*"]
@@ -17,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Check tag matches appinfo.json version
@@ -29,14 +30,10 @@ jobs:
           fi
 
       - run: npm ci
-      - run: npm run build
+      - run: npm run check
 
-      - name: Check bundle has no ES2020+ syntax
-        run: |
-          if grep -qE '\?\.[A-Za-z_$(\[]|\?\?' dist/assets/app.js; then
-            echo "dist/assets/app.js contains syntax Chrome 79 cannot parse" >&2
-            exit 1
-          fi
+      # Includes scripts/check-bundle.mjs (Chromium 53 / webOS 4)
+      - run: npm run build
 
       - run: npm run package
 
