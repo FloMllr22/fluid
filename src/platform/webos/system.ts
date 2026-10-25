@@ -30,8 +30,7 @@ export function appExists(appId: string): Promise<boolean> {
 /** The TV's UI language (Settings → General → Language). The system object has it on
  *  every firmware; navigator.language agrees on webOS 6.5 and is the fallback. */
 export function getLocale(): string {
-	const sys = systemObject();
-	return (sys && sys.locale) || navigator.language || 'en';
+	return systemObject()?.locale || navigator.language || 'en';
 }
 
 /** The TV's 12/24-hour setting (Settings → General → Time). webOSSystem.timeFormat is
