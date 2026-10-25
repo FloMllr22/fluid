@@ -12,17 +12,17 @@ interface Props {
 	onActivate: (index: number) => void;
 }
 
-const VIEWPORT_WIDTH = LAYOUT.screenWidth - 2 * LAYOUT.edgePadding;
+/** Width the tiles are laid out in: the screen inside the safe area. Tiles scrolled
+ *  beyond it stay visible out to the screen edges (see .row__viewport). */
+const SAFE_WIDTH = LAYOUT.screenWidth - 2 * LAYOUT.edgePadding;
 const STEP = LAYOUT.tileSize + LAYOUT.tileGap;
 
 /** Horizontal strip of tiles. Centred when it fits; otherwise a carousel that keeps
  *  the selected tile in the middle (clamped at the ends). */
 export function Row({label, items, focused, selected, emptyText, onSelect, onActivate}: Props) {
 	const total = items.length * STEP - LAYOUT.tileGap;
-	const fits = total <= VIEWPORT_WIDTH;
-	const offset = fits
-		? 0
-		: clamp(selected * STEP + LAYOUT.tileSize / 2 - VIEWPORT_WIDTH / 2, 0, total - VIEWPORT_WIDTH);
+	const fits = total <= SAFE_WIDTH;
+	const offset = fits ? 0 : clamp(selected * STEP + LAYOUT.tileSize / 2 - SAFE_WIDTH / 2, 0, total - SAFE_WIDTH);
 
 	return (
 		<section class={`row${focused ? ' row--focused' : ''}`}>

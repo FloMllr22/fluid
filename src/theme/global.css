@@ -121,12 +121,14 @@ body {
 	color: var(--color-text-secondary);
 }
 
-/* The viewport clips; the track slides. Extra vertical padding leaves room for the
-   focus scale so tiles are never clipped while enlarged. */
+/* The viewport clips; the track slides. Sideways it reaches out to the screen edges, so a
+   long row runs off the screen instead of being cut at the safe area, and the focused
+   tile has room to grow at either end; its padding keeps the resting tiles inside the
+   safe area. Extra vertical padding leaves room for the focus scale. */
 .row__viewport {
 	overflow: hidden;
-	padding: 16px 0;
-	margin: -16px 0;
+	padding: 16px var(--layout-edge-padding);
+	margin: -16px calc(-1 * var(--layout-edge-padding));
 	opacity: var(--motion-unfocused-row-opacity);
 	transition: opacity var(--motion-focus-ms) ease-out;
 }
