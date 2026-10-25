@@ -17,7 +17,7 @@ interface Props {
 
 const VIEWPORT_HEIGHT = 720; // matches .grid__viewport height in global.css
 const LABEL_HEIGHT = 60; // two-line tile label + its top margin (see .tile__label)
-const GRID_ROW_GAP = 40; // matches .grid__track grid-row-gap
+const GRID_ROW_GAP = LAYOUT.gridRowGap;
 const ROW_STEP = LAYOUT.tileSize + LABEL_HEIGHT + GRID_ROW_GAP;
 
 /** Full grid of tiles; scrolls vertically to keep the focused row in view. */

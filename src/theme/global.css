@@ -1,5 +1,5 @@
 /* Global styles. Values come from tokens.ts via CSS custom properties (see applyTokens).
-   Written for Chrome 79: no flex `gap`, no `inset`, no `aspect-ratio`. */
+   Written for Chromium 53 (webOS 4): no CSS Grid, no flex `gap`, no `inset`, no `aspect-ratio`. */
 
 @font-face {
 	font-family: "Inter Variable";
@@ -349,17 +349,21 @@ body {
 	height: 720px;
 	padding: 16px 0;
 }
+/* A wrapping flex row instead of CSS Grid (Chromium 57+). The track holds exactly
+   `grid-columns` tiles, each followed by one gap, so it wraps after the last column;
+   shifting it right by half a gap centres the visible tiles. */
 .grid__track {
-	display: grid;
-	grid-template-columns: repeat(var(--layout-grid-columns), var(--layout-tile-size));
-	grid-column-gap: var(--layout-tile-gap);
-	grid-row-gap: 40px;
-	justify-content: center;
+	position: relative;
+	left: calc(var(--layout-tile-gap) / 2);
+	display: flex;
+	flex-wrap: wrap;
+	width: calc(var(--layout-grid-columns) * (var(--layout-tile-size) + var(--layout-tile-gap)));
+	margin: 0 auto;
 	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
 	will-change: transform;
 }
 .grid__track .tile {
-	margin-right: 0;
+	margin: 0 var(--layout-tile-gap) var(--layout-grid-row-gap) 0;
 }
 .tile--dimmed .tile__box {
 	opacity: 0.45;

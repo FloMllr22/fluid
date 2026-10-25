@@ -54,7 +54,8 @@ export const LAYOUT = {
 	tileRadius: 24,
 	rowLabelGap: 14, // gap between a row's subheader and its tiles
 	rowGap: 28, // vertical space between rows
-	gridColumns: 9 // settings picker grid
+	gridColumns: 9, // settings picker grid
+	gridRowGap: 40 // vertical space between rows of the settings picker grid
 } as const;
 
 export const MOTION = {
