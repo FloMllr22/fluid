@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {iconsScript, isSafePath, shellQuote} from './shell';
+import {iconsScript, isSafePath, shellQuote, sizesScript} from './shell';
 
 describe('shellQuote', () => {
 	it('wraps a plain value in single quotes', () => {
@@ -36,6 +36,20 @@ describe('isSafePath', () => {
 		]) {
 			expect(isSafePath(path)).toBe(false);
 		}
+	});
+});
+
+describe('sizesScript', () => {
+	it('measures the validated paths, and succeeds when some are missing', () => {
+		expect(sizesScript(['/a/one.png', '/b/two.png'])).toBe("wc -c '/a/one.png' '/b/two.png' 2>/dev/null || true");
+	});
+
+	it('refuses to build a command with an unsafe path', () => {
+		expect(() => sizesScript(['/ok.png', '/bad;reboot'])).toThrow(/unsafe path/);
+	});
+
+	it('refuses an empty list, which would leave wc waiting for input', () => {
+		expect(() => sizesScript([])).toThrow(/No files/);
 	});
 });
 

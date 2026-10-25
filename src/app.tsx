@@ -80,7 +80,10 @@ export function App() {
 		const load = () => {
 			failed = false;
 			platform.listApps().then(
-				(list) => setAppsState({status: 'ready', apps: list.apps}),
+				(list) => {
+					setAppsState({status: 'ready', apps: list.apps});
+					if (list.failedIcons > 0) showToast('Some app icons could not be loaded', 'error');
+				},
 				(error: unknown) => {
 					failed = true;
 					setAppsState({status: 'failed', error});
@@ -91,7 +94,7 @@ export function App() {
 		return platform.onForeground(() => {
 			if (failed) load();
 		});
-	}, []);
+	}, [showToast]);
 
 	// Refresh inputs whenever fluid comes back to the foreground (labels or connections may
 	// have changed).
