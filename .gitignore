@@ -1,9 +1,39 @@
+# dependencies and build output
 node_modules/
 dist/
 build/
+coverage/
 *.ipk
-.DS_Store
+
+# device data and credentials: never in the repository (tv.env.example is the template)
+tv.env
+tv.env.*
+!tv.env.example
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
 
 # local, per-person settings
-tv.env
 src/config/catalog.local.ts
+
+# local only: AI assistant files, and notes (plan, decisions, design mockups); the
+# repository holds code plus README.md and THIRD_PARTY_NOTICES.md
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+docs/
+*.md
+!README.md
+!THIRD_PARTY_NOTICES.md
+
+# editors, operating systems, logs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+npm-debug.log*
