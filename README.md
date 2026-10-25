@@ -1,18 +1,29 @@
-# webOS Launcher
+# fluid – a home screen for LG webOS TVs
 
-A minimalist home screen for LG webOS TVs: a greeting and clock, a row of your apps, a
-row of your inputs, and a way back to LG's own home. Built for **webOS 6 (Chrome 79)**,
-where sideloaded web apps are more restricted than on newer firmware.
+fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: a greeting and
+clock, a row of your apps, a row of your inputs, and a way back to LG's own home.
 
-- **Apps**: your choice of apps, in your order
+> **Status: early development.** fluid runs on the maintainer's TV, but it is a
+> foundation, not a finished product. Expect changes, and no releases yet.
+
+## What it does
+
+- **Apps**: the apps you pick, in your order
 - **Sources**: Live TV and the HDMI inputs, with the names set in the TV's input settings
 - **More**: LG's own home screen, and Settings
-- Black background with a soft grey gradient, lots of space, remote-first navigation
 - Follows the TV's 12/24-hour clock setting
-- No root, no background service, no startup scripts: a plain app in its own sandbox
+- Works with the remote's arrow keys and with the Magic Remote pointer
+- No network access, no telemetry: your settings stay in the app's storage on the TV
 
-> **Status: no maintainer.** This project is published as-is. Issues and pull requests
-> may not get a response. Fork it freely.
+## Requirements
+
+- An LG TV with **webOS 4.0 or later** (models from 2018 on)
+- **Root** and the [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel),
+  with its SSH server enabled for installing from a computer
+
+So far fluid is tested on one TV, running webOS 6.5. The build targets the browser engine
+of webOS 4 (Chromium 53), but nothing has been tried on webOS 4 or 5 yet. Compatibility
+reports (TV model, webOS version, firmware version) are welcome.
 
 ## Using it
 
@@ -21,143 +32,158 @@ where sideloaded web apps are more restricted than on newer firmware.
 | Home | ↑ ↓ | Move between rows |
 | Home | ← → | Move along a row |
 | Home | OK | Open the app or input |
-| Settings | OK | Add or remove an app/source |
-| Settings | Hold OK (or **Re-order** button) | Enter/leave re-order mode |
+| Settings | OK | Add or remove an app or source |
+| Settings | Hold OK (or the **Re-order** button) | Enter or leave re-order mode |
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
-| Re-order mode | Back | Cancel the move / leave re-order mode |
+| Re-order mode | Back | Cancel the move or leave re-order mode |
 | Settings | Back | Return home |
 
-The Magic Remote pointer is hidden when the launcher opens; shake the remote to bring it
-back. Clicking works everywhere.
+The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
+Pointing selects, clicking opens.
 
-The launcher doesn't take over the HOME button. On a rooted TV you can map a button to it
-with [LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID
-`works.partridge.webos-launcher`).
+**Which apps can be picked.** By default fluid offers a built-in list of well-known apps,
+shown as letter tiles, limited to the ones installed on the TV. Turn on *Settings →
+Options → Live app list via Homebrew Channel* to list every installed app with its real
+icon, read from the TV itself.
 
-## Install
+fluid does not take over the HOME button yet. You can map a remote button to it with
+[LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID
+`io.github.flomllr22.fluid`).
 
-**From the Homebrew Channel** (rooted TVs): search for *Launcher*.
+## Install from source
 
-**From a release**: download the `.ipk` from
-[Releases](../../releases) and install it with the Homebrew Channel, the
-[webOS CLI](https://webostv.developer.lge.com/develop/tools/cli-installation)
-(`ares-install`), or [webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop).
-It also works in LG's Developer Mode, without root.
+There are no releases yet, so fluid is built and installed from a computer (Windows,
+Linux or macOS) with [Node.js](https://nodejs.org) 24.
 
-## Build
+### 1. Set up key login to the TV (once)
 
-Needs Node 18+.
+Create a key and copy its public half to the TV. The first `ssh` asks for the TV's root
+password; after that the key is used.
+
+Windows (PowerShell):
+
+```powershell
+ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\fluid_tv" -C "fluid-deploy"
+Get-Content "$env:USERPROFILE\.ssh\fluid_tv.pub" | ssh root@<tv-ip> "mkdir -p ~/.ssh; chmod 700 ~/.ssh; tr -d '\r' >> ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys"
+```
+
+Linux and macOS:
+
+```sh
+ssh-keygen -t ed25519 -f ~/.ssh/fluid_tv -C "fluid-deploy"
+ssh-copy-id -i ~/.ssh/fluid_tv.pub root@<tv-ip>
+```
+
+Check that it works without a password: `ssh -i ~/.ssh/fluid_tv root@<tv-ip> "echo ok"`
+(in PowerShell, use `"$env:USERPROFILE\.ssh\fluid_tv"` for the key path).
+
+### 2. Tell fluid where the TV is
+
+Copy `tv.env.example` to `tv.env` (`Copy-Item tv.env.example tv.env` in PowerShell,
+`cp tv.env.example tv.env` elsewhere) and fill in the TV's address. `tv.env` is
+git-ignored, so the address and key path never end up in the repository.
+
+| Setting | Meaning | Default |
+|---|---|---|
+| `TV_HOST` | IP address or host name of the TV | required |
+| `TV_PORT` | Port of the Homebrew Channel's SSH server | `22` |
+| `TV_USER` | User on the TV | `root` |
+| `TV_KEY` | Private key from step 1; `~` is your home folder | ssh's default keys |
+
+### 3. Build and install
 
 ```sh
 npm install
-npm run build      # type-check, then build dist/ (chrome79, classic script)
-npm run package    # dist/ → build/works.partridge.webos-launcher_<version>_all.ipk
+npm run deploy
 ```
 
-To install on a rooted TV over SSH, copy `tv.env.example` to `tv.env` (git-ignored) and
-set `TV_HOST` to an ssh alias or `root@<tv-ip>`, then:
+`npm run deploy` type-checks and builds fluid, packages it as an `.ipk`, copies it to the TV
+over SSH, installs it with webOS's developer install service (the same one the Homebrew
+Channel uses) and launches it. It only uses key login, so a wrong key or address fails
+with a message instead of waiting at a password prompt. Running it again updates fluid;
+the settings on the TV are kept.
+
+### Uninstall
+
+Log in to the TV with `ssh root@<tv-ip>` and run:
 
 ```sh
-npm run install:tv   # copy the ipk over SSH, install it, launch it
-npm run deploy       # build + package + install:tv
+luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.flomllr22.fluid"}'
 ```
 
-`npm run dev` serves the UI in a desktop browser with sample inputs and the whole
-catalogue, for layout work without a TV.
+## Development
 
-## Which apps appear
+| Command | Does |
+|---|---|
+| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs |
+| `npm run check` | Lint (Biome), type check (TypeScript) and unit tests (Vitest) |
+| `npm run format` | Formats the code and applies safe lint fixes |
+| `npm run build` | Type-checks, builds `dist/` and checks the bundle's syntax and CSS for webOS 4 |
+| `npm run package` | Packages `dist/` into `build/io.github.flomllr22.fluid_<version>_all.ipk` |
+| `npm run install:tv` | Installs the existing package on the TV without rebuilding |
+| `npm run deploy` | `build`, `package` and `install:tv` in one go |
 
-webOS 6 doesn't let a sideloaded web app list the installed apps or read their icons.
-So the launcher ships a catalogue ([src/config/catalog.ts](src/config/catalog.ts)) with
-icon copies in [public/icons/apps/](public/icons/apps/), and shows only the entries the TV
-reports as installed (`applicationManager/getAppLoadStatus`, which is allowed). Apps
-without a bundled icon get a plain monogram tile.
+All scripts are plain Node, so they work the same in PowerShell, cmd and Unix shells.
+CI runs `check`, `build` and `package` on Linux and Windows for pushes to `main` and for
+pull requests.
 
-To add your own apps or change the default row **without editing tracked files**, copy
-[src/config/catalog.local.example.ts](src/config/catalog.local.example.ts) to
-`src/config/catalog.local.ts` (git-ignored) and rebuild.
+### Notes on the platform
 
-### Option: live app list via the Homebrew Channel (off by default)
+- **Oldest engine: Chromium 53 (webOS 4).** Everything is compiled down to it, and
+  `scripts/check-bundle.mjs` fails the build if the bundle is not valid ES2016 or its CSS
+  uses features Chromium 53 lacks (CSS Grid, flexbox `gap`, `inset`, `aspect-ratio` …).
+  The type check only knows the ES2016 standard library, so newer built-ins such as
+  `Object.entries` or `Array.prototype.flat` are reported as errors.
+- **One classic script.** webOS refuses `<script type="module">` from `file://`, so Vite
+  builds a single IIFE and the HTML loads it with `defer`.
+- **Luna calls** without root: `applicationManager/launch` and `getAppLoadStatus`,
+  `eim/getAllInputStatus`, `systemservice/getPreferences` (clock format).
+- **Live app list** (opt-in): asks the Homebrew Channel's service, which runs commands as
+  root, for `listLaunchPoints` and for each icon as base64. fluid only sends fixed
+  commands; icon paths are validated and shell-quoted, and app IDs never reach the shell.
+- **Pointer.** The system draws the pointer, so CSS cannot hide it; fluid calls
+  `webOSSystem.setCursorHidden(true)` whenever it comes to the foreground.
+- **Debugging.** A rooted TV exposes the web inspector on port 9998.
 
-*Settings → Options → Live app list via Homebrew Channel.*
-
-On a rooted TV with the [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel),
-turning this on reads the full list of installed apps and their real icons, instead of
-the catalogue. It works by asking the Homebrew Channel's service to run
-`luna-send ... listLaunchPoints` and to base64-encode each icon file. **Those commands run
-as root.** The launcher only sends fixed commands; icon paths are validated and
-shell-quoted before use, and app IDs never reach the shell. If the Homebrew Channel isn't
-there, the launcher says so and uses the catalogue. Icons are cached in the app's local
-storage.
-
-## Compatibility and testing
-
-Tested on **one TV only**: an LG OLED C1 (2021) running **webOS 6.5**, rooted, with the
-Homebrew Channel 0.7.3. Everything else is untested:
-
-- Newer webOS (22 and later) should run it, since the build targets an older engine, but
-  the Luna calls it relies on haven't been confirmed there.
-- Older webOS (5 and earlier) is unknown; the External Input Manager call
-  (`com.webos.service.eim/getAllInputStatus`) may differ.
-- Only the UK app IDs in the catalogue were checked on a real TV. The others come from
-  public sources and are simply skipped if wrong.
-
-Reports of what works on other models are welcome as issues, though see *no maintainer*
-above.
-
-### Notes for developers
-
-- **Chrome 79.** `<script type="module">` won't load from `file://` on webOS 6 (no MIME
-  type), and `?.`/`??` are syntax errors. [vite.config.ts](vite.config.ts) builds one IIFE
-  for `chrome79` and rewrites the script tag; CI fails the build if ES2020 syntax slips
-  in. The CSS avoids flex `gap`, `inset` and `aspect-ratio`.
-- **Luna calls used** (all in the "public" LS2 group a web app gets):
-  `applicationManager/launch`, `applicationManager/getAppLoadStatus`,
-  `eim/getAllInputStatus`, `systemservice/getPreferences` (`timeFormat`). Denied to web
-  apps on webOS 6: `listLaunchPoints`, `listApps`, `getAppInfo`, `getForegroundAppInfo`.
-- **Pointer.** The pointer is drawn by the system, so CSS `cursor: none` does nothing;
-  the app calls `webOSSystem.setCursorHidden(true)` when it comes to the foreground.
-- **Remote debugging.** A dev-mode or rooted TV exposes the web inspector on port 9998.
-
-## Project layout
+### Project layout
 
 ```
 src/
-  config/      constants (IDs, key codes, Luna URIs) and the app catalogue
+  config/      constants (IDs, key codes, Luna URIs) and the built-in app list
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
-  lib/         Luna bridge, launching, inputs, app providers, storage, clock, pointer
+  lib/         Luna bridge, launching, inputs, app list, storage, clock, pointer, sample data
   hooks/       remote keys, OK press/hold, clock tick, time format
   components/  Header, Clock, Row, Grid, Tile, OptionList, Glyph, Toast
   screens/     Home, Settings
   app.tsx      state, data loading and wiring
-scripts/       package.sh, install.sh, gen-manifest.mjs
-public/        appinfo.json, app icon, bundled icons, licence texts
-.github/       build on push; release (ipk + Homebrew manifest) on tag
+scripts/       package, deploy, bundle check, Homebrew manifest
+public/        appinfo.json, app icon, licence texts
+.github/       CI on push and pull request; release on tag
 ```
 
-## Releasing
+### Releasing
 
-Bump `version` in `public/appinfo.json` (and `package.json`), commit, then push a
-matching tag:
+Set the same `version` in `public/appinfo.json` and `package.json` (a unit test checks
+that they match), commit, then tag and push the tag:
 
 ```sh
-git tag v1.0.1 && git push origin v1.0.1
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-The release workflow builds the ipk, generates the Homebrew Channel manifest
-(`works.partridge.webos-launcher.manifest.json`, with the ipk's SHA-256) and attaches both
-to a GitHub release. The Homebrew repository reads the manifest from the latest release.
+The release workflow builds the `.ipk`, writes a Homebrew Channel manifest with the
+package's SHA-256 and attaches both to a GitHub release.
 
 ## Licence and credits
 
-Code: [MIT](LICENSE). Bundled Preact (MIT) and the Inter typeface (SIL OFL 1.1): see
+[MIT](LICENSE). fluid started as a fork of
+[partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), whose
+copyright notice is kept in the licence. Bundled Preact (MIT) and the Inter typeface
+(SIL OFL 1.1), and the tools used to build fluid, are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-**Third-party icons.** The app and input icons in `public/icons/` belong to their owners
-and are not covered by the MIT licence. They're included in good faith, only to show
-recognisable tiles for apps already on the user's TV. Rights holders can ask for removal
-by opening an issue; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This project is
-not affiliated with LG Electronics or any app publisher.
+fluid ships no third-party logos. This project is not affiliated with LG Electronics or
+any app publisher; "LG" and "webOS" are trademarks of LG Electronics.
 
-Written with AI assistance (Claude Code), directed, tested and reviewed by a human on a
-real TV.
+Developed with AI assistance (Claude Code), directed and tested on a real TV by the
+maintainer.
