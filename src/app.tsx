@@ -4,11 +4,12 @@ import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
 import {errorMessage, t, tn} from './i18n';
-import {loadConfig, saveConfig, toggleId, type UserConfig} from './lib/storage';
+import {toggleId} from './lib/order';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
 import {Home, type HomeRow} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
+import {loadSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 
 type Screen = 'home' | 'settings';
 
@@ -41,7 +42,8 @@ function failure(what: string, error: unknown): string {
 
 export function App() {
 	const [screen, setScreen] = useState<Screen>('home');
-	const [config, setConfig] = useState<UserConfig>(loadConfig);
+	const [loaded] = useState(loadSettings);
+	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
 	const [inputs, setInputs] = useState<InputSource[]>([]);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -52,6 +54,22 @@ export function App() {
 		setToast({text, kind});
 		toastTimer.current = window.setTimeout(() => setToast(null), TIMING.toastMs);
 	}, []);
+
+	/** Keeps and stores new settings; says so when the TV's storage refuses them. */
+	const updateSettings = useCallback(
+		(next: UserSettings) => {
+			setSettings(next);
+			if (!saveSettings(next)) showToast(t('settings.saveFailed'), 'error');
+		},
+		[showToast]
+	);
+
+	// Settings from an older fluid are stored in the current form at once; settings that
+	// could not be read are reported (fluid then starts with the defaults).
+	useEffect(() => {
+		if (loaded.unreadable) showToast(t('settings.loadFailed'), 'error');
+		else if (loaded.migrated) updateSettings(loaded.settings);
+	}, [loaded, showToast, updateSettings]);
 
 	// Start in remote (5-way) mode: hide the Magic Remote pointer whenever we come to the
 	// front. Shaking the remote still brings it back.
@@ -97,21 +115,16 @@ export function App() {
 		return platform.onForeground(refresh);
 	}, [showToast]);
 
-	const updateConfig = (next: UserConfig) => {
-		setConfig(next);
-		saveConfig(next);
-	};
-
 	// ----- derived rows -----
 	const apps = useMemo(() => (appsState.status === 'ready' ? appsState.apps : []), [appsState]);
 	const appsText = appsProblem(appsState);
 	const shownApps = useMemo(
-		() => (config.appIds ? pickInOrder(apps, config.appIds, (a) => a.id) : apps),
-		[apps, config.appIds]
+		() => (settings.appIds ? pickInOrder(apps, settings.appIds, (a) => a.id) : apps),
+		[apps, settings.appIds]
 	);
 	const shownInputs = useMemo(
-		() => (config.sourceIds ? pickInOrder(inputs, config.sourceIds, (s) => s.appId) : inputs),
-		[inputs, config.sourceIds]
+		() => (settings.sourceIds ? pickInOrder(inputs, settings.sourceIds, (s) => s.appId) : inputs),
+		[inputs, settings.sourceIds]
 	);
 
 	const rows: HomeRow[] = useMemo(
@@ -189,14 +202,14 @@ export function App() {
 	const onToggle = useCallback(
 		(tabId: string, key: string) => {
 			if (tabId === ROW.apps) {
-				const current = config.appIds || apps.map((a) => a.id);
-				updateConfig({...config, appIds: toggleId(current, key)});
+				const current = settings.appIds || apps.map((a) => a.id);
+				updateSettings({...settings, appIds: toggleId(current, key)});
 			} else {
-				const current = config.sourceIds || inputs.map((s) => s.appId);
-				updateConfig({...config, sourceIds: toggleId(current, key)});
+				const current = settings.sourceIds || inputs.map((s) => s.appId);
+				updateSettings({...settings, sourceIds: toggleId(current, key)});
 			}
 		},
-		[config, apps, inputs]
+		[settings, apps, inputs, updateSettings]
 	);
 
 	const onOption = useCallback(() => {
@@ -206,10 +219,10 @@ export function App() {
 	/** Replace a row's order with `keys` (the full list of what's shown). */
 	const onReorder = useCallback(
 		(tabId: string, keys: string[]) => {
-			if (tabId === ROW.apps) updateConfig({...config, appIds: keys});
-			else updateConfig({...config, sourceIds: keys});
+			if (tabId === ROW.apps) updateSettings({...settings, appIds: keys});
+			else updateSettings({...settings, sourceIds: keys});
 		},
-		[config]
+		[settings, updateSettings]
 	);
 
 	return (

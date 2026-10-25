@@ -54,6 +54,8 @@
 	"settings.hint.reorder": "OK aufnehmen · OK halten oder „Fertig“ zum Beenden",
 	"settings.hint.holding": "Pfeile verschieben · OK ablegen · Zurück bricht ab",
 	"settings.hint.options": "OK ein- oder ausschalten · Zurück zum Home-Screen",
+	"settings.loadFailed": "Deine Einstellungen konnten nicht gelesen werden. fluid startet mit den Standardwerten.",
+	"settings.saveFailed": "Deine Einstellungen konnten nicht gespeichert werden.",
 
 	"error.unavailable": "Der Dienst des TVs ist nicht erreichbar.",
 	"error.timeout": "Der TV hat nicht rechtzeitig geantwortet.",

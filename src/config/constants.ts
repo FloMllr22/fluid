@@ -22,6 +22,3 @@ export const TIMING = {
 	clockTickMs: 1000,
 	longPressMs: 600 // OK held this long enters/leaves re-order mode
 } as const;
-
-/** localStorage key for the user's selections. Bump the suffix on breaking changes. */
-export const STORAGE_KEY = 'fluid-config-v1';

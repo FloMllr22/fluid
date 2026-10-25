@@ -163,7 +163,8 @@ src/
   config/      constants (app ID, key codes, timings)
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
   i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
-  lib/         storage, clock, ordering, tile adapters
+  state/       settings: one versioned schema with migrations
+  lib/         clock, ordering, tile adapters
   hooks/       remote keys, OK press/hold, clock tick, time format
   components/  Header, Clock, Row, Grid, Tile, OptionList, Glyph, Toast
   screens/     Home, Settings

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {moveItem} from './order';
+import {moveItem, toggleId} from './order';
 
 describe('moveItem', () => {
 	const list = ['a', 'b', 'c', 'd'];
@@ -25,5 +25,21 @@ describe('moveItem', () => {
 	it('never mutates its input', () => {
 		moveItem(list, 0, 3);
 		expect(list).toEqual(['a', 'b', 'c', 'd']);
+	});
+});
+
+describe('toggleId', () => {
+	it('appends a missing ID', () => {
+		expect(toggleId(['a'], 'b')).toEqual(['a', 'b']);
+	});
+
+	it('removes a present ID', () => {
+		expect(toggleId(['a', 'b', 'c'], 'b')).toEqual(['a', 'c']);
+	});
+
+	it('never mutates its input', () => {
+		const ids = ['a'];
+		toggleId(ids, 'b');
+		expect(ids).toEqual(['a']);
 	});
 });
