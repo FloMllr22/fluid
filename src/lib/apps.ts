@@ -103,7 +103,13 @@ function listViaHomebrew(): Promise<AppEntry[]> {
 }
 
 /** Read the icons as data URIs in one shell round-trip, cached in localStorage by path.
- *  Icons are requested by *index*, so app IDs never reach the shell. */
+ *  Icons are requested by *index*, so app IDs never reach the shell.
+ *
+ *  Known limit, still to fix: the Homebrew Channel runs `exec` with Node's default output
+ *  limit, and webOS 6.5 ships Node 8.12, where that is 200 KB. On the development TV,
+ *  26 icons already produce 180 KB of base64, so a few more apps make the whole call fail,
+ *  and the catch below hides that (every app then shows a letter tile). Fetch in batches
+ *  and report the failure. */
 function loadIcons(points: LaunchPoint[]): Promise<Record<string, string>> {
 	const cache = readIconCache();
 	const result: Record<string, string> = {};
