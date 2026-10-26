@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {onForeground} from './pointer';
+import {onBackground, onForeground} from './pointer';
 
 /** Minimal document that records listeners, so the tests can fire webOS's events. */
 let listeners: Record<string, () => void>;
@@ -55,6 +55,29 @@ describe('onForeground', () => {
 
 	it('stops listening when asked to', () => {
 		const stop = onForeground(vi.fn());
+		stop();
+		expect(listeners).toEqual({});
+	});
+});
+
+describe('onBackground', () => {
+	it('calls back when the page is hidden', () => {
+		const callback = vi.fn();
+		onBackground(callback);
+		page.hidden = true;
+		listeners.visibilitychange();
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
+	it('ignores the page becoming visible', () => {
+		const callback = vi.fn();
+		onBackground(callback);
+		listeners.visibilitychange();
+		expect(callback).not.toHaveBeenCalled();
+	});
+
+	it('stops listening when asked to', () => {
+		const stop = onBackground(vi.fn());
 		stop();
 		expect(listeners).toEqual({});
 	});

@@ -61,4 +61,7 @@ export interface Platform {
 	/** Calls back whenever fluid comes to the foreground, including a relaunch while it
 	 *  is running. Returns a function that stops it. */
 	onForeground(callback: () => void): () => void;
+	/** Calls back whenever fluid leaves the foreground (another app or input in front, or
+	 *  the screen off), so timers can pause. Returns a function that stops it. */
+	onBackground(callback: () => void): () => void;
 }

@@ -41,3 +41,13 @@ export function onForeground(callback: () => void): () => void {
 		document.removeEventListener('webOSRelaunch', onVisible);
 	};
 }
+
+/** Calls back whenever fluid leaves the foreground: the page is hidden behind another app
+ *  or input, or the screen goes off. Returns a function that stops it. */
+export function onBackground(callback: () => void): () => void {
+	const onHidden = () => {
+		if (document.hidden) callback();
+	};
+	document.addEventListener('visibilitychange', onHidden);
+	return () => document.removeEventListener('visibilitychange', onHidden);
+}

@@ -3,7 +3,7 @@
 import type {Platform} from '../types';
 import {listApps} from './apps';
 import {listInputs} from './inputs';
-import {hidePointer, onForeground} from './pointer';
+import {hidePointer, onBackground, onForeground} from './pointer';
 import {getLocale, getTimeFormat, launch, launchLgHome} from './system';
 
 export {isWebOS} from './luna';
@@ -18,6 +18,7 @@ export function createWebOSPlatform(): Platform {
 		getLocale,
 		getTimeFormat,
 		hidePointer,
-		onForeground
+		onForeground,
+		onBackground
 	};
 }

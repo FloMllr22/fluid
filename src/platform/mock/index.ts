@@ -48,6 +48,15 @@ export function createMockPlatform(): Platform {
 			};
 			document.addEventListener('visibilitychange', onVisible);
 			return () => document.removeEventListener('visibilitychange', onVisible);
+		},
+		// another browser tab, or the window minimised
+		onBackground: (callback) => {
+			if (typeof document === 'undefined') return () => {};
+			const onHidden = () => {
+				if (document.hidden) callback();
+			};
+			document.addEventListener('visibilitychange', onHidden);
+			return () => document.removeEventListener('visibilitychange', onHidden);
 		}
 	};
 }
