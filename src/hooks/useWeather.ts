@@ -12,8 +12,10 @@ import {type CachedWeather, loadCachedWeather, saveCachedWeather} from '../state
 export function useWeather(settings: WeatherSettings): WeatherView {
 	const {enabled, place} = settings;
 	const [view, setView] = useState<WeatherView>(() => startView(settings, place && loadCachedWeather(place)));
-	const latitude = place ? place.latitude : Number.NaN;
-	const longitude = place ? place.longitude : Number.NaN;
+	// null without a place, never NaN: hooks compare their dependencies with !==, and as
+	// NaN !== NaN the effect would run again after every render, and render again
+	const latitude = place ? place.latitude : null;
+	const longitude = place ? place.longitude : null;
 
 	useEffect(() => {
 		let last = place && loadCachedWeather(place);
