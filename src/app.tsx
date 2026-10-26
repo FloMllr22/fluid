@@ -5,10 +5,12 @@ import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
+import {useWeather} from './hooks/useWeather';
 import {errorMessage, t, tn} from './i18n';
 import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
+import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
@@ -33,6 +35,9 @@ const MISC = {lgHome: 'lg-home', settings: 'settings'} as const;
 const BACKGROUND_TAB = 'background';
 
 const PHOTO_IDS = PHOTOS.map((p) => p.id);
+
+/** °C or °F, by the TV's region */
+const UNIT = temperatureUnit(platform.getLocale());
 
 /** No options at the moment: the Homebrew option went when root became a requirement,
  *  and the Options tab stays hidden until the next ones arrive. */
@@ -66,6 +71,7 @@ export function App() {
 	const [inputs, setInputs] = useState<InputSource[]>([]);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
 	const toastTimer = useRef(0);
+	const weather = useWeather(settings.weather);
 
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
 		window.clearTimeout(toastTimer.current);
@@ -346,6 +352,8 @@ export function App() {
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
 			<Home
 				rows={rows}
+				weather={weather}
+				unit={UNIT}
 				active={screen === 'home' && !menuApp}
 				hidden={screen !== 'home'}
 				onActivate={onActivate}

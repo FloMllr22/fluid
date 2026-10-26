@@ -3,12 +3,14 @@ import {Clock} from '../components/Clock';
 import {Header} from '../components/Header';
 import {Row} from '../components/Row';
 import type {MoveArrows, TileModel} from '../components/Tile';
+import {WeatherNow} from '../components/WeatherNow';
 import {useClock} from '../hooks/useClock';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {useTimeFormat} from '../hooks/useTimeFormat';
 import {t} from '../i18n';
 import {focusIndex, followItem, type RowFocus} from '../lib/focus';
+import type {TemperatureUnit, WeatherView} from '../lib/weather';
 
 export interface HomeRow {
 	id: string;
@@ -26,6 +28,9 @@ export interface MovingItem {
 
 interface Props {
 	rows: HomeRow[];
+	/** the weather at the top right; nothing while it is off */
+	weather: WeatherView;
+	unit: TemperatureUnit;
 	active: boolean;
 	/** another screen is in front: Home stays mounted, keeping its focus, but is not drawn */
 	hidden?: boolean;
@@ -40,13 +45,13 @@ interface Props {
 	onMoveEnd: (keep: boolean) => void;
 }
 
-/** The home screen: greeting, clock and the navigable rows.
+/** The home screen: greeting, clock, weather and the navigable rows.
  *  Up/Down move between rows (each row remembers its item), Left/Right move along a row.
  *  OK opens the item; holding OK asks for its options.
  *  Move mode is a variant of this: the focused item stays focused and lifted while
  *  Left/Right move it along its row, OK keeps its new place and Back cancels. Focus is
  *  kept by item, so it follows the item and stays on it afterwards. */
-export function Home({rows, active, hidden, onActivate, onLongPress, moving, onMove, onMoveEnd}: Props) {
+export function Home({rows, weather, unit, active, hidden, onActivate, onLongPress, moving, onMove, onMoveEnd}: Props) {
 	const now = useClock();
 	const timeFormat = useTimeFormat();
 	const [rowIndex, setRowIndex] = useState(0);
@@ -149,6 +154,7 @@ export function Home({rows, active, hidden, onActivate, onLongPress, moving, onM
 		<div class={`screen${hidden ? ' screen--hidden' : ''}${moving ? ' home--moving' : ''}`}>
 			<Header now={now} moving={movingItem ? movingItem.label : undefined} />
 			<Clock now={now} format={timeFormat} />
+			<WeatherNow view={weather} unit={unit} class="weather" />
 			<div class="rows">
 				{rows.map((row, i) => (
 					<Row

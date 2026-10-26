@@ -46,6 +46,8 @@ export const FONT = {
 	greeting: 72,
 	clock: 32,
 	clockTime: 44,
+	weather: 32, // temperature and sky, top right
+	weatherNote: 24, // why there is no weather (loading, no place, failed)
 	rowLabel: 20,
 	tileLabel: 19,
 	settingsTitle: 40,
@@ -64,6 +66,9 @@ export const LAYOUT = {
 	screenHeight: 1080,
 	edgePadding: 140, // heavy padding around the screen edges
 	headerTop: 84,
+	weatherGlyph: 44, // the sky, left of the temperature
+	weatherGap: 16, // between the glyph, the temperature and the sky
+	weatherNoteWidth: 460, // a longer note wraps, clear of the longest greeting
 	rowsTop: 236, // rows start here, below the greeting and clock
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,

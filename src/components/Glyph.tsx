@@ -1,6 +1,6 @@
 // Inline SVG line icons (24×24, drawn as strokes): the More row, the input sources, the
-// slideshow tile, the tile badges and the arrows of move mode. All drawn for fluid; no
-// third-party artwork.
+// slideshow tile, the weather, the tile badges and the arrows of move mode. All drawn for
+// fluid; no third-party artwork.
 
 import type {ComponentChildren} from 'preact';
 
@@ -15,7 +15,23 @@ export type GlyphName =
 	| 'monitor'
 	| 'phone'
 	| 'camera'
-	| 'slideshow';
+	| 'slideshow'
+	| 'sun'
+	| 'moon'
+	| 'cloud-sun'
+	| 'cloud-moon'
+	| 'cloud'
+	| 'fog'
+	| 'drizzle'
+	| 'rain'
+	| 'snow'
+	| 'thunder';
+
+/** A cloud in the upper part of the square, with room below for what falls from it. */
+const HIGH_CLOUD = 'M7 15h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.2 6.1 4.5 4.5 0 0 0 7 15z';
+
+/** A smaller cloud at the lower right, with room above for the sun or the moon. */
+const LOW_CLOUD = 'M11.4 21.6h8a3.2 3.2 0 0 0 .5-6.35A4.8 4.8 0 0 0 10.8 14.5a3.6 3.6 0 0 0 .6 7.1z';
 
 const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 	house: () => <path d="M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8M10 20v-6h4v6" />,
@@ -75,12 +91,46 @@ const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 			<rect x="3" y="7" width="15" height="12" rx="1.5" />
 			<path d="M7 4h12.5A1.5 1.5 0 0 1 21 5.5V15M5.5 16.5l3.5-4 3 3 2-2 3 3" />
 		</>
-	)
+	),
+	sun: () => (
+		<>
+			<circle cx="12" cy="12" r="4" />
+			<path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+		</>
+	),
+	// a crescent: the full disc, less a disc to its upper right
+	moon: () => <path d="M11.5 4A8 8 0 1 0 20 12.5 6 6 0 0 1 11.5 4z" />,
+	// a small sun at the upper left; no rays where the cloud is
+	'cloud-sun': () => (
+		<>
+			<circle cx="8" cy="8" r="3" />
+			<path d="M8 1.9v1.5M1.9 8h1.5M3.7 3.7l1 1M12.3 3.7l-1 1M12.6 8h1.5M3.7 12.3l1-1" />
+			<path d={LOW_CLOUD} />
+		</>
+	),
+	'cloud-moon': () => (
+		<>
+			<path d="M7.7 3.5A4.5 4.5 0 1 0 12.5 8.3 3.4 3.4 0 0 1 7.7 3.5z" />
+			<path d={LOW_CLOUD} />
+		</>
+	),
+	cloud: () => <path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.2 9.1 4.5 4.5 0 0 0 7 18z" />,
+	fog: () => <path d={`${HIGH_CLOUD}M5 18.5h14M7.5 21.5h9`} />,
+	drizzle: () => <path d={`${HIGH_CLOUD}M8 18.5h.01M12 18.5h.01M16 18.5h.01M10 21.5h.01M14 21.5h.01`} />,
+	rain: () => <path d={`${HIGH_CLOUD}M8.7 17.5l-1.2 4M12.7 17.5l-1.2 4M16.7 17.5l-1.2 4`} />,
+	// three flakes, each three strokes crossing
+	snow: () => (
+		<path
+			d={`${HIGH_CLOUD}M7.5 17.6l2 2M9.5 17.6l-2 2M8.5 17.2v2.8M14.5 17.6l2 2M16.5 17.6l-2 2M15.5 17.2v2.8M11 20.3l2 2M13 20.3l-2 2M12 19.9v2.8`}
+		/>
+	),
+	thunder: () => <path d={`${HIGH_CLOUD}M13 16.5l-2 3h3l-2 3`} />
 };
 
-export function Glyph({name}: {name: GlyphName}) {
+/** A line icon, drawn as a tile's glyph unless given another class. */
+export function Glyph({name, className = 'tile__glyph'}: {name: GlyphName; className?: string}) {
 	return (
-		<svg class="tile__glyph" viewBox="0 0 24 24" aria-hidden="true">
+		<svg class={className} viewBox="0 0 24 24" aria-hidden="true">
 			{SHAPES[name]()}
 		</svg>
 	);

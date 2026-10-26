@@ -129,11 +129,12 @@ body {
 	color: var(--color-text-primary);
 }
 
+/* top left, across from the weather */
 .clock {
 	position: absolute;
-	right: var(--layout-edge-padding);
+	left: var(--layout-edge-padding);
 	top: var(--layout-header-top);
-	text-align: center;
+	text-align: left;
 	color: var(--color-text-secondary);
 	font-weight: 300;
 	line-height: 1.25;
@@ -153,6 +154,44 @@ body {
 	font-size: var(--font-clock-period);
 	font-weight: 300;
 	letter-spacing: 0.08em;
+}
+
+/* top right, level with the clock's first line: glyph, temperature, sky */
+.weather {
+	position: absolute;
+	right: var(--layout-edge-padding);
+	top: var(--layout-header-top);
+	pointer-events: none;
+	transition: opacity var(--motion-focus-ms) ease-out;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: var(--font-weather);
+	font-weight: 300;
+	color: var(--color-text-secondary);
+}
+.weather__glyph {
+	flex: 0 0 auto;
+	width: var(--layout-weather-glyph);
+	height: var(--layout-weather-glyph);
+	margin-right: var(--layout-weather-gap);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.weather__temperature {
+	margin-right: var(--layout-weather-gap);
+	color: var(--color-text-primary);
+}
+.weather__note {
+	max-width: var(--layout-weather-note-width);
+	margin: 0;
+	font-size: var(--font-weather-note);
+	line-height: 1.3;
+	text-align: right;
+	color: var(--color-text-muted);
 }
 
 /* ---------- rows ---------- */
@@ -475,9 +514,10 @@ body {
 
 /* ---------- move mode (Home) ---------- */
 
-/* Only the row with the moving app stays; the clock steps back, the other rows and the
-   row's own label give way to the app's name above and the hint below. */
-.home--moving .clock {
+/* Only the row with the moving app stays; the clock and the weather step back, the other
+   rows and the row's own label give way to the app's name above and the hint below. */
+.home--moving .clock,
+.home--moving .weather {
 	opacity: var(--motion-move-backdrop-opacity);
 }
 .home--moving .row {
