@@ -37,6 +37,7 @@ export const COLOR = {
 	switchTrackOn: '#EEEEEE',
 	switchKnob: '#AAAAAA',
 	switchKnobOn: '#000000',
+	fieldBg: '#0a0a0a', // a text field, inside its row
 	danger: '#e0564f',
 	overlay: 'rgba(0, 0, 0, 0.9)' // behind the app menu
 } as const;
@@ -69,6 +70,8 @@ export const LAYOUT = {
 	weatherGlyph: 44, // the sky, left of the temperature
 	weatherGap: 16, // between the glyph, the temperature and the sky
 	weatherNoteWidth: 460, // a longer note wraps, clear of the longest greeting
+	fieldHeight: 56, // the place search field
+	placeHeight: 64, // a place found by the search
 	rowsTop: 236, // rows start here, below the greeting and clock
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,

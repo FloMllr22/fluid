@@ -11,7 +11,7 @@ import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgroun
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
-import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
+import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
 import {loadSettings, saveSettings, type Settings as UserSettings} from './state/settings';
@@ -272,6 +272,17 @@ export function App() {
 
 	const onBackgroundError = useCallback(() => showToast(t('background.loadFailed'), 'error'), [showToast]);
 
+	/** Turning the weather off keeps the place, for when it is turned on again. */
+	const onWeatherToggle = useCallback(
+		() => updateSettings({...settings, weather: {...settings.weather, enabled: !settings.weather.enabled}}),
+		[settings, updateSettings]
+	);
+
+	const onPickPlace = useCallback(
+		(place: Place) => updateSettings({...settings, weather: {...settings.weather, place}}),
+		[settings, updateSettings]
+	);
+
 	const onOption = useCallback(() => {
 		/* no options at the moment, see OPTIONS */
 	}, []);
@@ -368,6 +379,13 @@ export function App() {
 			{screen === 'settings' && (
 				<Settings
 					tabs={tabs}
+					weather={{
+						settings: settings.weather,
+						view: weather,
+						unit: UNIT,
+						onToggle: onWeatherToggle,
+						onPick: onPickPlace
+					}}
 					options={OPTIONS}
 					active
 					onToggle={onToggle}

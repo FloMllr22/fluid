@@ -154,7 +154,7 @@ export function Home({rows, weather, unit, active, hidden, onActivate, onLongPre
 		<div class={`screen${hidden ? ' screen--hidden' : ''}${moving ? ' home--moving' : ''}`}>
 			<Header now={now} moving={movingItem ? movingItem.label : undefined} />
 			<Clock now={now} format={timeFormat} />
-			<WeatherNow view={weather} unit={unit} class="weather" />
+			<WeatherNow view={weather} unit={unit} where="home" />
 			<div class="rows">
 				{rows.map((row, i) => (
 					<Row

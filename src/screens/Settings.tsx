@@ -2,6 +2,7 @@ import {useCallback, useState} from 'preact/hooks';
 import {Grid} from '../components/Grid';
 import {type OptionItem, OptionList} from '../components/OptionList';
 import type {TileModel} from '../components/Tile';
+import {type WeatherChoice, WeatherPanel} from '../components/WeatherPanel';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {t} from '../i18n';
@@ -28,6 +29,8 @@ export interface SettingsTab {
 
 interface Props {
 	tabs: SettingsTab[];
+	/** the Weather tab, after the grid tabs */
+	weather: WeatherChoice;
 	options: OptionItem[];
 	active: boolean;
 	/** OK on an item: add or remove it, or on a tab for picking, pick it */
@@ -47,14 +50,16 @@ interface Held {
 }
 
 /** Settings: pick which apps and sources appear on the home rows and their order, the
- *  background, plus options.
+ *  background, the weather, plus options.
  *
- *  Tabs: one grid tab per row (Apps, Sources), then Background, then Options if there are any.
+ *  Tabs: one grid tab per row (Apps, Sources), then Background, Weather, then Options if
+ *  there are any.
  *  Grid tabs, select mode: everything available; OK adds/removes an item.
  *  Grid tabs, re-order mode (hold OK, or the button): only what's on the home screen, in order;
  *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave.
- *  Background tab: previews of every background; OK picks one, which shows at once. */
-export function Settings({tabs, options, active, onToggle, onReorder, onOption, onClose}: Props) {
+ *  Background tab: previews of every background; OK picks one, which shows at once.
+ *  Weather tab: its own panel, which takes the keys while focus is in it. */
+export function Settings({tabs, weather, options, active, onToggle, onReorder, onOption, onClose}: Props) {
 	const [tabIndex, setTabIndex] = useState(0);
 	const [zone, setZone] = useState<Zone>('tabs');
 	const [gridIndex, setGridIndex] = useState(0);
@@ -63,11 +68,15 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	const [held, setHeld] = useState<Held | null>(null);
 
 	const hasOptions = options.length > 0;
-	const tabCount = tabs.length + (hasOptions ? 1 : 0); // grid tabs + Options
-	const onOptions = tabIndex === tabs.length;
-	const tab: SettingsTab | undefined = onOptions ? undefined : tabs[tabIndex];
+	const tabCount = tabs.length + 1 + (hasOptions ? 1 : 0); // grid tabs + Weather + Options
+	const onWeather = tabIndex === tabs.length;
+	const onOptions = tabIndex === tabs.length + 1;
+	const tab: SettingsTab | undefined = tabIndex < tabs.length ? tabs[tabIndex] : undefined;
 	const items = tab ? (reordering ? tab.shown : tab.items) : [];
-	const count = onOptions ? options.length : items.length;
+	// the Weather tab always has its switch
+	const count = onOptions ? options.length : onWeather ? 1 : items.length;
+	/** focus is in the Weather tab, whose panel then takes the keys */
+	const inPanel = onWeather && zone === 'content';
 	const cols = LAYOUT.gridColumns;
 	const keysOf = (list: TileModel[]) => list.map((t) => t.key);
 	/** the tab has a re-order mode, and the button for it */
@@ -139,7 +148,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 		if (tab) setMode(!reordering);
 	};
 
-	useOkPress({onPress, onLongPress}, active);
+	useOkPress({onPress, onLongPress}, active && !inPanel);
 
 	const handleKey = useCallback(
 		(key: NavKey): boolean => {
@@ -220,20 +229,25 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 		]
 	);
 
-	useKeys(handleKey, active);
+	useKeys(handleKey, active && !inPanel);
 
 	const hint = t(
-		onOptions
-			? 'settings.hint.options'
-			: held
-				? 'settings.hint.holding'
-				: reordering
-					? 'settings.hint.reorder'
-					: canReorder
-						? 'settings.hint.select'
-						: 'settings.hint.pick'
+		onWeather
+			? 'settings.hint.weather'
+			: onOptions
+				? 'settings.hint.options'
+				: held
+					? 'settings.hint.holding'
+					: reordering
+						? 'settings.hint.reorder'
+						: canReorder
+							? 'settings.hint.select'
+							: 'settings.hint.pick'
 	);
-	const labels = tabs.map((tb) => tb.label).concat(hasOptions ? [t('settings.options')] : []);
+	const labels = tabs
+		.map((tb) => tb.label)
+		.concat(t('settings.weather'))
+		.concat(hasOptions ? [t('settings.options')] : []);
 	const buttonClass = [
 		'settings__button',
 		reordering && 'settings__button--active',
@@ -293,6 +307,15 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 							setZone('content');
 							activateGridItem(i);
 						}}
+					/>
+				)}
+				{onWeather && (
+					<WeatherPanel
+						{...weather}
+						active={active && inPanel}
+						onExit={() => setZone('tabs')}
+						onClose={onClose}
+						onPointer={() => setZone('content')}
 					/>
 				)}
 				{onOptions && (
