@@ -9,7 +9,7 @@ is **not** covered by that licence.
 | Component | Licence | Where |
 |---|---|---|
 | [Preact](https://preactjs.com) | MIT, © Jason Miller | compiled into `assets/app.js`; licence text in [public/licenses/preact-MIT.txt](public/licenses/preact-MIT.txt) |
-| [Inter](https://rsms.me/inter/) typeface | SIL Open Font License 1.1, © The Inter Project Authors | `src/assets/inter-latin-wght.woff2`; licence text in [public/licenses/Inter-OFL.txt](public/licenses/Inter-OFL.txt) |
+| [Manrope](https://github.com/sharanda/manrope) typeface | SIL Open Font License 1.1, © 2019 The Manrope Project Authors | `src/assets/fonts/manrope-latin-*.woff2` (weights 400 to 800, Latin subset, as packaged by [Fontsource](https://fontsource.org)); licence text in [public/licenses/Manrope-OFL.txt](public/licenses/Manrope-OFL.txt) |
 
 Both licence texts are included in the installed app under `licenses/`.
 

@@ -46,7 +46,7 @@ export const COLOR = {
 } as const;
 
 export const FONT = {
-	family: '"Inter Variable", "LG Smart UI", "Helvetica Neue", Arial, sans-serif',
+	family: 'Manrope, "LG Smart UI", "Helvetica Neue", Arial, sans-serif',
 	greeting: 72,
 	clock: 32,
 	clockTime: 44,

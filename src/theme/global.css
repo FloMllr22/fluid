@@ -1,12 +1,41 @@
 /* Global styles. Values come from tokens.ts via CSS custom properties (see applyTokens).
    Written for Chromium 53 (webOS 4): no CSS Grid, no flex `gap`, no `inset`, no `aspect-ratio`. */
 
+/* One file per weight: Chromium 53 knows neither variable fonts nor weight ranges here. */
 @font-face {
-	font-family: "Inter Variable";
+	font-family: "Manrope";
 	font-style: normal;
-	font-weight: 100 900;
+	font-weight: 400;
 	font-display: block;
-	src: url("../assets/inter-latin-wght.woff2") format("woff2");
+	src: url("../assets/fonts/manrope-latin-400.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 500;
+	font-display: block;
+	src: url("../assets/fonts/manrope-latin-500.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 600;
+	font-display: block;
+	src: url("../assets/fonts/manrope-latin-600.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 700;
+	font-display: block;
+	src: url("../assets/fonts/manrope-latin-700.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Manrope";
+	font-style: normal;
+	font-weight: 800;
+	font-display: block;
+	src: url("../assets/fonts/manrope-latin-800.woff2") format("woff2");
 }
 
 * {
