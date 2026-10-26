@@ -1,12 +1,15 @@
 import {render} from 'preact';
 import {App} from './app';
-import {setLocale} from './i18n';
+import {localeFor, setLocale} from './i18n';
 import {platform} from './platform';
+import {loadSettings} from './state/settings';
 import {applyTokens} from './theme/tokens';
 import './theme/global.css';
 
 applyTokens();
-setLocale(platform.getLocale());
+// The settings first, so that the first frame is already in the chosen language.
+const loaded = loadSettings();
+setLocale(localeFor(loaded.settings.language, platform.getLocale()));
 const root = document.getElementById('root');
 if (!root) throw new Error('index.html has no #root element');
-render(<App />, root);
+render(<App loaded={loaded} />, root);

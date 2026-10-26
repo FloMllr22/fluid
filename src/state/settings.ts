@@ -4,6 +4,7 @@
 // what the user set. Stored data is untrusted: each field is checked on loading and falls
 // back to its default on its own. Callers always get fresh objects and arrays.
 
+import {LANGUAGES, type Language} from '../i18n';
 import type {Place} from '../platform';
 
 /** The colours fluid offers as a background; dark is the gradient fluid always had. */
@@ -14,6 +15,9 @@ export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
  *  ID), or a slideshow of all of them. A photo that a later fluid no longer ships is
  *  stored as it is; whoever draws the background falls back to the default. */
 export type Background = {kind: 'color'; color: BackgroundColor} | {kind: 'photo'; id: string} | {kind: 'slideshow'};
+
+/** The language fluid speaks: the TV's ("tv"), or one fluid has. */
+export type LanguageChoice = 'tv' | Language;
 
 /** The weather on Home. Off, fluid makes no network connection at all. */
 export interface WeatherSettings {
@@ -32,9 +36,10 @@ export interface Settings {
 	favoriteIds: string[];
 	background: Background;
 	weather: WeatherSettings;
+	language: LanguageChoice;
 }
 
-export const SETTINGS_VERSION = 4;
+export const SETTINGS_VERSION = 5;
 
 /** Holds {version, settings}. */
 export const SETTINGS_KEY = 'fluid-settings';
@@ -53,7 +58,9 @@ export const MIGRATIONS: Record<number, (data: Data) => Data> = {
 	// 3: a choice of background; the one fluid had until then
 	3: (data) => ({...data, background: defaultBackground()}),
 	// 4: the weather, off until the user turns it on
-	4: (data) => ({...data, weather: defaultWeather()})
+	4: (data) => ({...data, weather: defaultWeather()}),
+	// 5: a language of fluid's own; until then it always spoke the TV's
+	5: (data) => ({...data, language: 'tv'})
 };
 
 export function defaultBackground(): Background {
@@ -65,7 +72,14 @@ export function defaultWeather(): WeatherSettings {
 }
 
 export function defaultSettings(): Settings {
-	return {appIds: null, sourceIds: null, favoriteIds: [], background: defaultBackground(), weather: defaultWeather()};
+	return {
+		appIds: null,
+		sourceIds: null,
+		favoriteIds: [],
+		background: defaultBackground(),
+		weather: defaultWeather(),
+		language: 'tv'
+	};
 }
 
 export interface LoadedSettings {
@@ -74,6 +88,8 @@ export interface LoadedSettings {
 	unreadable: boolean;
 	/** the settings were migrated from an older version and should be saved */
 	migrated: boolean;
+	/** nothing was stored: fluid starts for the first time (or its storage was cleared) */
+	firstStart: boolean;
 }
 
 /** Reads the settings, migrating older ones. Never throws. */
@@ -84,9 +100,10 @@ export function loadSettings(): LoadedSettings {
 		raw = localStorage.getItem(SETTINGS_KEY);
 		if (raw === null) legacy = localStorage.getItem(LEGACY_KEY);
 	} catch {
-		return {settings: defaultSettings(), unreadable: true, migrated: false};
+		return {settings: defaultSettings(), unreadable: true, migrated: false, firstStart: false};
 	}
-	if (raw === null && legacy === null) return {settings: defaultSettings(), unreadable: false, migrated: false};
+	if (raw === null && legacy === null)
+		return {settings: defaultSettings(), unreadable: false, migrated: false, firstStart: true};
 
 	let version: number;
 	let data: Data;
@@ -102,13 +119,13 @@ export function loadSettings(): LoadedSettings {
 			if (!isObject(data)) throw new Error('no settings');
 		}
 	} catch {
-		return {settings: defaultSettings(), unreadable: true, migrated: false};
+		return {settings: defaultSettings(), unreadable: true, migrated: false, firstStart: false};
 	}
 
 	// A version newer than this fluid (after a downgrade) is read as far as the fields are
 	// known; saving then writes the current version.
 	for (let next = version + 1; next <= SETTINGS_VERSION; next++) data = MIGRATIONS[next](data);
-	return {settings: sanitize(data), unreadable: false, migrated: version < SETTINGS_VERSION};
+	return {settings: sanitize(data), unreadable: false, migrated: version < SETTINGS_VERSION, firstStart: false};
 }
 
 /** Writes the settings. Returns false when the TV's storage refuses them. */
@@ -128,8 +145,14 @@ function sanitize(data: Data): Settings {
 		sourceIds: idList(data.sourceIds),
 		favoriteIds: idList(data.favoriteIds) || [],
 		background: backgroundOf(data.background) || defaultBackground(),
-		weather: weatherOf(data.weather)
+		weather: weatherOf(data.weather),
+		language: languageOf(data.language)
 	};
+}
+
+/** A stored language choice; anything fluid does not speak (any more) means the TV's. */
+function languageOf(value: unknown): LanguageChoice {
+	return LANGUAGES.find((language) => language === value) || 'tv';
 }
 
 /** A copy of the stored weather settings; each field falls back on its own. */

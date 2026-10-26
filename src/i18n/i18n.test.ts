@@ -8,6 +8,7 @@ import {
 	errorMessage,
 	LANGUAGES,
 	languageOf,
+	localeFor,
 	MESSAGES,
 	setLocale,
 	t,
@@ -171,5 +172,27 @@ describe('errorMessage', () => {
 		expect(errorMessage(new PlatformError('timeout', 'No answer within 4000 ms: luna://x'))).toBe(
 			"The TV didn't answer in time."
 		);
+	});
+});
+
+describe('localeFor', () => {
+	it("is the TV's locale when fluid follows the TV", () => {
+		expect(localeFor('tv', 'de-DE')).toBe('de-DE');
+		expect(localeFor('tv', 'fr-FR')).toBe('fr-FR');
+	});
+
+	it("keeps the TV's region for the language the TV speaks too", () => {
+		expect(localeFor('en', 'en-GB')).toBe('en-GB');
+		expect(localeFor('de', 'de_AT')).toBe('de_AT');
+	});
+
+	it('is just the chosen language otherwise', () => {
+		expect(localeFor('en', 'de-DE')).toBe('en');
+		expect(localeFor('de', 'en-US')).toBe('de');
+	});
+
+	it('gives dates in the chosen language', () => {
+		setLocale(localeFor('de', 'en-US'));
+		expect(dayMonth(sunday)).toBe('25. Oktober');
 	});
 });

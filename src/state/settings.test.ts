@@ -53,7 +53,7 @@ beforeEach(() => {
 
 describe('loadSettings', () => {
 	it('gives the defaults on a first start, with nothing to report or save', () => {
-		expect(loadSettings()).toEqual({settings: defaultSettings(), unreadable: false, migrated: false});
+		expect(loadSettings()).toEqual({settings: defaultSettings(), unreadable: false, migrated: false, firstStart: true});
 	});
 
 	it('reads back what was saved', () => {
@@ -62,10 +62,11 @@ describe('loadSettings', () => {
 			sourceIds: ['com.webos.app.hdmi2'],
 			favoriteIds: ['a'],
 			background: {kind: 'photo', id: 'lake'} as Background,
-			weather: {enabled: true, place: berlin}
+			weather: {enabled: true, place: berlin},
+			language: 'de' as const
 		};
 		expect(saveSettings(settings)).toBe(true);
-		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false});
+		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false, firstStart: false});
 	});
 
 	it('replaces each field of the wrong type with its default', () => {
@@ -77,20 +78,26 @@ describe('loadSettings', () => {
 			sourceIds: null,
 			favoriteIds: [],
 			background: dark,
-			weather: off
+			weather: off,
+			language: 'tv'
 		});
 	});
 
 	it('reports settings that are not readable, and uses the defaults', () => {
 		for (const raw of ['{broken', '"text"', '{"version":1}', '{"settings":{}}']) {
 			useStorage({[SETTINGS_KEY]: raw});
-			expect(loadSettings(), raw).toEqual({settings: defaultSettings(), unreadable: true, migrated: false});
+			expect(loadSettings(), raw).toEqual({
+				settings: defaultSettings(),
+				unreadable: true,
+				migrated: false,
+				firstStart: false
+			});
 		}
 	});
 
 	it('reports storage that cannot be read at all', () => {
 		useStorage({}, true);
-		expect(loadSettings()).toMatchObject({settings: defaultSettings(), unreadable: true});
+		expect(loadSettings()).toMatchObject({settings: defaultSettings(), unreadable: true, firstStart: false});
 	});
 
 	it('reads what it knows from settings of a newer fluid', () => {
@@ -104,9 +111,17 @@ describe('loadSettings', () => {
 			})
 		);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], background: {kind: 'slideshow'}, weather: off},
+			settings: {
+				appIds: ['a'],
+				sourceIds: null,
+				favoriteIds: ['a'],
+				background: {kind: 'slideshow'},
+				weather: off,
+				language: 'tv'
+			},
 			unreadable: false,
-			migrated: false
+			migrated: false,
+			firstStart: false
 		});
 	});
 
@@ -125,9 +140,10 @@ describe('migration from fluid 0.1', () => {
 	it('keeps the chosen apps and sources, and drops the Homebrew option', () => {
 		useStorage(legacy);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off},
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'},
 			unreadable: false,
-			migrated: true
+			migrated: true,
+			firstStart: false
 		});
 	});
 
@@ -137,7 +153,7 @@ describe('migration from fluid 0.1', () => {
 		expect(data[LEGACY_KEY]).toBeUndefined();
 		expect(JSON.parse(data[SETTINGS_KEY])).toEqual({
 			version: SETTINGS_VERSION,
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off}
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'}
 		});
 		expect(loadSettings().migrated).toBe(false);
 	});
@@ -152,9 +168,10 @@ describe('migration from version 1', () => {
 	it('keeps the choices and starts without favourites', () => {
 		useStorage(stored(1, {appIds: ['a'], sourceIds: null}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark, weather: off},
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'},
 			unreadable: false,
-			migrated: true
+			migrated: true,
+			firstStart: false
 		});
 	});
 });
@@ -163,9 +180,17 @@ describe('migration from version 2', () => {
 	it('keeps the choices and favourites, with the background fluid had', () => {
 		useStorage(stored(2, {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b']}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b'], background: dark, weather: off},
+			settings: {
+				appIds: ['a', 'b'],
+				sourceIds: null,
+				favoriteIds: ['b'],
+				background: dark,
+				weather: off,
+				language: 'tv'
+			},
 			unreadable: false,
-			migrated: true
+			migrated: true,
+			firstStart: false
 		});
 	});
 });
@@ -175,10 +200,61 @@ describe('migration from version 3', () => {
 		const photo: Background = {kind: 'photo', id: 'lake'};
 		useStorage(stored(3, {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo, weather: off},
+			settings: {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo, weather: off, language: 'tv'},
 			unreadable: false,
-			migrated: true
+			migrated: true,
+			firstStart: false
 		});
+	});
+});
+
+describe('migration from version 4', () => {
+	it('keeps every choice, and speaks the TV language as before', () => {
+		const weather = {enabled: true, place: berlin};
+		useStorage(stored(4, {appIds: null, sourceIds: null, favoriteIds: [], background: dark, weather}));
+		expect(loadSettings()).toEqual({
+			settings: {appIds: null, sourceIds: null, favoriteIds: [], background: dark, weather, language: 'tv'},
+			unreadable: false,
+			migrated: true,
+			firstStart: false
+		});
+	});
+});
+
+describe('language', () => {
+	const read = (language: unknown) => {
+		useStorage(stored(SETTINGS_VERSION, {...defaultSettings(), language}));
+		return loadSettings().settings.language;
+	};
+
+	it('follows the TV at first', () => {
+		expect(defaultSettings().language).toBe('tv');
+	});
+
+	it('reads back each language fluid speaks, and the TV choice', () => {
+		for (const language of ['tv', 'de', 'en']) expect(read(language)).toBe(language);
+	});
+
+	it('follows the TV for a language fluid does not speak, or anything else', () => {
+		for (const language of ['fr', 'DE', 'de-DE', '', null, 1, undefined])
+			expect(read(language), String(language)).toBe('tv');
+	});
+});
+
+describe('first start', () => {
+	it('is told only when nothing is stored', () => {
+		expect(loadSettings().firstStart).toBe(true);
+		saveSettings(defaultSettings());
+		expect(loadSettings().firstStart).toBe(false);
+	});
+
+	it('is not told for settings of fluid 0.1, nor for unreadable ones', () => {
+		useStorage({[LEGACY_KEY]: '{"appIds":null}'});
+		expect(loadSettings().firstStart).toBe(false);
+		useStorage({[SETTINGS_KEY]: '{broken'});
+		expect(loadSettings().firstStart).toBe(false);
+		useStorage({}, true);
+		expect(loadSettings().firstStart).toBe(false);
 	});
 });
 

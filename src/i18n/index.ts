@@ -49,6 +49,14 @@ export function languageOf(locale: string): Language {
 	return LANGUAGES.find((l) => l === code) || 'en';
 }
 
+/** The locale for a language choice: the TV's for "tv". A chosen language keeps the TV's
+ *  region when the TV speaks it too ("en" on an en-GB TV stays en-GB, so dates keep their
+ *  order); otherwise it is just the language. */
+export function localeFor(choice: 'tv' | Language, tvLocale: string): string {
+	const tvLanguage = tvLocale.split(/[-_]/)[0].toLowerCase();
+	return choice === 'tv' || choice === tvLanguage ? tvLocale : choice;
+}
+
 /** Switches every text and date to `locale` (the TV's UI language). Dates follow the full
  *  locale ("en-US": October 25, "en-GB": 25 October) when fluid speaks its language;
  *  otherwise they are English like the texts. */

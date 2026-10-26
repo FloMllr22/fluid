@@ -14,7 +14,7 @@ import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
-import {loadSettings, saveSettings, type Settings as UserSettings} from './state/settings';
+import {type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 import {PHOTOS} from './theme/backgrounds';
 
 type Screen = 'home' | 'settings';
@@ -60,12 +60,11 @@ function failure(what: string, error: unknown): string {
 	return `${what} ${errorMessage(error)}`;
 }
 
-export function App() {
+export function App({loaded}: {loaded: LoadedSettings}) {
 	const [screen, setScreen] = useState<Screen>('home');
 	/** the app whose menu is open (OK held on it) */
 	const [menuAppId, setMenuAppId] = useState<string | null>(null);
 	const [moving, setMoving] = useState<Moving | null>(null);
-	const [loaded] = useState(loadSettings);
 	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
 	const [inputs, setInputs] = useState<InputSource[]>([]);
