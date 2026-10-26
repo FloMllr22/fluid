@@ -15,6 +15,7 @@ import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
+import {Onboarding} from './screens/Onboarding';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
 import {type LanguageChoice, type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 import {PHOTOS} from './theme/backgrounds';
@@ -74,6 +75,9 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
 	const [inputs, setInputs] = useState<InputSource[]>([]);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
+	/** the first start: the onboarding runs, and the settings are a draft until it is done */
+	const [onboarding, setOnboarding] = useState(loaded.firstStart);
+	const draft = useRef(loaded.firstStart);
 	const toastTimer = useRef(0);
 	const weather = useWeather(settings.weather);
 
@@ -83,14 +87,22 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		toastTimer.current = window.setTimeout(() => setToast(null), TIMING.toastMs);
 	}, []);
 
-	/** Keeps and stores new settings; says so when the TV's storage refuses them. */
+	/** Keeps and stores new settings; says so when the TV's storage refuses them. During
+	 *  the onboarding they are only kept: nothing is stored before it is done, so it comes
+	 *  again if the TV is switched off halfway. */
 	const updateSettings = useCallback(
 		(next: UserSettings) => {
 			setSettings(next);
-			if (!saveSettings(next)) showToast(t('settings.saveFailed'), 'error');
+			if (!draft.current && !saveSettings(next)) showToast(t('settings.saveFailed'), 'error');
 		},
 		[showToast]
 	);
+
+	const finishOnboarding = useCallback(() => {
+		draft.current = false;
+		setOnboarding(false);
+		if (!saveSettings(settings)) showToast(t('settings.saveFailed'), 'error');
+	}, [settings, showToast]);
 
 	// Settings from an older fluid are stored in the current form at once. Settings that
 	// could not be read are reported, then replaced by the defaults fluid starts with, so
@@ -242,6 +254,9 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			settings.language
 		]
 	);
+
+	/** a grid tab of Settings, for the onboarding */
+	const tabById = (id: string): SettingsTab => tabs.find((tab) => tab.id === id) || tabs[0];
 
 	// ----- actions -----
 	const open = (id: string, label: string) => {
@@ -415,14 +430,27 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				rows={rows}
 				weather={weather}
 				unit={UNIT}
-				active={screen === 'home' && !menuApp}
-				hidden={screen !== 'home'}
+				active={screen === 'home' && !menuApp && !onboarding}
+				hidden={screen !== 'home' || onboarding}
 				onActivate={onActivate}
 				onLongPress={onLongPress}
 				moving={movingItem}
 				onMove={onMove}
 				onMoveEnd={onMoveEnd}
 			/>
+			{onboarding && (
+				<Onboarding
+					language={settings.language}
+					tvLocale={TV_LOCALE}
+					onLanguage={onLanguage}
+					apps={tabById(ROW.apps)}
+					background={tabById(BACKGROUND_TAB)}
+					onToggle={onToggle}
+					onReorder={onReorder}
+					onFinish={finishOnboarding}
+					active
+				/>
+			)}
 			{screen === 'home' && menuApp && (
 				<AppMenu app={tileOf(menuApp)} onChoose={onMenuChoose} onClose={() => setMenuAppId(null)} />
 			)}

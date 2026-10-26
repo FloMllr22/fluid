@@ -476,9 +476,9 @@ body {
 	color: var(--color-button-active-text);
 }
 
+/* its height comes from Grid (gridHeight in Settings) */
 .grid__viewport {
 	overflow: hidden;
-	height: 720px;
 	padding: 16px 0;
 }
 /* A wrapping flex row instead of CSS Grid (Chromium 57+). The track holds exactly
@@ -785,6 +785,112 @@ body {
 }
 .pills--large .pill:last-child {
 	margin-right: 0;
+}
+
+/* ---------- onboarding ---------- */
+
+/* As in the mockups: the name and the step at the top, title and lead in the middle, the
+   step dots and the key hint at the foot. */
+.onboarding__brand {
+	position: absolute;
+	left: var(--layout-edge-padding);
+	top: var(--layout-header-top);
+	font-size: var(--font-onboarding-brand);
+	font-weight: 700;
+	letter-spacing: -0.5px;
+	color: var(--color-text-primary);
+}
+.onboarding__step {
+	position: absolute;
+	right: var(--layout-edge-padding);
+	top: calc(var(--layout-header-top) + 8px);
+	font-size: var(--font-onboarding-step);
+	color: var(--color-text-secondary);
+}
+.onboarding__main {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: var(--layout-onboarding-top);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+.onboarding__main--language {
+	top: var(--layout-onboarding-welcome-top);
+}
+.onboarding__title {
+	margin: 0;
+	font-size: var(--font-onboarding-title);
+	font-weight: 600;
+	letter-spacing: -2.5px;
+	color: var(--color-text-primary);
+}
+.onboarding__main--language .onboarding__title {
+	font-size: var(--font-onboarding-welcome);
+	letter-spacing: -3px;
+}
+/* one line where it can, within the safe area */
+.onboarding__lead {
+	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-edge-padding));
+	margin: 18px 0 0;
+	font-size: var(--font-onboarding-lead);
+	line-height: 1.35;
+	color: var(--color-text-secondary);
+}
+.onboarding__choices {
+	margin-top: 80px;
+}
+.onboarding__buttons {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	margin: 40px 0 8px;
+}
+/* the Settings button, in a centred row */
+.onboarding__button {
+	margin: 0 12px;
+}
+.onboarding__empty {
+	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-edge-padding));
+	margin: 56px 0 0;
+	font-size: var(--font-onboarding-lead);
+	line-height: 1.35;
+	color: var(--color-text-muted);
+}
+.onboarding__footer {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: var(--layout-onboarding-footer-bottom);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.onboarding__dots {
+	display: flex;
+	flex-direction: row;
+	margin-bottom: 24px;
+}
+.onboarding__dot {
+	width: 10px;
+	height: 10px;
+	margin: 0 6px;
+	border-radius: 5px;
+	background: var(--color-dot);
+}
+.onboarding__dot--done {
+	background: var(--color-dot-done);
+}
+.onboarding__dot--current {
+	width: 48px;
+	background: var(--color-text-primary);
+}
+.onboarding__hint {
+	margin: 0;
+	font-size: var(--font-onboarding-hint);
+	color: var(--color-text-muted);
 }
 
 /* ---------- app menu ---------- */

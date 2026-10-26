@@ -39,6 +39,8 @@ export const COLOR = {
 	switchKnobOn: '#000000',
 	fieldBg: '#0a0a0a', // a text field, inside its row
 	pillBg: 'rgba(255, 255, 255, 0.08)', // a language choice without focus
+	dot: 'rgba(255, 255, 255, 0.25)', // an onboarding step still to come
+	dotDone: 'rgba(255, 255, 255, 0.5)', // an onboarding step done
 	danger: '#e0564f',
 	overlay: 'rgba(0, 0, 0, 0.9)' // behind the app menu
 } as const;
@@ -62,7 +64,13 @@ export const FONT = {
 	menuAction: 26,
 	moveName: 44, // the app being moved, above its row
 	pill: 28, // a language choice in Settings
-	pillLarge: 34 // a language choice in the onboarding
+	pillLarge: 34, // a language choice in the onboarding
+	onboardingBrand: 36,
+	onboardingStep: 26, // "Step 1 of 3"
+	onboardingWelcome: 96, // the first step's title
+	onboardingTitle: 80,
+	onboardingLead: 32,
+	onboardingHint: 24
 } as const;
 
 export const LAYOUT = {
@@ -77,6 +85,10 @@ export const LAYOUT = {
 	placeHeight: 64, // a place found by the search
 	pillHeight: 80, // a language choice in Settings
 	pillHeightLarge: 104, // a language choice in the onboarding
+	onboardingTop: 180, // the title of the Apps and Background steps
+	onboardingWelcomeTop: 300, // the title of the first step
+	onboardingGridHeight: 480, // two rows of tiles
+	onboardingFooterBottom: 64, // the step dots and the key hint
 	rowsTop: 236, // rows start here, below the greeting and clock
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,
@@ -85,6 +97,7 @@ export const LAYOUT = {
 	rowGap: 28, // vertical space between rows
 	rowBleed: 32, // room above and below a row's tiles for a focused or lifted tile
 	gridColumns: 9, // settings picker grid
+	gridHeight: 720, // the visible part of the settings picker grid, which scrolls
 	gridRowGap: 40, // vertical space between rows of the settings picker grid
 	liftOffset: -6, // a tile picked up in re-order or move mode rises by this much
 	moveRoom: 28, // extra space either side of the tile being moved on Home, for its arrows
