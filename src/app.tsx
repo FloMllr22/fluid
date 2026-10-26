@@ -1,16 +1,19 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
 import {AppMenu, type AppMenuAction} from './components/AppMenu';
+import {Background} from './components/Background';
 import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
 import {errorMessage, t, tn} from './i18n';
+import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
-import {appTile, inputTile, pickInOrder} from './lib/tiles';
+import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
 import {loadSettings, saveSettings, type Settings as UserSettings} from './state/settings';
+import {PHOTOS} from './theme/backgrounds';
 
 type Screen = 'home' | 'settings';
 
@@ -26,6 +29,10 @@ interface Moving {
 
 const ROW = {apps: 'apps', sources: 'sources', misc: 'misc'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings'} as const;
+/** the Settings tab that is not a Home row */
+const BACKGROUND_TAB = 'background';
+
+const PHOTO_IDS = PHOTOS.map((p) => p.id);
 
 /** No options at the moment: the Homebrew option went when root became a requirement,
  *  and the Options tab stays hidden until the next ones arrive. */
@@ -180,6 +187,11 @@ export function App() {
 		[rowApps, shownInputs, appsText, settings.favoriteIds]
 	);
 
+	// the stored background as it can be drawn: a photo this fluid lacks falls back
+	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
+	// named in the user's language, which is set by now
+	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), []);
+
 	const tabs: SettingsTab[] = useMemo(
 		() => [
 			{
@@ -198,9 +210,16 @@ export function App() {
 				items: inputs.map(inputTile),
 				shown: shownInputs.map(inputTile),
 				emptyText: t('inputs.noneFound')
+			},
+			{
+				id: BACKGROUND_TAB,
+				label: t('settings.background'),
+				items: backgroundChoices,
+				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(background)),
+				emptyText: t('rows.empty') // never: the colours are always there
 			}
 		],
-		[apps, inputs, shownApps, shownInputs, appsText, settings.favoriteIds, favoriteCount]
+		[apps, inputs, shownApps, shownInputs, appsText, settings.favoriteIds, favoriteCount, backgroundChoices, background]
 	);
 
 	// ----- actions -----
@@ -229,7 +248,10 @@ export function App() {
 
 	const onToggle = useCallback(
 		(tabId: string, key: string) => {
-			if (tabId === ROW.apps) {
+			if (tabId === BACKGROUND_TAB) {
+				const picked = backgroundFromKey(key);
+				if (picked) updateSettings({...settings, background: picked});
+			} else if (tabId === ROW.apps) {
 				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key);
 				// a hidden app is no favourite any more
 				const favoriteIds = settings.favoriteIds.filter((id) => appIds.indexOf(id) !== -1);
@@ -241,6 +263,8 @@ export function App() {
 		},
 		[settings, apps, inputs, updateSettings]
 	);
+
+	const onBackgroundError = useCallback(() => showToast(t('background.loadFailed'), 'error'), [showToast]);
 
 	const onOption = useCallback(() => {
 		/* no options at the moment, see OPTIONS */
@@ -318,10 +342,12 @@ export function App() {
 
 	return (
 		<>
+			<Background background={background} photos={PHOTOS} onError={onBackgroundError} />
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
 			<Home
 				rows={rows}
 				active={screen === 'home' && !menuApp}
+				hidden={screen !== 'home'}
 				onActivate={onActivate}
 				onLongPress={onLongPress}
 				moving={movingItem}

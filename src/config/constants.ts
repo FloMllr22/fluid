@@ -20,5 +20,6 @@ export const KEY = {
 export const TIMING = {
 	toastMs: 2200,
 	clockTickMs: 1000,
-	longPressMs: 600 // OK held this long enters/leaves re-order mode
+	longPressMs: 600, // OK held this long enters/leaves re-order mode
+	slideshowMs: 5 * 60 * 1000 // the background slideshow shows the next photo
 } as const;

@@ -1,5 +1,6 @@
 // Inline SVG line icons (24×24, drawn as strokes): the More row, the input sources, the
-// tile badges and the arrows of move mode. All drawn for fluid; no third-party artwork.
+// slideshow tile, the tile badges and the arrows of move mode. All drawn for fluid; no
+// third-party artwork.
 
 import type {ComponentChildren} from 'preact';
 
@@ -13,7 +14,8 @@ export type GlyphName =
 	| 'speaker'
 	| 'monitor'
 	| 'phone'
-	| 'camera';
+	| 'camera'
+	| 'slideshow';
 
 const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 	house: () => <path d="M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8M10 20v-6h4v6" />,
@@ -65,6 +67,13 @@ const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 		<>
 			<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5l1.5-2h6l1.5 2H19a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z" />
 			<circle cx="12" cy="13" r="3.5" />
+		</>
+	),
+	// a picture in front of another: the background slideshow
+	slideshow: () => (
+		<>
+			<rect x="3" y="7" width="15" height="12" rx="1.5" />
+			<path d="M7 4h12.5A1.5 1.5 0 0 1 21 5.5V15M5.5 16.5l3.5-4 3 3 2-2 3 3" />
 		</>
 	)
 };

@@ -27,6 +27,8 @@ export interface MovingItem {
 interface Props {
 	rows: HomeRow[];
 	active: boolean;
+	/** another screen is in front: Home stays mounted, keeping its focus, but is not drawn */
+	hidden?: boolean;
 	onActivate: (rowId: string, item: TileModel) => void;
 	/** OK held on an item, or the pointer's button held on it */
 	onLongPress: (rowId: string, item: TileModel) => void;
@@ -44,7 +46,7 @@ interface Props {
  *  Move mode is a variant of this: the focused item stays focused and lifted while
  *  Left/Right move it along its row, OK keeps its new place and Back cancels. Focus is
  *  kept by item, so it follows the item and stays on it afterwards. */
-export function Home({rows, active, onActivate, onLongPress, moving, onMove, onMoveEnd}: Props) {
+export function Home({rows, active, hidden, onActivate, onLongPress, moving, onMove, onMoveEnd}: Props) {
 	const now = useClock();
 	const timeFormat = useTimeFormat();
 	const [rowIndex, setRowIndex] = useState(0);
@@ -144,7 +146,7 @@ export function Home({rows, active, onActivate, onLongPress, moving, onMove, onM
 	// item before its menu opens, as the arrow keys may have moved focus away meanwhile:
 	// the menu, and move mode, act on the focused item.
 	return (
-		<div class={`screen${moving ? ' home--moving' : ''}`}>
+		<div class={`screen${hidden ? ' screen--hidden' : ''}${moving ? ' home--moving' : ''}`}>
 			<Header now={now} moving={movingItem ? movingItem.label : undefined} />
 			<Clock now={now} format={timeFormat} />
 			<div class="rows">

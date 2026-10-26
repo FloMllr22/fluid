@@ -1,9 +1,12 @@
-// Adapters from data (apps, inputs) to what the Tile component draws.
+// Adapters from data (apps, inputs, backgrounds) to what the Tile component draws.
 
 import type {GlyphName} from '../components/Glyph';
 import type {TileModel} from '../components/Tile';
-import {t} from '../i18n';
+import {type MessageKey, t} from '../i18n';
 import {type AppEntry, type InputSource, LIVE_TV_ID} from '../platform';
+import {BACKGROUND_COLORS, type BackgroundColor} from '../state/settings';
+import {COLOR_BACKGROUNDS} from '../theme/backgrounds';
+import {backgroundKey, type Photo} from './backgrounds';
 
 /** EIM's icon names (LG's images, which fluid does not ship) → fluid's own glyphs.
  *  Anything not listed, such as HDMI_1 … HDMI_4, AV, USB, gets the generic input glyph. */
@@ -45,6 +48,37 @@ export function appTile(app: AppEntry, favorite = false): TileModel {
 export function inputTile(input: InputSource): TileModel {
 	const label = input.id === LIVE_TV_ID ? t('inputs.liveTv') : input.label;
 	return {key: input.appId, label, glyph: inputGlyph(input.icon)};
+}
+
+const COLOR_NAMES: Record<BackgroundColor, MessageKey> = {
+	dark: 'background.dark',
+	black: 'background.black',
+	blue: 'background.blue'
+};
+
+/** The name of a photo that comes with fluid. Every photo has one in every language (see
+ *  the locale tests). */
+export function photoName(id: string): string {
+	return t(`background.photo.${id}` as MessageKey);
+}
+
+/** The choices of the Background tab: the colours, each photo, and a slideshow when
+ *  there are two photos or more. Each tile is a preview. */
+export function backgroundTiles(photos: Photo[]): TileModel[] {
+	const tiles: TileModel[] = BACKGROUND_COLORS.map((color) => ({
+		key: backgroundKey({kind: 'color', color}),
+		label: t(COLOR_NAMES[color]),
+		swatch: COLOR_BACKGROUNDS[color]
+	}));
+	for (const photo of photos)
+		tiles.push({
+			key: backgroundKey({kind: 'photo', id: photo.id}),
+			label: photoName(photo.id),
+			imageUrl: photo.thumbUrl
+		});
+	if (photos.length > 1)
+		tiles.push({key: backgroundKey({kind: 'slideshow'}), label: t('background.slideshow'), glyph: 'slideshow'});
+	return tiles;
 }
 
 /** Order `items` by an ID list, dropping IDs that no longer exist. */

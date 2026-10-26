@@ -1,5 +1,6 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {PLATFORM_ERROR_CODES, PlatformError} from '../platform';
+import {PHOTOS} from '../theme/backgrounds';
 import {createDateFormatter} from './dates';
 import {
 	currentLanguage,
@@ -49,6 +50,10 @@ describe('locale files', () => {
 		it(`${language}: names seven weekdays and twelve months`, () => {
 			expect(texts['clock.weekdays']).toHaveLength(7);
 			expect(texts['clock.months']).toHaveLength(12);
+		});
+
+		it(`${language}: names every photo that comes with fluid`, () => {
+			for (const photo of PHOTOS) expect(texts, photo.id).toHaveProperty([`background.photo.${photo.id}`]);
 		});
 	}
 

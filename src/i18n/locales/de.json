@@ -55,10 +55,18 @@
 	"move.title": "Verschieben",
 	"move.hint": "← → verschieben · OK ablegen · Zurück abbrechen",
 
+	"background.dark": "Dunkel",
+	"background.black": "OLED-Schwarz",
+	"background.blue": "Ruhiges Blau",
+	"background.slideshow": "Diashow",
+	"background.loadFailed": "Ein Hintergrundbild konnte nicht geladen werden.",
+
 	"settings.title": "Einstellungen",
 	"settings.options": "Optionen",
 	"settings.reorder.apps": "Apps verschieben",
 	"settings.reorder.sources": "Quellen verschieben",
+	"settings.background": "Hintergrund",
+	"settings.hint.pick": "OK wählt aus · Zurück zum Home-Screen",
 	"settings.done": "Fertig",
 	"settings.reorderEmpty": "Noch nichts auf dem Home-Screen.",
 	"settings.hint.select": "OK hinzufügen oder entfernen · OK halten zum Verschieben · Zurück zum Home-Screen",

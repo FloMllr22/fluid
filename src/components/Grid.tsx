@@ -4,8 +4,9 @@ import {Tile, type TileModel} from './Tile';
 
 interface Props {
 	items: TileModel[];
-	/** select: tick badges on chosen items, others dimmed. reorder: plain tiles. */
-	mode: 'select' | 'reorder';
+	/** select: tick badges on chosen items, others dimmed. pick: a tick badge on the one
+	 *  chosen, nothing dimmed (the tiles are previews). reorder: plain tiles. */
+	mode: 'select' | 'pick' | 'reorder';
 	checkedKeys: string[];
 	/** index of the tile picked up in re-order mode, or -1 */
 	liftedIndex: number;
@@ -34,7 +35,7 @@ export function Grid({items, mode, checkedKeys, liftedIndex, focused, selected, 
 		<div class="grid__viewport">
 			<div class="grid__track" style={{transform: `translateY(${-offset}px)`}}>
 				{items.map((item, i) => {
-					const checked = mode === 'select' && checkedKeys.indexOf(item.key) !== -1;
+					const checked = mode !== 'reorder' && checkedKeys.indexOf(item.key) !== -1;
 					return (
 						<Tile
 							key={item.key}

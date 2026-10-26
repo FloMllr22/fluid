@@ -12,6 +12,8 @@ export interface TileModel {
 	glyph?: GlyphName;
 	/** monogram background when there is no artwork */
 	color?: string;
+	/** a CSS background that fills the tile, with nothing on it (the background colours) */
+	swatch?: string;
 	/** a favourite app: shown with a star */
 	favorite?: boolean;
 }
@@ -72,6 +74,7 @@ export function Tile({
 	const classes = ['tile', focused && 'tile--focused', lifted && 'tile--lifted', dimmed && 'tile--dimmed']
 		.filter(Boolean)
 		.join(' ');
+	const fill = model.swatch || (model.color && !model.imageUrl ? model.color : undefined);
 	return (
 		<div
 			class={classes}
@@ -81,12 +84,12 @@ export function Tile({
 			onMouseLeave={endHold}
 			onClick={onClick}
 		>
-			<div class="tile__box" style={model.color && !model.imageUrl ? {background: model.color} : undefined}>
+			<div class="tile__box" style={fill ? {background: fill} : undefined}>
 				{model.imageUrl ? (
 					<img class="tile__image" src={model.imageUrl} alt="" />
 				) : model.glyph ? (
 					<Glyph name={model.glyph} />
-				) : (
+				) : model.swatch ? null : (
 					<div class="tile__monogram">{model.label.charAt(0).toUpperCase()}</div>
 				)}
 				{model.favorite && (

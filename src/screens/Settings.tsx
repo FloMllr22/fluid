@@ -11,11 +11,13 @@ import {LAYOUT} from '../theme/tokens';
 export interface SettingsTab {
 	id: string;
 	label: string;
-	/** the re-order button, e.g. "Re-order apps" */
-	reorderLabel: string;
+	/** the re-order button, e.g. "Re-order apps". A tab without one is for picking one
+	 *  item (the background): OK picks it, and there is no re-order mode. */
+	reorderLabel?: string;
 	/** everything available */
 	items: TileModel[];
-	/** what's on the home screen, in home-screen order */
+	/** what's on the home screen, in home-screen order; on a tab for picking, the item
+	 *  picked */
 	shown: TileModel[];
 	/** how many items lead `shown` as their own group (favourites); re-ordering keeps each
 	 *  item within its group */
@@ -28,6 +30,7 @@ interface Props {
 	tabs: SettingsTab[];
 	options: OptionItem[];
 	active: boolean;
+	/** OK on an item: add or remove it, or on a tab for picking, pick it */
 	onToggle: (tabId: string, key: string) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
 	onOption: (optionId: string) => void;
@@ -43,12 +46,14 @@ interface Held {
 	original: string[];
 }
 
-/** Settings: pick which apps and sources appear on the home rows and their order, plus options.
+/** Settings: pick which apps and sources appear on the home rows and their order, the
+ *  background, plus options.
  *
- *  Tabs: one grid tab per row (Apps, Sources), then Options if there are any.
+ *  Tabs: one grid tab per row (Apps, Sources), then Background, then Options if there are any.
  *  Grid tabs, select mode: everything available; OK adds/removes an item.
  *  Grid tabs, re-order mode (hold OK, or the button): only what's on the home screen, in order;
- *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave. */
+ *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave.
+ *  Background tab: previews of every background; OK picks one, which shows at once. */
 export function Settings({tabs, options, active, onToggle, onReorder, onOption, onClose}: Props) {
 	const [tabIndex, setTabIndex] = useState(0);
 	const [zone, setZone] = useState<Zone>('tabs');
@@ -65,6 +70,8 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 	const count = onOptions ? options.length : items.length;
 	const cols = LAYOUT.gridColumns;
 	const keysOf = (list: TileModel[]) => list.map((t) => t.key);
+	/** the tab has a re-order mode, and the button for it */
+	const canReorder = tab !== undefined && tab.reorderLabel !== undefined;
 
 	const selectTab = (i: number) => {
 		if (reordering) return; // tab is locked while re-ordering
@@ -75,7 +82,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 
 	/** Switch re-order mode, keeping focus on the same item where it exists in both lists. */
 	const setMode = (next: boolean) => {
-		if (!tab || next === reordering) return;
+		if (!tab || !canReorder || next === reordering) return;
 		const focusedKey = items[gridIndex]?.key;
 		const target = next ? tab.shown : tab.items;
 		const i = focusedKey ? keysOf(target).indexOf(focusedKey) : -1;
@@ -186,7 +193,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 				case 'up':
 					if (gridIndex >= cols) setGridIndex((i) => i - cols);
 					// Spatial: the button sits top-right, so leave the grid towards whichever is above.
-					else setZone(reordering || gridIndex % cols >= cols / 2 ? 'button' : 'tabs');
+					else setZone(canReorder && (reordering || gridIndex % cols >= cols / 2) ? 'button' : 'tabs');
 					break;
 				case 'down':
 					setGridIndex((i) => (i + cols < count ? i + cols : i));
@@ -207,6 +214,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 			reordering,
 			held,
 			items,
+			canReorder,
 			onReorder,
 			onClose
 		]
@@ -221,7 +229,9 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 				? 'settings.hint.holding'
 				: reordering
 					? 'settings.hint.reorder'
-					: 'settings.hint.select'
+					: canReorder
+						? 'settings.hint.select'
+						: 'settings.hint.pick'
 	);
 	const labels = tabs.map((tb) => tb.label).concat(hasOptions ? [t('settings.options')] : []);
 	const buttonClass = [
@@ -259,7 +269,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 							{label}
 						</div>
 					))}
-					{tab && (
+					{tab && canReorder && (
 						<div class={buttonClass} onMouseEnter={() => setZone('button')} onClick={() => setMode(!reordering)}>
 							{reordering ? t('settings.done') : tab.reorderLabel}
 						</div>
@@ -268,7 +278,7 @@ export function Settings({tabs, options, active, onToggle, onReorder, onOption, 
 				{tab && (
 					<Grid
 						items={items}
-						mode={reordering ? 'reorder' : 'select'}
+						mode={reordering ? 'reorder' : canReorder ? 'select' : 'pick'}
 						checkedKeys={keysOf(tab.shown)}
 						liftedIndex={held ? held.index : -1}
 						focused={zone === 'content'}

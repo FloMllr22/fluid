@@ -55,10 +55,18 @@
 	"move.title": "Moving",
 	"move.hint": "← → move · OK puts it down · Back cancels",
 
+	"background.dark": "Dark",
+	"background.black": "OLED black",
+	"background.blue": "Calm blue",
+	"background.slideshow": "Slideshow",
+	"background.loadFailed": "A background photo couldn't be loaded.",
+
 	"settings.title": "Settings",
 	"settings.options": "Options",
 	"settings.reorder.apps": "Re-order apps",
 	"settings.reorder.sources": "Re-order sources",
+	"settings.background": "Background",
+	"settings.hint.pick": "OK picks one · Back returns home",
 	"settings.done": "Done",
 	"settings.reorderEmpty": "Nothing on the home screen yet.",
 	"settings.hint.select": "OK adds or removes an item · Hold OK to re-order · Back returns home",
