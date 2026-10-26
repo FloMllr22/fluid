@@ -15,7 +15,10 @@ back to LG's own home.
 - **Background**: dark, OLED black or calm blue, one of three photos, or a slideshow of them
 - **Weather** (optional, off until you turn it on): the sky and temperature at a place you
   search for, from [Open-Meteo](https://open-meteo.com), in °C or °F as your TV's region uses
-- Speaks English and German, following the TV's language, and the TV's 12/24-hour clock setting
+- **First start**: a short setup in three steps (language, apps, background); all of it can be
+  changed later in Settings
+- Speaks English and German: the TV's language, or the one you pick; follows the TV's 12/24-hour
+  clock setting
 - Works with the remote's arrow keys and with the Magic Remote pointer
 - No telemetry, and no network access at all unless you turn the weather on (see
   [Privacy](#privacy)); your settings stay in the app's storage on the TV
@@ -34,6 +37,10 @@ reports (TV model, webOS version, firmware version) are welcome.
 
 | Where | Key | Does |
 |---|---|---|
+| First start, language | ← →, OK | Pick a language and go on |
+| First start, apps and background | OK | Go on with what is chosen (focus starts on **Next** / **Finish**) |
+| First start, apps and background | ↓, then as in Settings | Choose apps (and re-order them) or a background |
+| First start | Back | Return to the step before |
 | Home | ↑ ↓ | Move between rows |
 | Home | ← → | Move along a row |
 | Home | OK | Open the app or input |
@@ -48,6 +55,7 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Settings, Weather tab | OK | Turn the weather on or off, open the keyboard to search for a place, or use the place found |
 | Typing a place | OK | Search at once (the search also starts when you pause typing) |
 | Typing a place | Back, ↑ ↓ | Leave the field |
+| Settings, Language tab | ← →, OK | Use that language (it changes at once) |
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
@@ -145,7 +153,7 @@ luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.f
 
 | Command | Does |
 |---|---|
-| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list, `?weather-error=offline` (or `service`) a failed weather and place search, `?weather-code=71` (any WMO code) and `?weather-night=1` other skies. The browser never goes online: places and weather are sample data |
+| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list, `?weather-error=offline` (or `service`) a failed weather and place search, `?weather-code=71` (any WMO code) and `?weather-night=1` other skies. The browser never goes online: places and weather are sample data. `localStorage.clear()` in the console, then reload, shows the first-start setup again |
 | `npm run check` | Lint (Biome), type check (TypeScript) and unit tests (Vitest) |
 | `npm run format` | Formats the code and applies safe lint fixes |
 | `npm run build` | Type-checks, builds `dist/` and checks the bundle's syntax and CSS for webOS 4 |
@@ -179,7 +187,8 @@ pull requests.
   checked field by field before fluid uses them.
 - **Pointer.** The system draws the pointer, so CSS cannot hide it; fluid calls
   `webOSSystem.setCursorHidden(true)` whenever it comes to the foreground.
-- **Language.** fluid follows the TV's UI language (`webOSSystem.locale`) and falls back
+- **Language.** Unless a language is picked in Settings (or at the first start), fluid
+  follows the TV's UI language (`webOSSystem.locale`) and falls back
   to English. Dates come from `Intl` where the engine has the locale, otherwise from the
   names in the locale file; plural rules are fluid's own, as `Intl.PluralRules` only
   arrived in Chromium 63. To add a language, translate `src/i18n/locales/en.json` and add
@@ -198,10 +207,12 @@ src/
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
   i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
   state/       settings: one versioned schema with migrations; the weather cache
-  lib/         clock, ordering, tile adapters, weather
-  hooks/       remote keys, OK press/hold, clock tick, time format, weather, place search
-  components/  Header, Clock, WeatherNow, Row, Grid, Tile, OptionList, WeatherPanel, Glyph, Toast
-  screens/     Home, Settings
+  lib/         clock, ordering, grid navigation, tile adapters, weather
+  hooks/       remote keys, OK press/hold, clock tick, time format, weather, place search,
+               grid tabs (Settings and the first start)
+  components/  Header, Clock, WeatherNow, Row, Grid, Tile, OptionList, WeatherPanel,
+               LanguageChoice, Glyph, Toast
+  screens/     Home, Settings, Onboarding (first start)
   app.tsx      state, data loading and wiring
 scripts/       package, deploy, bundle check, Homebrew manifest
 public/        appinfo.json, app icon, licence texts
