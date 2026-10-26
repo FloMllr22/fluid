@@ -20,7 +20,9 @@ export const COLOR = {
 	photoTextHalo: 'rgba(0, 0, 0, 0.95)',
 	textPrimary: '#EEEEEE',
 	textSecondary: '#AAAAAA',
-	textMuted: '#666666',
+	// labels that are not active: WCAG AA (4.5:1) behind the letters on every background
+	// and photo, measured; the brightest spot is the middle of calm blue (#999999 needed)
+	textMuted: '#9C9C9C',
 	tileBg: '#161616',
 	tileBgFocus: '#202020',
 	tileBorder: '#2a2a2a',
