@@ -10,6 +10,24 @@ export const COLOR = {
 	bgBlueInner: '#24324a', // the "calm blue" background
 	bgBlueMid: '#18202c',
 	bgBlueOuter: '#0a0e15',
+	// "dusk": an evening sky over the sea, from the design mockup. Sky from the top down to
+	// the bright horizon, the sea below it; a warm glow and a pink bloom on the horizon.
+	duskSkyTop: '#091735',
+	duskSkyHigh: '#14346a',
+	duskSkyMid: '#36508f',
+	duskSkyLow: '#86589f',
+	duskHorizon: '#df8b6c',
+	duskSeaTop: '#3b3a72',
+	duskSeaMid: '#1c2352',
+	duskSeaBottom: '#0b1030',
+	duskGlow: 'rgba(255, 160, 96, 0.55)',
+	duskGlowEdge: 'rgba(255, 160, 96, 0)',
+	duskBloom: 'rgba(206, 86, 170, 0.5)',
+	duskBloomEdge: 'rgba(206, 86, 170, 0)',
+	// shade over its left part, where the app list crosses the horizon: keeps the names
+	// there at WCAG AA (measured on the horizon behind the inactive names)
+	duskShade: 'rgba(6, 10, 28, 0.5)',
+	duskShadeEdge: 'rgba(6, 10, 28, 0)',
 	// Over a photo: darker only behind the greeting and clock (top) and the last row and
 	// the hint (bottom), light in between so the photo shows. Text keeps WCAG AA through
 	// a dark halo right behind its letters (photoTextHalo), measured behind the letters on

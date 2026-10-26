@@ -323,6 +323,7 @@ describe('background', () => {
 		for (const background of [
 			{kind: 'color', color: 'black'},
 			{kind: 'color', color: 'blue'},
+			{kind: 'color', color: 'dusk'},
 			{kind: 'photo', id: 'lake'},
 			{kind: 'slideshow'}
 		])

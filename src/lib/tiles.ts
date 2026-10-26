@@ -53,7 +53,8 @@ export function inputTile(input: InputSource): TileModel {
 const COLOR_NAMES: Record<BackgroundColor, MessageKey> = {
 	dark: 'background.dark',
 	black: 'background.black',
-	blue: 'background.blue'
+	blue: 'background.blue',
+	dusk: 'background.dusk'
 };
 
 /** The name of a photo that comes with fluid. Every photo has one in every language (see
