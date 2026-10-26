@@ -2,26 +2,32 @@ import {useCallback, useState} from 'preact/hooks';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {t} from '../i18n';
-import {Tile, type TileModel} from './Tile';
+import {popoverTop} from '../lib/home';
+import {LAYOUT} from '../theme/tokens';
+import type {GlyphName} from './Glyph';
+import {Menu, menuHeight} from './Menu';
+import type {TileModel} from './Tile';
 
 export type AppMenuAction = 'favorite' | 'move' | 'hide' | 'cancel';
 
 interface Props {
 	app: TileModel;
+	/** where the app's row is on the screen: the menu opens beside it */
+	rowTop: number;
 	onChoose: (action: AppMenuAction) => void;
 	onClose: () => void;
 }
 
-/** The options for one app, over the dimmed home screen: make it a favourite or take that
- *  back, move it along the row, hide it, or cancel. ← → choose, OK confirms, Back closes;
- *  the pointer chooses by pointing and clicking. Opened by holding OK, whose release it
- *  ignores. */
-export function AppMenu({app, onChoose, onClose}: Props) {
-	const actions: {id: AppMenuAction; label: string}[] = [
-		{id: 'favorite', label: t(app.favorite ? 'menu.unfavorite' : 'menu.favorite')},
-		{id: 'move', label: t('menu.move')},
-		{id: 'hide', label: t('menu.hide')},
-		{id: 'cancel', label: t('menu.cancel')}
+/** The options for one app, beside it in the list: make it a favourite or take that back,
+ *  move it along the list, hide it, or cancel. ↑ ↓ choose, OK confirms, ← or Back close;
+ *  the pointer chooses by pointing and clicking, and closes it by clicking elsewhere.
+ *  Opened by holding OK, whose release it ignores. */
+export function AppMenu({app, rowTop, onChoose, onClose}: Props) {
+	const actions: {id: AppMenuAction; label: string; glyph: GlyphName}[] = [
+		{id: 'favorite', label: t(app.favorite ? 'menu.unfavorite' : 'menu.favorite'), glyph: 'star'},
+		{id: 'move', label: t('menu.move'), glyph: 'move'},
+		{id: 'hide', label: t('menu.hide'), glyph: 'hide'},
+		{id: 'cancel', label: t('menu.cancel'), glyph: 'close'}
 	];
 	const [selected, setSelected] = useState(0);
 	const last = actions.length - 1;
@@ -34,31 +40,33 @@ export function AppMenu({app, onChoose, onClose}: Props) {
 
 	const handleKey = useCallback(
 		(key: NavKey): boolean => {
-			if (key === 'left') setSelected((i) => clamp(i - 1, 0, last));
-			else if (key === 'right') setSelected((i) => clamp(i + 1, 0, last));
-			else if (key === 'back') onClose();
+			if (key === 'up') setSelected((i) => clamp(i - 1, 0, last));
+			else if (key === 'down') setSelected((i) => clamp(i + 1, 0, last));
+			else if (key === 'left' || key === 'back') onClose();
 			return true; // the menu takes every key; OK goes through useOkPress
 		},
 		[last, onClose]
 	);
 	useKeys(handleKey);
 
+	const top = popoverTop(
+		rowTop,
+		LAYOUT.listRowHeight,
+		menuHeight(actions.length),
+		LAYOUT.safeY,
+		LAYOUT.screenHeight - LAYOUT.safeY
+	);
 	return (
-		<div class="menu">
-			<Tile model={app} focused />
-			<div class="menu__actions">
-				{actions.map((action, i) => (
-					<div
-						key={action.id}
-						class={`menu__action${i === selected ? ' menu__action--focused' : ''}`}
-						onMouseEnter={() => setSelected(i)}
-						onClick={() => onChoose(action.id)}
-					>
-						{action.label}
-					</div>
-				))}
-			</div>
-			<p class="hint">{t('menu.hint')}</p>
-		</div>
+		<>
+			<div class="catcher catcher--menu" onClick={onClose} />
+			<Menu
+				className="menu--app"
+				top={top}
+				entries={actions.map((action) => ({key: action.id, label: action.label, glyph: action.glyph}))}
+				focus={selected}
+				onPoint={setSelected}
+				onPick={(i) => onChoose(actions[i].id)}
+			/>
+		</>
 	);
 }

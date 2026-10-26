@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
-import {AppMenu, type AppMenuAction} from './components/AppMenu';
+import type {AppMenuAction} from './components/AppMenu';
 import {Background} from './components/Background';
 import {LanguagePanel} from './components/LanguageChoice';
 import type {OptionItem} from './components/OptionList';
@@ -14,7 +14,7 @@ import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order'
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
-import {Home, type HomeRow, type MovingItem} from './screens/Home';
+import {Home, type MovingApp} from './screens/Home';
 import {Onboarding} from './screens/Onboarding';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
 import {type LanguageChoice, type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
@@ -25,17 +25,15 @@ type Screen = 'home' | 'settings';
 /** The app list: still loading, read from the TV, or failed. */
 type AppsState = {status: 'loading'} | {status: 'ready'; apps: AppEntry[]} | {status: 'failed'; error: unknown};
 
-/** An app being moved along the Apps row (move mode), and the row's order meanwhile;
+/** An app being moved along the list on Home (move mode), and the list's order meanwhile;
  *  stored once OK puts it down. */
 interface Moving {
 	id: string;
 	order: string[];
 }
 
-const ROW = {apps: 'apps', sources: 'sources', misc: 'misc'} as const;
-const MISC = {lgHome: 'lg-home', settings: 'settings'} as const;
-/** the Settings tab that is not a Home row */
-const BACKGROUND_TAB = 'background';
+/** the grid tabs of Settings: the apps and the sources shown on Home, and the background */
+const TAB = {apps: 'apps', sources: 'sources', background: 'background'} as const;
 
 const PHOTO_IDS = PHOTOS.map((p) => p.id);
 
@@ -170,8 +168,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		);
 		return pickInOrder(chosen, order, (a) => a.id);
 	}, [apps, settings.appIds, settings.favoriteIds]);
-	// while an app is being moved, the Apps row shows the order it has meanwhile
-	const rowApps = useMemo(
+	// while an app is being moved, the list shows the order it has meanwhile
+	const listApps = useMemo(
 		() => (moving ? pickInOrder(apps, moving.order, (a) => a.id) : shownApps),
 		[apps, moving, shownApps]
 	);
@@ -183,31 +181,9 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[inputs, settings.sourceIds]
 	);
 
-	const rows: HomeRow[] = useMemo(
-		() => [
-			{
-				id: ROW.apps,
-				label: t('rows.apps'),
-				items: rowApps.map(tileOf),
-				emptyText: appsText || t('apps.noneSelected')
-			},
-			{
-				id: ROW.sources,
-				label: t('rows.sources'),
-				items: shownInputs.map(inputTile),
-				emptyText: t('inputs.noneSelected')
-			},
-			{
-				id: ROW.misc,
-				label: t('rows.more'),
-				items: [
-					{key: MISC.lgHome, label: t('home.lgHome'), glyph: 'house'},
-					{key: MISC.settings, label: t('home.settings'), glyph: 'gear'}
-				]
-			}
-		],
-		[rowApps, shownInputs, appsText, settings.favoriteIds, settings.language]
-	);
+	const homeApps = useMemo(() => listApps.map(tileOf), [listApps, settings.favoriteIds]);
+	// Live TV is named in the user's language, again when it changes
+	const homeSources = useMemo(() => shownInputs.map(inputTile), [shownInputs, settings.language]);
 
 	// the stored background as it can be drawn: a photo this fluid lacks falls back
 	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
@@ -217,7 +193,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const tabs: SettingsTab[] = useMemo(
 		() => [
 			{
-				id: ROW.apps,
+				id: TAB.apps,
 				label: t('rows.apps'),
 				reorderLabel: t('settings.reorder.apps'),
 				items: apps.map(tileOf),
@@ -226,7 +202,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				emptyText: appsText || t('apps.noneFound')
 			},
 			{
-				id: ROW.sources,
+				id: TAB.sources,
 				label: t('rows.sources'),
 				reorderLabel: t('settings.reorder.sources'),
 				items: inputs.map(inputTile),
@@ -234,7 +210,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				emptyText: t('inputs.noneFound')
 			},
 			{
-				id: BACKGROUND_TAB,
+				id: TAB.background,
 				label: t('settings.background'),
 				items: backgroundChoices,
 				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(background)),
@@ -265,29 +241,22 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			.catch((error: unknown) => showToast(failure(t('launch.failed', {name: label}), error), 'error'));
 	};
 
-	const onActivate = useCallback(
-		(rowId: string, item: TileModel) => {
-			if (rowId === ROW.misc) {
-				if (item.key === MISC.settings) setScreen('settings');
-				else if (item.key === MISC.lgHome)
-					platform
-						.launchLgHome()
-						.catch((error: unknown) =>
-							showToast(failure(t('launch.failed', {name: t('home.lgHome')}), error), 'error')
-						);
-				return;
-			}
-			open(item.key, item.label);
-		},
-		[showToast]
-	);
+	const onOpen = useCallback((item: TileModel) => open(item.key, item.label), [showToast]);
+
+	const onLgHome = useCallback(() => {
+		platform
+			.launchLgHome()
+			.catch((error: unknown) => showToast(failure(t('launch.failed', {name: t('home.lgHome')}), error), 'error'));
+	}, [showToast]);
+
+	const onSettings = useCallback(() => setScreen('settings'), []);
 
 	const onToggle = useCallback(
 		(tabId: string, key: string) => {
-			if (tabId === BACKGROUND_TAB) {
+			if (tabId === TAB.background) {
 				const picked = backgroundFromKey(key);
 				if (picked) updateSettings({...settings, background: picked});
-			} else if (tabId === ROW.apps) {
+			} else if (tabId === TAB.apps) {
 				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key);
 				// a hidden app is no favourite any more
 				const favoriteIds = settings.favoriteIds.filter((id) => appIds.indexOf(id) !== -1);
@@ -352,14 +321,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		/* no options at the moment, see OPTIONS */
 	}, []);
 
-	/** Holding OK on an app opens its menu; on anything else it simply opens the item. */
-	const onLongPress = useCallback(
-		(rowId: string, item: TileModel) => {
-			if (rowId === ROW.apps) setMenuAppId(item.key);
-			else onActivate(rowId, item);
-		},
-		[onActivate]
-	);
+	/** Holding OK on an app opens its menu. */
+	const onAppMenu = useCallback((item: TileModel) => setMenuAppId(item.key), []);
 
 	const menuApp = menuAppId === null ? undefined : shownApps.find((a) => a.id === menuAppId);
 
@@ -382,7 +345,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		}
 	};
 
-	/** Move mode: ← → swap the app with its neighbour, within its group (favourites or not). */
+	/** Move mode: ↑ ↓ swap the app with its neighbour, within its group (favourites or not). */
 	const onMove = useCallback(
 		(step: -1 | 1) => {
 			setMoving((m) => {
@@ -395,7 +358,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	);
 
 	/** OK stores the new order, Back drops it. An app put down where it was changes
-	 *  nothing, so a row of all apps (no choice stored yet) stays one. */
+	 *  nothing, so a list of all apps (no choice stored yet) stays one. */
 	const onMoveEnd = useCallback(
 		(keep: boolean) => {
 			setMoving(null);
@@ -406,17 +369,17 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[moving, shownApps, settings, updateSettings]
 	);
 
-	const movingItem = useMemo((): MovingItem | undefined => {
+	const movingApp = useMemo((): MovingApp | undefined => {
 		if (!moving) return undefined;
 		const canMove = (step: -1 | 1) =>
 			swapNeighbour(moving.order, settings.favoriteIds, moving.id, step) !== moving.order;
-		return {rowId: ROW.apps, key: moving.id, arrows: {left: canMove(-1), right: canMove(1)}};
+		return {key: moving.id, arrows: {up: canMove(-1), down: canMove(1)}};
 	}, [moving, settings.favoriteIds]);
 
 	/** Replace a row's order with `keys` (the full list of what's shown). */
 	const onReorder = useCallback(
 		(tabId: string, keys: string[]) => {
-			if (tabId === ROW.apps) updateSettings({...settings, appIds: keys});
+			if (tabId === TAB.apps) updateSettings({...settings, appIds: keys});
 			else updateSettings({...settings, sourceIds: keys});
 		},
 		[settings, updateSettings]
@@ -427,14 +390,24 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			<Background background={background} photos={PHOTOS} onError={onBackgroundError} />
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
 			<Home
-				rows={rows}
+				apps={homeApps}
+				appsEmptyText={appsText || t('apps.noneSelected')}
+				sources={homeSources}
+				sourcesEmptyText={t('inputs.noneSelected')}
 				weather={weather}
 				unit={UNIT}
 				active={screen === 'home' && !menuApp && !onboarding}
 				hidden={screen !== 'home' || onboarding}
-				onActivate={onActivate}
-				onLongPress={onLongPress}
-				moving={movingItem}
+				onOpen={onOpen}
+				onLgHome={onLgHome}
+				onSettings={onSettings}
+				onAppMenu={onAppMenu}
+				menu={
+					screen === 'home' && menuApp
+						? {app: tileOf(menuApp), onChoose: onMenuChoose, onClose: () => setMenuAppId(null)}
+						: undefined
+				}
+				moving={movingApp}
 				onMove={onMove}
 				onMoveEnd={onMoveEnd}
 			/>
@@ -443,16 +416,13 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					language={settings.language}
 					tvLocale={TV_LOCALE}
 					onLanguage={onLanguage}
-					apps={tabById(ROW.apps)}
-					background={tabById(BACKGROUND_TAB)}
+					apps={tabById(TAB.apps)}
+					background={tabById(TAB.background)}
 					onToggle={onToggle}
 					onReorder={onReorder}
 					onFinish={finishOnboarding}
 					active
 				/>
-			)}
-			{screen === 'home' && menuApp && (
-				<AppMenu app={tileOf(menuApp)} onChoose={onMenuChoose} onClose={() => setMenuAppId(null)} />
 			)}
 			{screen === 'settings' && (
 				<Settings

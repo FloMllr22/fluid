@@ -1,14 +1,13 @@
 {
 	"rows.apps": "Apps",
 	"rows.sources": "Quellen",
-	"rows.more": "Mehr",
 	"rows.empty": "Noch nichts da",
 
 	"home.greeting.morning": "Guten Morgen",
 	"home.greeting.afternoon": "Guten Tag",
 	"home.greeting.evening": "Guten Abend",
 	"home.lgHome": "LG Home",
-	"home.settings": "Einstellungen",
+	"home.lgHomeShort": "LG",
 
 	"clock.am": "AM",
 	"clock.pm": "PM",
@@ -28,6 +27,8 @@
 		"Dezember"
 	],
 	"clock.dayMonth": "{day}. {month}",
+	"clock.dateLine": "{weekday}, {date} · {time}",
+	"clock.withPeriod": "{time} {period}",
 
 	"apps.loading": "Apps werden geladen …",
 	"apps.noneSelected": "Keine Apps ausgewählt – in den Einstellungen hinzufügen",
@@ -43,6 +44,8 @@
 	"inputs.noneFound": "Der TV meldet keine Eingänge",
 	"inputs.loadFailed": "fluid konnte die Eingänge nicht lesen.",
 
+	"sources.hint": "↑ ↓ wählen · OK wechselt dorthin · Zurück schließt",
+
 	"launch.failed": "{name} konnte nicht geöffnet werden.",
 
 	"menu.favorite": "Zu Favoriten hinzufügen",
@@ -50,10 +53,10 @@
 	"menu.move": "Verschieben",
 	"menu.hide": "Ausblenden",
 	"menu.cancel": "Abbrechen",
-	"menu.hint": "← → wählen · OK bestätigen · Zurück schließt",
+	"menu.hint": "↑ ↓ wählen · OK bestätigen · Zurück schließt",
 
 	"move.title": "Verschieben",
-	"move.hint": "← → verschieben · OK ablegen · Zurück abbrechen",
+	"move.hint": "↑ ↓ verschieben · OK ablegen · Zurück abbrechen",
 
 	"background.dark": "Dunkel",
 	"background.black": "OLED-Schwarz",

@@ -107,83 +107,502 @@ body {
 		opacity: 1;
 	}
 }
-/* Darkens a photo behind the greeting and clock (top) and the last row and the hint (foot),
-   and only lightly in between, where the rows' text has its own halo (see .app--photo). */
+/* Darkens a photo behind the app list (left) and the greeting (foot), and only lightly
+   elsewhere, where the text has its own halo (see .app--photo). */
 .background__scrim {
 	position: absolute;
 	left: 0;
 	top: 0;
 	width: 100%;
 	height: 100%;
-	background: linear-gradient(
-		to bottom,
-		var(--color-photo-scrim-top) 0%,
-		var(--color-photo-scrim-top) 12%,
-		var(--color-photo-scrim-middle) 28%,
-		var(--color-photo-scrim-middle) 78%,
-		var(--color-photo-scrim-bottom) 100%
-	);
+	background:
+		linear-gradient(
+			to right,
+			var(--color-photo-scrim-side) 0%,
+			var(--color-photo-scrim-side) 22%,
+			var(--color-photo-scrim-clear) 45%
+		),
+		linear-gradient(to top, var(--color-photo-scrim-foot) 0%, var(--color-photo-scrim-clear) 35%);
 }
 
-/* ---------- header ---------- */
+/* ---------- home ---------- */
 
-.header {
+/* Text on Home has a soft shade under it; over a photo the halo (.app--photo .screen)
+   takes its place. */
+.home {
+	text-shadow: 0 2px 18px var(--color-text-shadow);
+}
+
+/* Where a click closes an open menu: everything but the bar (Sources), or everything (an
+   app's menu). */
+.catcher {
 	position: absolute;
 	left: 0;
-	right: 0;
-	top: var(--layout-header-top);
-	text-align: center;
-	pointer-events: none;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 2;
 }
-.header__greeting {
-	margin: 0;
-	font-size: var(--font-greeting);
-	font-weight: 300;
-	letter-spacing: -0.01em;
+.catcher--menu {
+	z-index: 4;
+}
+
+/* ---------- app icon ---------- */
+
+.app-icon {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--layout-app-icon-radius);
+	overflow: hidden;
+	background: var(--color-glyph-well);
+	box-shadow: 0 6px 18px var(--color-icon-shadow);
+	text-shadow: none;
+}
+.app-icon__image {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.app-icon__glyph {
+	position: absolute;
+	left: 25%;
+	top: 25%;
+	width: 50%;
+	height: 50%;
+	fill: none;
+	stroke: var(--color-text-primary);
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.app-icon__monogram {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--font-app-monogram);
+	font-weight: 800;
+	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
-/* move mode, in place of the greeting: "Moving", then the app's name */
-.header__mode {
+
+/* ---------- app list ---------- */
+
+/* As tall as the screen, so that a long list runs out at its top and foot. */
+.applist {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: var(--layout-main-left);
+	height: 100%;
+	overflow: hidden;
+}
+/* The icons sit on the safe area; the rows' padding reaches a little beyond it, where the
+   pill of the focused app only shows once it has moved right. */
+.applist__track {
+	position: absolute;
+	left: calc(var(--layout-safe-x) - var(--layout-list-row-padding));
+	width: var(--layout-list-width);
+	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+	will-change: transform;
+}
+.applist__empty {
+	position: absolute;
+	left: var(--layout-safe-x);
+	top: 50%;
+	width: var(--layout-list-width);
 	margin: 0;
-	font-size: var(--font-row-label);
+	transform: translateY(-50%);
+	font-size: var(--font-list-empty);
 	font-weight: 500;
+	line-height: 1.35;
+	color: var(--color-text-secondary);
+}
+
+.applist__row {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: var(--layout-list-row-height);
+	margin-bottom: var(--layout-list-row-gap);
+	padding: 0 16px 0 var(--layout-list-row-padding);
+	opacity: var(--motion-app-rest-opacity);
+	transform: translateX(0);
+	transition:
+		transform var(--motion-focus-ms) ease-out,
+		opacity var(--motion-focus-ms) ease-out;
+}
+.applist__row:last-child {
+	margin-bottom: 0;
+}
+/* the light pill behind the focused app, faded in */
+.applist__row::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--layout-list-row-radius);
+	background: var(--color-highlight);
+	opacity: 0;
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.applist__row--focused {
+	opacity: 1;
+	transform: translateX(var(--motion-list-shift));
+}
+.applist__row--focused::before {
+	opacity: 1;
+}
+/* move mode: the app is lifted, the others step back */
+.applist__row--lifted::before {
+	background: var(--color-highlight-lifted);
+	box-shadow: 0 10px 28px var(--color-lifted-shadow);
+}
+.applist__row--dimmed {
+	opacity: var(--motion-dimmed-opacity);
+}
+
+.applist__icon {
+	position: relative;
+	flex: 0 0 auto;
+	width: var(--layout-app-icon);
+	height: var(--layout-app-icon);
+	margin-right: var(--layout-list-icon-gap);
+	transform: scale(1);
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+.applist__row--focused .applist__icon {
+	transform: scale(var(--motion-app-icon-focus-scale));
+}
+.applist__row--focused .app-icon {
+	box-shadow:
+		0 0 0 3px var(--color-accent),
+		0 10px 28px var(--color-lifted-shadow);
+}
+
+/* The name is laid out at its focused size and drawn smaller without focus. */
+.applist__name {
+	position: relative;
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: var(--font-app-name);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--color-text-primary);
+	transform: scale(var(--motion-app-name-rest-scale));
+	transform-origin: 0 50%;
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+.applist__row--focused .applist__name {
+	font-weight: 800;
+	transform: scale(1);
+}
+.applist__label {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+/* raised a little to the middle of the letters, which sit above the middle of the line */
+.applist__star {
+	flex: 0 0 auto;
+	width: 30px;
+	height: 30px;
+	margin: 0 0 18px 14px;
+	color: var(--color-text-secondary);
+}
+.applist__star svg {
+	width: 100%;
+	height: 100%;
+	fill: currentColor;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linejoin: round;
+}
+
+/* the arrows of the app being moved, at the right of its row */
+.applist__row--lifted .applist__name {
+	margin-right: calc(2 * var(--layout-list-arrow-size) + 8px);
+}
+.applist__arrows {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	margin-top: calc(var(--layout-list-arrow-size) / -2);
+	display: flex;
+	flex-direction: row;
+}
+.applist__arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--layout-list-arrow-size);
+	height: var(--layout-list-arrow-size);
+	margin-left: 8px;
+	border: 1px solid var(--color-glass-border);
+	border-radius: 50%;
+	background: var(--color-glass);
+	color: var(--color-text-primary);
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.applist__arrow--off {
+	opacity: 0;
+	pointer-events: none;
+}
+.applist__arrow svg {
+	width: 26px;
+	height: 26px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2.4;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* ---------- bar ---------- */
+
+/* top right: Sources (with its menu below it), LG Home, Settings; above the catcher */
+.bar {
+	position: absolute;
+	right: var(--layout-safe-x);
+	top: var(--layout-safe-y);
+	z-index: 3;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.bar__sources {
+	position: relative;
+}
+.bar__button {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	height: var(--layout-bar-height);
+	margin-left: var(--layout-bar-gap);
+	border: 1px solid var(--color-glass-border);
+	border-radius: calc(var(--layout-bar-height) / 2);
+	background: var(--color-glass);
+	color: var(--color-text-primary);
+	transform: scale(1);
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+.bar__sources .bar__button {
+	margin-left: 0;
+}
+.bar__button--pill {
+	padding: 0 22px 0 20px;
+}
+.bar__button--round {
+	width: var(--layout-bar-height);
+}
+.bar__button--open {
+	border-color: var(--color-text-secondary);
+}
+.bar__button--focused {
+	border-color: var(--color-focus-fill);
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+	text-shadow: none;
+	transform: scale(var(--motion-bar-focus-scale));
+}
+.bar__glyph {
+	width: var(--layout-bar-glyph);
+	height: var(--layout-bar-glyph);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.bar__label {
+	margin: 0 12px;
+	font-size: var(--font-bar-label);
+	font-weight: 700;
+}
+.bar__chevron {
+	width: 22px;
+	height: 22px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	transform: rotate(0);
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+.bar__chevron--open {
+	transform: rotate(180deg);
+}
+.bar__monogram {
+	font-size: var(--font-bar-monogram);
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+/* ---------- menus ---------- */
+
+/* Sources, below its button, and an app's menu, beside it in the list */
+.menu {
+	position: absolute;
+	width: var(--layout-menu-width);
+	padding: var(--layout-menu-padding);
+	border: 1px solid var(--color-glass-border);
+	border-radius: var(--layout-menu-radius);
+	background: var(--color-glass-menu);
+	box-shadow: 0 24px 60px var(--color-menu-shadow);
+	text-shadow: none;
+}
+.menu--sources {
+	top: calc(var(--layout-bar-height) + var(--layout-menu-offset));
+	right: 0;
+	animation: menu-down var(--motion-menu-in-ms) ease-out both;
+}
+.menu--app {
+	left: calc(
+		var(--layout-safe-x) -
+		var(--layout-list-row-padding) +
+		var(--layout-list-width) +
+		var(--motion-list-shift) +
+		var(--layout-menu-gap)
+	);
+	z-index: 5;
+	animation: menu-aside var(--motion-menu-in-ms) ease-out both;
+}
+@keyframes menu-down {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes menu-aside {
+	from {
+		opacity: 0;
+		transform: translateX(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+.menu__item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: var(--layout-menu-item-height);
+	margin-bottom: var(--layout-menu-item-gap);
+	padding: 0 16px 0 12px;
+	border-radius: var(--layout-menu-item-radius);
+	font-size: var(--font-menu-item);
+	font-weight: 600;
+	color: var(--color-text-primary);
+}
+.menu__item:last-child {
+	margin-bottom: 0;
+}
+.menu__item--focused {
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+}
+.menu__well {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--layout-menu-glyph-well);
+	height: var(--layout-menu-glyph-well);
+	margin-right: 16px;
+	border-radius: 12px;
+	background: var(--color-glyph-well);
+}
+.menu__item--focused .menu__well {
+	background: var(--color-glyph-well-focus);
+}
+.menu__glyph {
+	width: var(--layout-menu-glyph);
+	height: var(--layout-menu-glyph);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.menu__label {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.menu__empty {
+	margin: 0;
+	padding: 12px 16px;
+	font-size: var(--font-menu-item);
+	line-height: 1.35;
+	color: var(--color-text-secondary);
+}
+
+/* ---------- greeting ---------- */
+
+/* at the foot, right of the list: the greeting, then weekday, date and time; in move
+   mode the app's name, and the keys in place of the date */
+.greeting {
+	position: absolute;
+	left: var(--layout-main-left);
+	right: var(--layout-safe-x);
+	bottom: var(--layout-safe-y);
+	pointer-events: none;
+}
+.greeting__mode {
+	margin: 0 0 8px;
+	font-size: var(--font-move-mode);
+	font-weight: 700;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--color-text-secondary);
 }
-.header__name {
-	margin: 10px 0 0;
-	font-size: var(--font-move-name);
-	font-weight: 600;
+/* the padding keeps the descenders inside the box, which clips a name too long */
+.greeting__title {
+	margin: 0 0 -0.12em;
+	padding-bottom: 0.12em;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: var(--font-greeting);
+	font-weight: 800;
+	line-height: 1.02;
+	letter-spacing: -0.035em;
 	color: var(--color-text-primary);
 }
+.greeting__line {
+	margin: 10px 0 0;
+	font-size: var(--font-date-line);
+	font-weight: 500;
+	color: var(--color-text-soft);
+}
 
-/* top left, across from the weather */
-.clock {
-	position: absolute;
-	left: var(--layout-edge-padding);
-	top: var(--layout-header-top);
-	text-align: left;
-	color: var(--color-text-secondary);
-	font-weight: 300;
-	line-height: 1.25;
-	pointer-events: none;
-	transition: opacity var(--motion-focus-ms) ease-out;
-}
-.clock__line {
-	font-size: var(--font-clock);
-}
-.clock__time {
-	font-size: var(--font-clock-time);
-	font-weight: 200;
-	letter-spacing: 0.02em;
-}
-.clock__period {
-	margin-left: 8px;
-	font-size: var(--font-clock-period);
-	font-weight: 300;
-	letter-spacing: 0.08em;
-}
+/* ---------- weather ---------- */
 
 /* the weather in one line: glyph, temperature, sky */
 .weather-now {
@@ -193,14 +612,6 @@ body {
 	font-size: var(--font-weather);
 	font-weight: 300;
 	color: var(--color-text-secondary);
-}
-/* on Home: top right, level with the clock's first line */
-.weather-now--home {
-	position: absolute;
-	right: var(--layout-edge-padding);
-	top: var(--layout-header-top);
-	pointer-events: none;
-	transition: opacity var(--motion-focus-ms) ease-out;
 }
 .weather-now__glyph {
 	flex: 0 0 auto;
@@ -223,72 +634,36 @@ body {
 	line-height: 1.3;
 	color: var(--color-text-muted);
 }
+/* on Home: at the foot on the right, level with the date line */
+.weather-now--home {
+	position: absolute;
+	right: var(--layout-safe-x);
+	bottom: var(--layout-safe-y);
+	font-weight: 600;
+	color: var(--color-text-primary);
+	pointer-events: none;
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.weather-now--home .weather-now__glyph {
+	width: var(--layout-weather-glyph-home);
+	height: var(--layout-weather-glyph-home);
+	margin-right: 10px;
+	stroke-width: 1.75;
+}
+.weather-now--home .weather-now__temperature {
+	margin-right: 0;
+}
 .weather-now--home .weather-now__note {
 	max-width: var(--layout-weather-note-width);
 	text-align: right;
 }
 
-/* ---------- rows ---------- */
+/* ---------- move mode ---------- */
 
-.rows {
-	position: absolute;
-	left: var(--layout-edge-padding);
-	right: var(--layout-edge-padding);
-	top: var(--layout-rows-top);
-}
-
-.row {
-	margin-bottom: var(--layout-row-gap);
-	transition: opacity var(--motion-focus-ms) ease-out;
-}
-.row:last-child {
-	margin-bottom: 0;
-}
-
-.row__label {
-	margin: 0 0 var(--layout-row-label-gap);
-	font-size: var(--font-row-label);
-	font-weight: 500;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: var(--color-text-muted);
-	transition:
-		color var(--motion-focus-ms) ease-out,
-		opacity var(--motion-focus-ms) ease-out;
-}
-.row--focused .row__label {
-	color: var(--color-text-secondary);
-}
-
-/* The viewport clips; the track slides. Sideways it reaches out to the screen edges, so a
-   long row runs off the screen instead of being cut at the safe area, and the focused
-   tile has room to grow at either end; its padding keeps the resting tiles inside the
-   safe area. Extra vertical padding leaves room for the focus scale and a lifted tile. */
-.row__viewport {
-	overflow: hidden;
-	padding: var(--layout-row-bleed) var(--layout-edge-padding);
-	margin: calc(-1 * var(--layout-row-bleed)) calc(-1 * var(--layout-edge-padding));
-	opacity: var(--motion-unfocused-row-opacity);
-	transition: opacity var(--motion-focus-ms) ease-out;
-}
-.row--focused .row__viewport {
-	opacity: 1;
-}
-
-.row__track {
-	display: flex;
-	flex-direction: row;
-	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
-	will-change: transform;
-}
-.row__track--centered {
-	justify-content: center;
-}
-
-.row__empty {
-	font-size: var(--font-tile-label);
-	color: var(--color-text-muted);
-	font-weight: 400;
+/* the bar and the weather step back while an app is moved */
+.home--moving .bar,
+.home--moving .weather-now--home {
+	opacity: var(--motion-backdrop-opacity);
 }
 
 /* ---------- tiles ---------- */
@@ -544,64 +919,6 @@ body {
 }
 .tile--dimmed .tile__label {
 	color: var(--color-text-muted);
-}
-
-/* ---------- move mode (Home) ---------- */
-
-/* Only the row with the moving app stays; the clock and the weather step back, the other
-   rows and the row's own label give way to the app's name above and the hint below. */
-.home--moving .clock,
-.home--moving .weather-now--home {
-	opacity: var(--motion-move-backdrop-opacity);
-}
-.home--moving .row {
-	opacity: 0;
-}
-.home--moving .row--moving {
-	opacity: 1;
-}
-.row--moving .row__label {
-	opacity: 0;
-}
-
-/* The moving tile gets room on either side for its arrows (Row adds it to its layout). */
-.row__track .tile--lifted {
-	position: relative;
-	z-index: 2;
-	margin-left: var(--layout-move-room);
-	margin-right: calc(var(--layout-tile-gap) + var(--layout-move-room));
-}
-.row__track .tile--lifted:last-child {
-	margin-right: var(--layout-move-room);
-}
-
-/* level with the middle of the lifted box */
-.tile__arrow {
-	position: absolute;
-	top: calc((var(--layout-tile-size) - var(--layout-move-arrow-size)) / 2 + var(--layout-lift-offset));
-	width: var(--layout-move-arrow-size);
-	height: var(--layout-move-arrow-size);
-	color: var(--color-text-primary);
-	transition: opacity var(--motion-focus-ms) ease-out;
-}
-.tile__arrow--left {
-	right: calc(100% + var(--layout-move-arrow-gap));
-}
-.tile__arrow--right {
-	left: calc(100% + var(--layout-move-arrow-gap));
-}
-.tile__arrow--off {
-	opacity: 0;
-	pointer-events: none;
-}
-.tile__arrow svg {
-	width: 100%;
-	height: 100%;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 2.4;
-	stroke-linecap: round;
-	stroke-linejoin: round;
 }
 
 /* ---------- options ---------- */
@@ -922,76 +1239,52 @@ body {
 	color: var(--color-text-muted);
 }
 
-/* ---------- app menu ---------- */
-
-/* Over the dimmed home screen: the app, then its options side by side. */
-.menu {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	background: var(--color-overlay);
-}
-.menu .tile {
-	margin-right: 0;
-}
-.menu__actions {
-	display: flex;
-	flex-direction: row;
-	margin-top: 32px;
-}
-.menu__action {
-	height: 72px;
-	margin: 0 8px;
-	padding: 0 36px;
-	border-radius: 36px;
-	line-height: 72px;
-	font-size: var(--font-menu-action);
-	font-weight: 600;
-	color: var(--color-text-secondary);
-	background: var(--color-tile-bg);
-	box-shadow: 0 0 0 2px var(--color-tile-border);
-}
-.menu__action--focused {
-	color: var(--color-button-active-text);
-	background: var(--color-button-active-bg);
-	box-shadow: none;
-}
-/* ---------- key hint ---------- */
-
-/* at the foot of the screen: the app menu, move mode */
-.hint {
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 72px;
-	margin: 0;
-	text-align: center;
-	font-size: var(--font-tile-label);
-	color: var(--color-text-muted);
-}
-
 /* ---------- toast ---------- */
 
+/* top centre, clear of the list, the bar and the greeting */
 .toast {
 	position: absolute;
 	left: 50%;
-	bottom: 56px;
-	transform: translateX(-50%);
-	padding: 14px 28px;
+	top: var(--layout-safe-y);
+	z-index: 6;
+	padding: 16px 28px;
+	border: 1px solid var(--color-glass-border);
 	border-radius: 999px;
-	background: var(--color-tile-bg-focus);
-	box-shadow: 0 0 0 1px var(--color-tile-border);
+	background: var(--color-glass-menu);
+	box-shadow: 0 24px 60px var(--color-menu-shadow);
 	font-size: var(--font-toast);
-	color: var(--color-text-secondary);
+	font-weight: 600;
+	color: var(--color-text-primary);
 	white-space: nowrap;
 	pointer-events: none;
+	transform: translateX(-50%);
+	animation: toast-in var(--motion-menu-in-ms) ease-out both;
 }
 .toast--error {
 	color: var(--color-danger);
+}
+@keyframes toast-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -8px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+}
+
+/* ---------- reduced motion ---------- */
+
+/* Where the TV asks for less motion, everything changes at once. (Chromium 53 does not
+   know this query and ignores it.) */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
+		transition-duration: 0ms !important;
+		/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own animation */
+		animation-duration: 0ms !important;
+	}
 }

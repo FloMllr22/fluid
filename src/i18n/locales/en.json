@@ -1,14 +1,13 @@
 {
 	"rows.apps": "Apps",
 	"rows.sources": "Sources",
-	"rows.more": "More",
 	"rows.empty": "Nothing here yet",
 
 	"home.greeting.morning": "Good morning",
 	"home.greeting.afternoon": "Good afternoon",
 	"home.greeting.evening": "Good evening",
 	"home.lgHome": "LG Home",
-	"home.settings": "Settings",
+	"home.lgHomeShort": "LG",
 
 	"clock.am": "AM",
 	"clock.pm": "PM",
@@ -28,6 +27,8 @@
 		"December"
 	],
 	"clock.dayMonth": "{day} {month}",
+	"clock.dateLine": "{weekday}, {date} · {time}",
+	"clock.withPeriod": "{time} {period}",
 
 	"apps.loading": "Loading apps…",
 	"apps.noneSelected": "No apps selected — add some in Settings",
@@ -43,6 +44,8 @@
 	"inputs.noneFound": "The TV reports no inputs",
 	"inputs.loadFailed": "fluid couldn't read the inputs.",
 
+	"sources.hint": "↑ ↓ choose · OK switches to it · Back closes",
+
 	"launch.failed": "Couldn't open {name}.",
 
 	"menu.favorite": "Add to favourites",
@@ -50,10 +53,10 @@
 	"menu.move": "Move",
 	"menu.hide": "Hide",
 	"menu.cancel": "Cancel",
-	"menu.hint": "← → choose · OK confirms · Back closes",
+	"menu.hint": "↑ ↓ choose · OK confirms · Back closes",
 
 	"move.title": "Moving",
-	"move.hint": "← → move · OK puts it down · Back cancels",
+	"move.hint": "↑ ↓ move · OK puts it down · Back cancels",
 
 	"background.dark": "Dark",
 	"background.black": "OLED black",

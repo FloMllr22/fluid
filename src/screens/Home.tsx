@@ -1,187 +1,225 @@
 import {useCallback, useEffect, useState} from 'preact/hooks';
-import {Clock} from '../components/Clock';
-import {Header} from '../components/Header';
-import {Row} from '../components/Row';
-import type {MoveArrows, TileModel} from '../components/Tile';
+import {AppList, listRowTop, type MoveArrows} from '../components/AppList';
+import {AppMenu, type AppMenuAction} from '../components/AppMenu';
+import {Bar} from '../components/Bar';
+import {Greeting} from '../components/Greeting';
+import type {TileModel} from '../components/Tile';
 import {WeatherNow} from '../components/WeatherNow';
 import {useClock} from '../hooks/useClock';
-import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
+import {type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {useTimeFormat} from '../hooks/useTimeFormat';
 import {t} from '../i18n';
 import {focusIndex, followItem, type RowFocus} from '../lib/focus';
+import {BAR_ITEMS, type HomeFocus, homeStep, homeZone} from '../lib/home';
 import type {TemperatureUnit, WeatherView} from '../lib/weather';
 
-export interface HomeRow {
-	id: string;
-	label: string;
-	items: TileModel[];
-	emptyText?: string;
-}
-
-/** An item being moved along its row, and which ways it can go. */
-export interface MovingItem {
-	rowId: string;
+/** The app being moved along the list, and which ways it can go. */
+export interface MovingApp {
 	key: string;
 	arrows: MoveArrows;
 }
 
+/** An app's menu, open beside it. */
+export interface OpenMenu {
+	app: TileModel;
+	onChoose: (action: AppMenuAction) => void;
+	onClose: () => void;
+}
+
 interface Props {
-	rows: HomeRow[];
-	/** the weather at the top right; nothing while it is off */
+	apps: TileModel[];
+	/** says why there are no apps: still loading, failed, or none chosen */
+	appsEmptyText: string;
+	sources: TileModel[];
+	sourcesEmptyText: string;
+	/** the weather at the foot; nothing while it is off */
 	weather: WeatherView;
 	unit: TemperatureUnit;
 	active: boolean;
 	/** another screen is in front: Home stays mounted, keeping its focus, but is not drawn */
 	hidden?: boolean;
-	onActivate: (rowId: string, item: TileModel) => void;
-	/** OK held on an item, or the pointer's button held on it */
-	onLongPress: (rowId: string, item: TileModel) => void;
-	/** move mode: the focused item, being moved; the rows show its new place as it goes */
-	moving?: MovingItem;
-	/** ← or → in move mode */
+	/** OK on an app or a source */
+	onOpen: (item: TileModel) => void;
+	onLgHome: () => void;
+	onSettings: () => void;
+	/** OK held on an app, or the pointer's button held on it */
+	onAppMenu: (app: TileModel) => void;
+	/** the focused app's menu, open beside it; it then has the keys */
+	menu?: OpenMenu;
+	/** move mode: the focused app, being moved; the list shows its new place as it goes */
+	moving?: MovingApp;
+	/** ↑ or ↓ in move mode */
 	onMove: (step: -1 | 1) => void;
 	/** OK (keep the new place) or Back (put it back) in move mode */
 	onMoveEnd: (keep: boolean) => void;
 }
 
-/** The home screen: greeting, clock, weather and the navigable rows.
- *  Up/Down move between rows (each row remembers its item), Left/Right move along a row.
- *  OK opens the item; holding OK asks for its options.
- *  Move mode is a variant of this: the focused item stays focused and lifted while
- *  Left/Right move it along its row, OK keeps its new place and Back cancels. Focus is
- *  kept by item, so it follows the item and stays on it afterwards. */
-export function Home({rows, weather, unit, active, hidden, onActivate, onLongPress, moving, onMove, onMoveEnd}: Props) {
+/** The home screen: the apps in a list on the left, Sources, LG Home and Settings at the
+ *  top right, the greeting with date and time at the foot, and the weather.
+ *  In the list ↑ ↓ move and → goes to the bar; in the bar ← → move, ← from Sources or ↓
+ *  go back to the list (see homeStep). OK opens what has focus; on Sources it opens the
+ *  menu of the inputs below it (↑ ↓ choose, OK switches, Back closes). Holding OK on an
+ *  app opens its menu beside it.
+ *  Move mode is a variant of this: the focused app stays focused and lifted while ↑ ↓
+ *  move it along the list, OK keeps its new place and Back cancels. Focus is kept by app,
+ *  so it follows the app and stays on it afterwards. */
+export function Home({
+	apps,
+	appsEmptyText,
+	sources,
+	sourcesEmptyText,
+	weather,
+	unit,
+	active,
+	hidden,
+	onOpen,
+	onLgHome,
+	onSettings,
+	onAppMenu,
+	menu,
+	moving,
+	onMove,
+	onMoveEnd
+}: Props) {
 	const now = useClock();
 	const timeFormat = useTimeFormat();
-	const [rowIndex, setRowIndex] = useState(0);
-	const [focus, setFocus] = useState<Record<string, RowFocus>>({});
+	/** where focus is; the app is kept apart, by key (appFocus) */
+	const [focus, setFocus] = useState<HomeFocus>({zone: 'apps', app: 0, bar: 0, source: 0});
+	const [appFocus, setAppFocus] = useState<RowFocus | undefined>(undefined);
 
-	const columnOf = (row: HomeRow) =>
-		focusIndex(
-			row.items.map((item) => item.key),
-			focus[row.id]
-		);
-	const setColumn = (row: HomeRow, index: number) => {
-		const item = row.items[index];
-		if (item) setFocus((f) => ({...f, [row.id]: {key: item.key, index}}));
+	const keys = apps.map((app) => app.key);
+	const app = focusIndex(keys, appFocus);
+	const counts = {apps: apps.length, sources: sources.length};
+	const current: HomeFocus = {...focus, app};
+	const zone = homeZone(current, counts);
+
+	const focusApp = (index: number) => {
+		if (apps[index]) setAppFocus({key: apps[index].key, index});
+		setFocus((f) => ({...f, zone: 'apps'}));
 	};
-	const withFocused = (act: (rowId: string, item: TileModel) => void) => () => {
-		const row = rows[rowIndex];
-		if (!row) return;
-		const item = row.items[columnOf(row)];
-		if (item) act(row.id, item);
+	const moveTo = (next: HomeFocus) => {
+		if (next.app !== app) focusApp(next.app);
+		setFocus(next);
 	};
 
-	// In move mode OK puts the item down; holding OK does nothing there, so that move mode
-	// never ends while OK is still held (its release would then open the item). Move mode
+	const activateBar = (index: number) => {
+		const item = BAR_ITEMS[index];
+		if (item === 'sources') setFocus((f) => ({...f, zone: 'sources', bar: index, source: 0}));
+		else if (item === 'lg-home') onLgHome();
+		else onSettings();
+	};
+	const pickSource = (index: number) => {
+		setFocus((f) => ({...f, zone: 'bar'}));
+		if (sources[index]) onOpen(sources[index]);
+	};
+	const closeSources = () => setFocus((f) => ({...f, zone: 'bar'}));
+
+	const press = (held: boolean) => () => {
+		if (zone === 'apps') {
+			if (apps[app]) (held ? onAppMenu : onOpen)(apps[app]);
+		} else if (zone === 'bar') activateBar(focus.bar);
+		else if (sources.length === 0) closeSources();
+		else pickSource(focus.source);
+	};
+
+	// In move mode OK puts the app down; holding OK does nothing there, so that move mode
+	// never ends while OK is still held (its release would then open the app). Move mode
 	// is opened from the menu, possibly by holding OK: then OK counts once released.
 	const drop = () => onMoveEnd(true);
 	useOkPress(
-		moving
-			? {onPress: drop, onLongPress: () => undefined}
-			: {onPress: withFocused(onActivate), onLongPress: withFocused(onLongPress)},
+		moving ? {onPress: drop, onLongPress: () => undefined} : {onPress: press(false), onLongPress: press(true)},
 		active,
 		moving !== undefined
 	);
 
-	// When a row changes order, the remembered places move with their items: hiding the
+	// When the list changes order, the remembered place moves with its app: hiding the
 	// focused app then leaves focus where that app last was.
 	useEffect(() => {
-		setFocus((current) => {
-			let next = current;
-			for (const row of rows) {
-				const remembered = current[row.id];
-				if (!remembered) continue;
-				const moved = followItem(
-					row.items.map((item) => item.key),
-					remembered
-				);
-				if (moved !== remembered) next = {...next, [row.id]: moved};
-			}
-			return next;
-		});
-	}, [rows]);
+		setAppFocus((remembered) => (remembered ? followItem(keys, remembered) : remembered));
+	}, [apps]);
 
 	const handleKey = useCallback(
 		(key: NavKey): boolean => {
 			if (moving) {
-				if (key === 'left') onMove(-1);
-				else if (key === 'right') onMove(1);
+				if (key === 'up') onMove(-1);
+				else if (key === 'down') onMove(1);
 				else if (key === 'back') onMoveEnd(false);
-				return true; // OK goes through useOkPress; Up and Down stay in the row
+				return true; // OK goes through useOkPress; ← → stay in the list
 			}
-			const row = rows[rowIndex];
-			if (!row) return false;
-			switch (key) {
-				case 'up':
-					setRowIndex((r) => clamp(r - 1, 0, rows.length - 1));
-					return true;
-				case 'down':
-					setRowIndex((r) => clamp(r + 1, 0, rows.length - 1));
-					return true;
-				case 'left':
-					setColumn(row, clamp(columnOf(row) - 1, 0, row.items.length - 1));
-					return true;
-				case 'right':
-					setColumn(row, clamp(columnOf(row) + 1, 0, row.items.length - 1));
-					return true;
-				case 'enter':
-					return true; // handled by useOkPress (press vs hold)
-				case 'back':
-					return true; // swallow: Back on the home screen does nothing
+			if (key === 'enter') return true; // handled by useOkPress (press vs hold)
+			if (key === 'back') {
+				if (zone === 'sources') closeSources();
+				return true; // otherwise swallowed: Back on the home screen does nothing
 			}
+			moveTo(homeStep(current, key, counts));
+			return true;
 		},
-		[rows, rowIndex, focus, moving, onMove, onMoveEnd]
+		[apps, sources, focus, appFocus, moving, onMove, onMoveEnd]
 	);
 
 	useKeys(handleKey, active);
 
-	const movingRow = moving ? rows.find((row) => row.id === moving.rowId) : undefined;
-	const movingItem = moving && movingRow ? movingRow.items.find((item) => item.key === moving.key) : undefined;
-
-	/** Focus an item, as the pointer does by pointing at it. */
-	const focusItem = (i: number, col: number) => {
-		setRowIndex(i);
-		setColumn(rows[i], col);
-	};
+	const movingApp = moving ? apps.find((item) => item.key === moving.key) : undefined;
+	const note = moving ? t('move.hint') : menu ? t('menu.hint') : zone === 'sources' ? t('sources.hint') : undefined;
+	const classes = ['screen', 'home', hidden && 'screen--hidden', moving && 'home--moving'].filter(Boolean).join(' ');
 
 	// In move mode the pointer neither moves focus nor opens anything: it clicks the
-	// arrows, or the moving item to put it down. Holding the pointer's button focuses the
-	// item before its menu opens, as the arrow keys may have moved focus away meanwhile:
-	// the menu, and move mode, act on the focused item.
+	// arrows, or the moving app to put it down. Holding the pointer's button focuses the
+	// app before its menu opens, as the arrow keys may have moved focus away meanwhile:
+	// the menu, and move mode, act on the focused app. While a menu is open, a click
+	// anywhere else closes it.
 	return (
-		<div class={`screen${hidden ? ' screen--hidden' : ''}${moving ? ' home--moving' : ''}`}>
-			<Header now={now} moving={movingItem ? movingItem.label : undefined} />
-			<Clock now={now} format={timeFormat} />
+		<div class={classes}>
+			<AppList
+				items={apps}
+				emptyText={appsEmptyText}
+				focused={zone === 'apps' || moving !== undefined || menu !== undefined}
+				selected={app}
+				moving={moving?.arrows}
+				dimmed={moving !== undefined || menu !== undefined}
+				onSelect={(i) => {
+					if (!moving && !menu) focusApp(i);
+				}}
+				onActivate={(i) => {
+					if (!moving) onOpen(apps[i]);
+					else if (i === app) drop();
+				}}
+				onLongPress={(i) => {
+					if (moving) return;
+					focusApp(i);
+					onAppMenu(apps[i]);
+				}}
+				onMove={onMove}
+			/>
+			<Greeting now={now} format={timeFormat} moving={movingApp?.label} note={note} />
 			<WeatherNow view={weather} unit={unit} where="home" />
-			<div class="rows">
-				{rows.map((row, i) => (
-					<Row
-						key={row.id}
-						label={row.label}
-						items={row.items}
-						emptyText={row.emptyText}
-						focused={i === rowIndex}
-						selected={columnOf(row)}
-						moving={moving && row === movingRow ? moving.arrows : undefined}
-						onSelect={(col) => {
-							if (!moving) focusItem(i, col);
-						}}
-						onActivate={(col) => {
-							if (!moving) onActivate(row.id, row.items[col]);
-							else if (row === movingRow && col === columnOf(row)) drop();
-						}}
-						onLongPress={(col) => {
-							if (moving) return;
-							focusItem(i, col);
-							onLongPress(row.id, row.items[col]);
-						}}
-						onMove={onMove}
-					/>
-				))}
-			</div>
-			{moving && <p class="hint">{t('move.hint')}</p>}
+			{zone === 'sources' && <div class="catcher" onClick={closeSources} />}
+			<Bar
+				focus={zone === 'bar' && !moving ? focus.bar : -1}
+				sources={sources}
+				sourcesEmptyText={sourcesEmptyText}
+				sourcesOpen={zone === 'sources'}
+				sourceFocus={focus.source}
+				onPoint={(i) => {
+					if (!moving && zone !== 'sources') setFocus((f) => ({...f, zone: 'bar', bar: i}));
+				}}
+				onActivate={(i) => {
+					if (moving) return;
+					if (zone === 'sources' && BAR_ITEMS[i] === 'sources') closeSources();
+					else activateBar(i);
+				}}
+				onPointSource={(i) => setFocus((f) => ({...f, source: i}))}
+				onPickSource={pickSource}
+			/>
+			{menu && !hidden && apps[app] && (
+				<AppMenu
+					app={menu.app}
+					rowTop={listRowTop(apps.length, app, app)}
+					onChoose={menu.onChoose}
+					onClose={menu.onClose}
+				/>
+			)}
 		</div>
 	);
 }

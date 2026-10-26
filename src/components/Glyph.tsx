@@ -1,12 +1,15 @@
-// Inline SVG line icons (24×24, drawn as strokes): the More row, the input sources, the
-// slideshow tile, the weather, the tile badges and the arrows of move mode. All drawn for
-// fluid; no third-party artwork.
+// Inline SVG line icons (24×24, drawn as strokes): the bar on Home, the input sources, the
+// menus, the slideshow tile, the weather, the tile badges and the arrows of move mode. All
+// drawn for fluid; no third-party artwork.
 
 import type {ComponentChildren} from 'preact';
 
 export type GlyphName =
-	| 'house'
-	| 'gear'
+	| 'sliders'
+	| 'star'
+	| 'move'
+	| 'hide'
+	| 'close'
 	| 'tv'
 	| 'input'
 	| 'console'
@@ -34,13 +37,16 @@ const HIGH_CLOUD = 'M7 15h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.2 6.1 4.5 4.5 0 0 0 7
 const LOW_CLOUD = 'M11.4 21.6h8a3.2 3.2 0 0 0 .5-6.35A4.8 4.8 0 0 0 10.8 14.5a3.6 3.6 0 0 0 .6 7.1z';
 
 const SHAPES: Record<GlyphName, () => ComponentChildren> = {
-	house: () => <path d="M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8M10 20v-6h4v6" />,
-	gear: () => (
-		<>
-			<circle cx="12" cy="12" r="3.2" />
-			<path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7" />
-		</>
+	// three sliders: Settings
+	sliders: () => <path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 3v6M9 9v6M17 15v6" />,
+	star: () => <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+	// up and down: move an app along the list
+	move: () => <path d="M8 7.5l4-4 4 4M12 3.5v17M8 16.5l4 4 4-4" />,
+	// an eye, struck through: hide an app
+	hide: () => (
+		<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 4l16 16" />
 	),
+	close: () => <path d="M6 6l12 12M18 6 6 18" />,
 	// a screen with an antenna: Live TV, aerial, satellite
 	tv: () => (
 		<>
@@ -144,11 +150,13 @@ export function CheckMark() {
 	);
 }
 
-/** The arrows either side of an app being moved. */
-export function ChevronMark({side}: {side: 'left' | 'right'}) {
+const CHEVRONS = {left: 'M15 5l-7 7 7 7', right: 'M9 5l7 7-7 7', up: 'M5 15l7-7 7 7', down: 'M5 9l7 7 7-7'};
+
+/** A chevron: the arrows of an app being moved, a menu's button. */
+export function ChevronMark({side, className}: {side: keyof typeof CHEVRONS; className?: string}) {
 	return (
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<path d={side === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+		<svg class={className} viewBox="0 0 24 24" aria-hidden="true">
+			<path d={CHEVRONS[side]} />
 		</svg>
 	);
 }
