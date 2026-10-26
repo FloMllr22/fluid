@@ -26,6 +26,9 @@ docs/
 !README.md
 !THIRD_PARTY_NOTICES.md
 
+# original photos and their sources; the prepared ones are in src/assets/backgrounds/
+/assets/
+
 # editors, operating systems, logs
 .vscode/
 .idea/
