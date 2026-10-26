@@ -10,12 +10,14 @@ export const COLOR = {
 	bgBlueInner: '#24324a', // the "calm blue" background
 	bgBlueMid: '#18202c',
 	bgBlueOuter: '#0a0e15',
-	// Over a photo, so that text keeps its contrast: textSecondary stays at WCAG AA (4.5:1)
-	// over every pixel of every bundled photo from 0.76 on, measured; 0.78 leaves a margin.
-	// A little darker behind the clock and greeting, and towards the bottom.
-	photoScrimTop: 'rgba(0, 0, 0, 0.82)',
-	photoScrimMiddle: 'rgba(0, 0, 0, 0.78)',
-	photoScrimBottom: 'rgba(0, 0, 0, 0.82)',
+	// Over a photo: darker only behind the greeting and clock (top) and the last row and
+	// the hint (bottom), light in between so the photo shows. Text keeps WCAG AA through
+	// a dark halo right behind its letters (photoTextHalo), measured behind the letters on
+	// every bundled photo; not the dimmed rows without focus, as on the colours.
+	photoScrimTop: 'rgba(0, 0, 0, 0.55)',
+	photoScrimMiddle: 'rgba(0, 0, 0, 0.15)',
+	photoScrimBottom: 'rgba(0, 0, 0, 0.45)',
+	photoTextHalo: 'rgba(0, 0, 0, 0.95)',
 	textPrimary: '#EEEEEE',
 	textSecondary: '#AAAAAA',
 	textMuted: '#666666',

@@ -341,7 +341,7 @@ export function App() {
 	);
 
 	return (
-		<>
+		<div class={background.kind === 'color' ? 'app' : 'app app--photo'}>
 			<Background background={background} photos={PHOTOS} onError={onBackgroundError} />
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
 			<Home
@@ -369,6 +369,6 @@ export function App() {
 				/>
 			)}
 			<Toast message={toast} />
-		</>
+		</div>
 	);
 }
