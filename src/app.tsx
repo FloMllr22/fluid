@@ -1,13 +1,14 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
 import {AppMenu, type AppMenuAction} from './components/AppMenu';
 import {Background} from './components/Background';
+import {LanguagePanel} from './components/LanguageChoice';
 import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
-import {errorMessage, t, tn} from './i18n';
+import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
 import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
@@ -15,7 +16,7 @@ import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
-import {type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
+import {type LanguageChoice, type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 import {PHOTOS} from './theme/backgrounds';
 
 type Screen = 'home' | 'settings';
@@ -37,8 +38,11 @@ const BACKGROUND_TAB = 'background';
 
 const PHOTO_IDS = PHOTOS.map((p) => p.id);
 
+/** The TV's UI language, which fluid follows unless the user picks another */
+const TV_LOCALE = platform.getLocale();
+
 /** °C or °F, by the TV's region */
-const UNIT = temperatureUnit(platform.getLocale());
+const UNIT = temperatureUnit(TV_LOCALE);
 
 /** No options at the moment: the Homebrew option went when root became a requirement,
  *  and the Options tab stays hidden until the next ones arrive. */
@@ -190,13 +194,13 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				]
 			}
 		],
-		[rowApps, shownInputs, appsText, settings.favoriteIds]
+		[rowApps, shownInputs, appsText, settings.favoriteIds, settings.language]
 	);
 
 	// the stored background as it can be drawn: a photo this fluid lacks falls back
 	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
-	// named in the user's language, which is set by now
-	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), []);
+	// named in the user's language, again when it changes
+	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), [settings.language]);
 
 	const tabs: SettingsTab[] = useMemo(
 		() => [
@@ -225,7 +229,18 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				emptyText: t('rows.empty') // never: the colours are always there
 			}
 		],
-		[apps, inputs, shownApps, shownInputs, appsText, settings.favoriteIds, favoriteCount, backgroundChoices, background]
+		[
+			apps,
+			inputs,
+			shownApps,
+			shownInputs,
+			appsText,
+			settings.favoriteIds,
+			favoriteCount,
+			backgroundChoices,
+			background,
+			settings.language
+		]
 	);
 
 	// ----- actions -----
@@ -283,6 +298,17 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[settings, updateSettings]
 	);
 
+	/** Every text switches at once: the language is set before the next frame is drawn,
+	 *  and each list of texts above depends on it. */
+	const onLanguage = useCallback(
+		(language: LanguageChoice) => {
+			if (language === settings.language) return;
+			setLocale(localeFor(language, TV_LOCALE));
+			updateSettings({...settings, language});
+		},
+		[settings, updateSettings]
+	);
+
 	const panels: SettingsPanel[] = [
 		{
 			id: 'weather',
@@ -298,6 +324,12 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					{...nav}
 				/>
 			)
+		},
+		{
+			id: 'language',
+			label: t('settings.language'),
+			hint: t('settings.hint.language'),
+			render: (nav) => <LanguagePanel chosen={settings.language} tvLocale={TV_LOCALE} onChoose={onLanguage} {...nav} />
 		}
 	];
 

@@ -7,6 +7,7 @@ import {
 	dayMonth,
 	errorMessage,
 	LANGUAGES,
+	languageName,
 	languageOf,
 	localeFor,
 	MESSAGES,
@@ -194,5 +195,15 @@ describe('localeFor', () => {
 	it('gives dates in the chosen language', () => {
 		setLocale(localeFor('de', 'en-US'));
 		expect(dayMonth(sunday)).toBe('25. Oktober');
+	});
+});
+
+describe('languageName', () => {
+	it('names each language by its own name, in every language', () => {
+		for (const locale of LANGUAGES) {
+			setLocale(locale);
+			expect(languageName('de')).toBe('Deutsch');
+			expect(languageName('en')).toBe('English');
+		}
 	});
 });

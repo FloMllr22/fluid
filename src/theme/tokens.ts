@@ -38,6 +38,7 @@ export const COLOR = {
 	switchKnob: '#AAAAAA',
 	switchKnobOn: '#000000',
 	fieldBg: '#0a0a0a', // a text field, inside its row
+	pillBg: 'rgba(255, 255, 255, 0.08)', // a language choice without focus
 	danger: '#e0564f',
 	overlay: 'rgba(0, 0, 0, 0.9)' // behind the app menu
 } as const;
@@ -59,7 +60,9 @@ export const FONT = {
 	clockPeriod: 22,
 	toast: 24,
 	menuAction: 26,
-	moveName: 44 // the app being moved, above its row
+	moveName: 44, // the app being moved, above its row
+	pill: 28, // a language choice in Settings
+	pillLarge: 34 // a language choice in the onboarding
 } as const;
 
 export const LAYOUT = {
@@ -72,6 +75,8 @@ export const LAYOUT = {
 	weatherNoteWidth: 460, // a longer note wraps, clear of the longest greeting
 	fieldHeight: 56, // the place search field
 	placeHeight: 64, // a place found by the search
+	pillHeight: 80, // a language choice in Settings
+	pillHeightLarge: 104, // a language choice in the onboarding
 	rowsTop: 236, // rows start here, below the greeting and clock
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,

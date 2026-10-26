@@ -19,6 +19,9 @@ export type Background = {kind: 'color'; color: BackgroundColor} | {kind: 'photo
 /** The language fluid speaks: the TV's ("tv"), or one fluid has. */
 export type LanguageChoice = 'tv' | Language;
 
+/** The choices, as offered: the TV's first, then each language by its code. */
+export const LANGUAGE_CHOICES: LanguageChoice[] = ['tv' as LanguageChoice].concat(LANGUAGES.slice().sort());
+
 /** The weather on Home. Off, fluid makes no network connection at all. */
 export interface WeatherSettings {
 	enabled: boolean;

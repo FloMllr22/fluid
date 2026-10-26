@@ -101,6 +101,12 @@ export function dayMonth(date: Date): string {
 	return dates.dayMonth(date);
 }
 
+/** A language by its own name ("Deutsch", "English"), the same in every language. */
+export function languageName(language: Language): string {
+	const key: MessageKey = `language.${language}`;
+	return t(key);
+}
+
 /** A sentence for the user about a failed platform call. Every PlatformError code needs
  *  an "error.<code>" text; TypeScript checks that here. */
 export function errorMessage(error: unknown): string {

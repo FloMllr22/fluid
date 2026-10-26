@@ -3,6 +3,7 @@ import type {Place} from '../platform';
 import {
 	type Background,
 	defaultSettings,
+	LANGUAGE_CHOICES,
 	LEGACY_KEY,
 	loadSettings,
 	MIGRATIONS,
@@ -226,6 +227,10 @@ describe('language', () => {
 		useStorage(stored(SETTINGS_VERSION, {...defaultSettings(), language}));
 		return loadSettings().settings.language;
 	};
+
+	it('offers the TV first, then each language', () => {
+		expect(LANGUAGE_CHOICES).toEqual(['tv', 'de', 'en']);
+	});
 
 	it('follows the TV at first', () => {
 		expect(defaultSettings().language).toBe('tv');
