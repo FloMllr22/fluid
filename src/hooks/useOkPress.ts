@@ -8,12 +8,26 @@ interface Handlers {
 	onLongPress: () => void;
 }
 
+/** Whether OK is held right now, as far as the key events tell. */
+let okHeld = false;
+if (typeof window !== 'undefined') {
+	const track = (held: boolean) => (e: KeyboardEvent) => {
+		if (e.keyCode === KEY.enter) okHeld = held;
+	};
+	window.addEventListener('keydown', track(true), true);
+	window.addEventListener('keyup', track(false), true);
+	window.addEventListener('blur', () => {
+		okHeld = false;
+	});
+}
+
 /** Distinguishes a short OK press from a long one. Short presses act on key *up*, so a
  *  hold never triggers the short action first. A key-up without a matching key-down
  *  (e.g. the OK that opened this screen) is ignored. Auto-repeat key-downs are ignored.
- *  With `afterRelease`, for a view opened by holding OK, OK only counts once it has been
- *  released (or another key pressed): a remote that repeats a held key without marking
- *  the repeats would otherwise trigger the view at once. */
+ *  With `afterRelease`, for a view that may open by holding OK: if OK is held when it
+ *  opens, OK only counts once it has been released (or another key pressed), since a
+ *  remote that repeats a held key without marking the repeats would otherwise trigger the
+ *  view at once. Opened by a short press or the pointer, OK counts straight away. */
 export function useOkPress(handlers: Handlers, active = true, afterRelease = false): void {
 	// Latest handlers in a ref, so a re-render mid-press doesn't reset the hold timer.
 	const latest = useRef(handlers);
@@ -21,7 +35,7 @@ export function useOkPress(handlers: Handlers, active = true, afterRelease = fal
 
 	useEffect(() => {
 		if (!active) return;
-		let blocked = afterRelease;
+		let blocked = afterRelease && okHeld;
 		let armed = false;
 		let fired = false;
 		let timer = 0;
