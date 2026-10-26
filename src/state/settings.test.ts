@@ -1,4 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import type {Place} from '../platform';
 import {
 	type Background,
 	defaultSettings,
@@ -7,7 +8,8 @@ import {
 	MIGRATIONS,
 	SETTINGS_KEY,
 	SETTINGS_VERSION,
-	saveSettings
+	saveSettings,
+	type WeatherSettings
 } from './settings';
 
 let data: Record<string, string>;
@@ -39,6 +41,11 @@ const stored = (version: number, settings: unknown) => ({[SETTINGS_KEY]: JSON.st
 /** the background fluid had before there was a choice */
 const dark: Background = {kind: 'color', color: 'dark'};
 
+/** the weather until the user turns it on */
+const off: WeatherSettings = {enabled: false, place: null};
+
+const berlin: Place = {name: 'Berlin', region: 'Land Berlin', country: 'Germany', latitude: 52.52, longitude: 13.41};
+
 beforeEach(() => {
 	vi.unstubAllGlobals();
 	useStorage();
@@ -54,7 +61,8 @@ describe('loadSettings', () => {
 			appIds: ['b', 'a'],
 			sourceIds: ['com.webos.app.hdmi2'],
 			favoriteIds: ['a'],
-			background: {kind: 'photo', id: 'lake'} as Background
+			background: {kind: 'photo', id: 'lake'} as Background,
+			weather: {enabled: true, place: berlin}
 		};
 		expect(saveSettings(settings)).toBe(true);
 		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false});
@@ -64,7 +72,13 @@ describe('loadSettings', () => {
 		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5], favoriteIds: null, background: 'dark'}));
 		expect(loadSettings().settings).toEqual(defaultSettings());
 		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: {}}));
-		expect(loadSettings().settings).toEqual({appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark});
+		expect(loadSettings().settings).toEqual({
+			appIds: ['a'],
+			sourceIds: null,
+			favoriteIds: [],
+			background: dark,
+			weather: off
+		});
 	});
 
 	it('reports settings that are not readable, and uses the defaults', () => {
@@ -90,7 +104,7 @@ describe('loadSettings', () => {
 			})
 		);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], background: {kind: 'slideshow'}},
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], background: {kind: 'slideshow'}, weather: off},
 			unreadable: false,
 			migrated: false
 		});
@@ -111,7 +125,7 @@ describe('migration from fluid 0.1', () => {
 	it('keeps the chosen apps and sources, and drops the Homebrew option', () => {
 		useStorage(legacy);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark},
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off},
 			unreadable: false,
 			migrated: true
 		});
@@ -123,7 +137,7 @@ describe('migration from fluid 0.1', () => {
 		expect(data[LEGACY_KEY]).toBeUndefined();
 		expect(JSON.parse(data[SETTINGS_KEY])).toEqual({
 			version: SETTINGS_VERSION,
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark}
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off}
 		});
 		expect(loadSettings().migrated).toBe(false);
 	});
@@ -138,7 +152,7 @@ describe('migration from version 1', () => {
 	it('keeps the choices and starts without favourites', () => {
 		useStorage(stored(1, {appIds: ['a'], sourceIds: null}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark},
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark, weather: off},
 			unreadable: false,
 			migrated: true
 		});
@@ -149,10 +163,72 @@ describe('migration from version 2', () => {
 	it('keeps the choices and favourites, with the background fluid had', () => {
 		useStorage(stored(2, {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b']}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b'], background: dark},
+			settings: {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b'], background: dark, weather: off},
 			unreadable: false,
 			migrated: true
 		});
+	});
+});
+
+describe('migration from version 3', () => {
+	it('keeps every choice, with the weather off', () => {
+		const photo: Background = {kind: 'photo', id: 'lake'};
+		useStorage(stored(3, {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo}));
+		expect(loadSettings()).toEqual({
+			settings: {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo, weather: off},
+			unreadable: false,
+			migrated: true
+		});
+	});
+});
+
+describe('weather', () => {
+	const read = (weather: unknown) => {
+		useStorage(stored(SETTINGS_VERSION, {appIds: null, sourceIds: null, favoriteIds: [], background: dark, weather}));
+		return loadSettings().settings.weather;
+	};
+
+	it('starts off, with no place', () => {
+		expect(defaultSettings().weather).toEqual(off);
+	});
+
+	it('reads back whether it is on, and the place', () => {
+		expect(read({enabled: true, place: berlin})).toEqual({enabled: true, place: berlin});
+		expect(read({enabled: false, place: berlin})).toEqual({enabled: false, place: berlin});
+		expect(read({enabled: true, place: null})).toEqual({enabled: true, place: null});
+	});
+
+	it('is off for anything but true', () => {
+		for (const enabled of [undefined, 'true', 1, null]) expect(read({enabled, place: berlin}).enabled).toBe(false);
+	});
+
+	it('drops a place that is not one', () => {
+		for (const place of [
+			'Berlin',
+			[],
+			{...berlin, name: ''},
+			{...berlin, name: 5},
+			{...berlin, latitude: '52.52'},
+			{...berlin, latitude: 90.5},
+			{...berlin, longitude: -181},
+			{...berlin, longitude: null}
+		])
+			expect(read({enabled: true, place}), JSON.stringify(place)).toEqual({enabled: true, place: null});
+	});
+
+	it('keeps a place without region or country, and only its own fields', () => {
+		const bare = {name: 'Somewhere', latitude: 1, longitude: 2, population: 5};
+		expect(read({enabled: true, place: bare}).place).toEqual({
+			name: 'Somewhere',
+			region: '',
+			country: '',
+			latitude: 1,
+			longitude: 2
+		});
+	});
+
+	it('falls back to off for anything else', () => {
+		for (const weather of [undefined, true, 'on', []]) expect(read(weather), JSON.stringify(weather)).toEqual(off);
 	});
 });
 

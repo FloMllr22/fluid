@@ -4,6 +4,8 @@
 // what the user set. Stored data is untrusted: each field is checked on loading and falls
 // back to its default on its own. Callers always get fresh objects and arrays.
 
+import type {Place} from '../platform';
+
 /** The colours fluid offers as a background; dark is the gradient fluid always had. */
 export const BACKGROUND_COLORS = ['dark', 'black', 'blue'] as const;
 export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
@@ -13,6 +15,14 @@ export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
  *  stored as it is; whoever draws the background falls back to the default. */
 export type Background = {kind: 'color'; color: BackgroundColor} | {kind: 'photo'; id: string} | {kind: 'slideshow'};
 
+/** The weather on Home. Off, fluid makes no network connection at all. */
+export interface WeatherSettings {
+	enabled: boolean;
+	/** the place picked in the place search, named as it was found; only its coordinates
+	 *  are sent for the weather. null → none picked yet */
+	place: Place | null;
+}
+
 export interface Settings {
 	/** ordered app IDs for the Apps row; null → every app, in the order of LG's launcher */
 	appIds: string[] | null;
@@ -21,9 +31,10 @@ export interface Settings {
 	/** apps marked as favourites; they lead the Apps row */
 	favoriteIds: string[];
 	background: Background;
+	weather: WeatherSettings;
 }
 
-export const SETTINGS_VERSION = 3;
+export const SETTINGS_VERSION = 4;
 
 /** Holds {version, settings}. */
 export const SETTINGS_KEY = 'fluid-settings';
@@ -40,15 +51,21 @@ export const MIGRATIONS: Record<number, (data: Data) => Data> = {
 	// 2: favourites, none yet
 	2: (data) => ({...data, favoriteIds: []}),
 	// 3: a choice of background; the one fluid had until then
-	3: (data) => ({...data, background: defaultBackground()})
+	3: (data) => ({...data, background: defaultBackground()}),
+	// 4: the weather, off until the user turns it on
+	4: (data) => ({...data, weather: defaultWeather()})
 };
 
 export function defaultBackground(): Background {
 	return {kind: 'color', color: 'dark'};
 }
 
+export function defaultWeather(): WeatherSettings {
+	return {enabled: false, place: null};
+}
+
 export function defaultSettings(): Settings {
-	return {appIds: null, sourceIds: null, favoriteIds: [], background: defaultBackground()};
+	return {appIds: null, sourceIds: null, favoriteIds: [], background: defaultBackground(), weather: defaultWeather()};
 }
 
 export interface LoadedSettings {
@@ -110,8 +127,34 @@ function sanitize(data: Data): Settings {
 		appIds: idList(data.appIds),
 		sourceIds: idList(data.sourceIds),
 		favoriteIds: idList(data.favoriteIds) || [],
-		background: backgroundOf(data.background) || defaultBackground()
+		background: backgroundOf(data.background) || defaultBackground(),
+		weather: weatherOf(data.weather)
 	};
+}
+
+/** A copy of the stored weather settings; each field falls back on its own. */
+function weatherOf(value: unknown): WeatherSettings {
+	if (!isObject(value)) return defaultWeather();
+	return {enabled: value.enabled === true, place: placeOf(value.place)};
+}
+
+/** A copy of a stored place, or null for anything that is not one. */
+function placeOf(value: unknown): Place | null {
+	if (!isObject(value)) return null;
+	const {name, region, country, latitude, longitude} = value;
+	if (typeof name !== 'string' || name === '') return null;
+	if (!isCoordinate(latitude, 90) || !isCoordinate(longitude, 180)) return null;
+	return {
+		name,
+		region: typeof region === 'string' ? region : '',
+		country: typeof country === 'string' ? country : '',
+		latitude,
+		longitude
+	};
+}
+
+function isCoordinate(value: unknown, limit: number): value is number {
+	return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= limit;
 }
 
 /** A copy of a stored background, or null for anything that is not one. */
