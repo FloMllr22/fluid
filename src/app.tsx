@@ -4,6 +4,7 @@ import {Background} from './components/Background';
 import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
+import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, t, tn} from './i18n';
@@ -13,7 +14,7 @@ import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type HomeRow, type MovingItem} from './screens/Home';
-import {Settings, type SettingsTab} from './screens/Settings';
+import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
 import {type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 import {PHOTOS} from './theme/backgrounds';
 
@@ -282,6 +283,24 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[settings, updateSettings]
 	);
 
+	const panels: SettingsPanel[] = [
+		{
+			id: 'weather',
+			label: t('settings.weather'),
+			hint: t('settings.hint.weather'),
+			render: (nav) => (
+				<WeatherPanel
+					settings={settings.weather}
+					view={weather}
+					unit={UNIT}
+					onToggle={onWeatherToggle}
+					onPick={onPickPlace}
+					{...nav}
+				/>
+			)
+		}
+	];
+
 	const onOption = useCallback(() => {
 		/* no options at the moment, see OPTIONS */
 	}, []);
@@ -378,13 +397,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			{screen === 'settings' && (
 				<Settings
 					tabs={tabs}
-					weather={{
-						settings: settings.weather,
-						view: weather,
-						unit: UNIT,
-						onToggle: onWeatherToggle,
-						onPick: onPickPlace
-					}}
+					panels={panels}
 					options={OPTIONS}
 					active
 					onToggle={onToggle}

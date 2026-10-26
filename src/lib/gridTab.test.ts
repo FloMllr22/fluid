@@ -1,0 +1,70 @@
+import {describe, expect, it} from 'vitest';
+import type {TileModel} from '../components/Tile';
+import {gridStep, heldTarget, keepFocus} from './gridTab';
+
+const tiles = (...keys: string[]): TileModel[] => keys.map((key) => ({key, label: key}));
+
+describe('gridStep', () => {
+	// 11 tiles, 4 to a row:  0 1 2 3 / 4 5 6 7 / 8 9 10
+	it('moves left and right, on across rows, and stops at either end', () => {
+		expect(gridStep(5, 'left', 11, 4)).toBe(4);
+		expect(gridStep(4, 'left', 11, 4)).toBe(3);
+		expect(gridStep(0, 'left', 11, 4)).toBe(0);
+		expect(gridStep(3, 'right', 11, 4)).toBe(4);
+		expect(gridStep(10, 'right', 11, 4)).toBe(10);
+	});
+
+	it('moves up and down a row', () => {
+		expect(gridStep(6, 'up', 11, 4)).toBe(2);
+		expect(gridStep(2, 'down', 11, 4)).toBe(6);
+		expect(gridStep(6, 'down', 11, 4)).toBe(10);
+	});
+
+	it('stays put going down where there is no tile below', () => {
+		expect(gridStep(7, 'down', 11, 4)).toBe(7);
+		expect(gridStep(9, 'down', 11, 4)).toBe(9);
+	});
+
+	it('leaves the grid going up from the top row', () => {
+		expect(gridStep(0, 'up', 11, 4)).toBe(-1);
+		expect(gridStep(3, 'up', 11, 4)).toBe(-1);
+	});
+
+	it('stays on the first place in an empty grid', () => {
+		expect(gridStep(0, 'right', 0, 4)).toBe(0);
+		expect(gridStep(0, 'down', 0, 4)).toBe(0);
+	});
+});
+
+describe('heldTarget', () => {
+	// 2 favourites in front of 4 other apps
+	it('keeps a favourite among the favourites', () => {
+		expect(heldTarget(0, 1, 2, 6)).toBe(1);
+		expect(heldTarget(1, 5, 2, 6)).toBe(1);
+		expect(heldTarget(1, -3, 2, 6)).toBe(0);
+	});
+
+	it('keeps any other app behind the favourites', () => {
+		expect(heldTarget(3, 0, 2, 6)).toBe(2);
+		expect(heldTarget(3, 9, 2, 6)).toBe(5);
+		expect(heldTarget(3, 4, 2, 6)).toBe(4);
+	});
+
+	it('moves freely without favourites', () => {
+		expect(heldTarget(3, 0, 0, 6)).toBe(0);
+		expect(heldTarget(0, 5, 0, 6)).toBe(5);
+	});
+});
+
+describe('keepFocus', () => {
+	it('stays on the same tile when the list changes', () => {
+		expect(keepFocus(tiles('a', 'b', 'c', 'd'), tiles('c', 'a'), 2)).toBe(0);
+		expect(keepFocus(tiles('c', 'a'), tiles('a', 'b', 'c', 'd'), 1)).toBe(0);
+		expect(keepFocus(tiles('c', 'a'), tiles('a', 'b', 'c', 'd'), 0)).toBe(2);
+	});
+
+	it('goes to the first tile when its tile is not in the other list', () => {
+		expect(keepFocus(tiles('a', 'b', 'c'), tiles('a', 'c'), 1)).toBe(0);
+		expect(keepFocus(tiles(), tiles('a'), 0)).toBe(0);
+	});
+});
