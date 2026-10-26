@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {
+	type Background,
 	defaultSettings,
 	LEGACY_KEY,
 	loadSettings,
@@ -35,6 +36,9 @@ function useStorage(initial: Record<string, string> = {}, failing = false) {
 
 const stored = (version: number, settings: unknown) => ({[SETTINGS_KEY]: JSON.stringify({version, settings})});
 
+/** the background fluid had before there was a choice */
+const dark: Background = {kind: 'color', color: 'dark'};
+
 beforeEach(() => {
 	vi.unstubAllGlobals();
 	useStorage();
@@ -46,16 +50,21 @@ describe('loadSettings', () => {
 	});
 
 	it('reads back what was saved', () => {
-		const settings = {appIds: ['b', 'a'], sourceIds: ['com.webos.app.hdmi2'], favoriteIds: ['a']};
+		const settings = {
+			appIds: ['b', 'a'],
+			sourceIds: ['com.webos.app.hdmi2'],
+			favoriteIds: ['a'],
+			background: {kind: 'photo', id: 'lake'} as Background
+		};
 		expect(saveSettings(settings)).toBe(true);
 		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false});
 	});
 
 	it('replaces each field of the wrong type with its default', () => {
-		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5], favoriteIds: null}));
+		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5], favoriteIds: null, background: 'dark'}));
 		expect(loadSettings().settings).toEqual(defaultSettings());
 		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: {}}));
-		expect(loadSettings().settings).toEqual({appIds: ['a'], sourceIds: null, favoriteIds: []});
+		expect(loadSettings().settings).toEqual({appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark});
 	});
 
 	it('reports settings that are not readable, and uses the defaults', () => {
@@ -71,9 +80,17 @@ describe('loadSettings', () => {
 	});
 
 	it('reads what it knows from settings of a newer fluid', () => {
-		useStorage(stored(SETTINGS_VERSION + 1, {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], futureOption: true}));
+		useStorage(
+			stored(SETTINGS_VERSION + 1, {
+				appIds: ['a'],
+				sourceIds: null,
+				favoriteIds: ['a'],
+				background: {kind: 'slideshow'},
+				futureOption: true
+			})
+		);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a']},
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: ['a'], background: {kind: 'slideshow'}},
 			unreadable: false,
 			migrated: false
 		});
@@ -94,7 +111,7 @@ describe('migration from fluid 0.1', () => {
 	it('keeps the chosen apps and sources, and drops the Homebrew option', () => {
 		useStorage(legacy);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: []},
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark},
 			unreadable: false,
 			migrated: true
 		});
@@ -106,7 +123,7 @@ describe('migration from fluid 0.1', () => {
 		expect(data[LEGACY_KEY]).toBeUndefined();
 		expect(JSON.parse(data[SETTINGS_KEY])).toEqual({
 			version: SETTINGS_VERSION,
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: []}
+			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark}
 		});
 		expect(loadSettings().migrated).toBe(false);
 	});
@@ -121,10 +138,55 @@ describe('migration from version 1', () => {
 	it('keeps the choices and starts without favourites', () => {
 		useStorage(stored(1, {appIds: ['a'], sourceIds: null}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: []},
+			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark},
 			unreadable: false,
 			migrated: true
 		});
+	});
+});
+
+describe('migration from version 2', () => {
+	it('keeps the choices and favourites, with the background fluid had', () => {
+		useStorage(stored(2, {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b']}));
+		expect(loadSettings()).toEqual({
+			settings: {appIds: ['a', 'b'], sourceIds: null, favoriteIds: ['b'], background: dark},
+			unreadable: false,
+			migrated: true
+		});
+	});
+});
+
+describe('background', () => {
+	const read = (background: unknown) => {
+		useStorage(stored(SETTINGS_VERSION, {appIds: null, sourceIds: null, favoriteIds: [], background}));
+		return loadSettings().settings.background;
+	};
+
+	it('reads back each kind of background', () => {
+		for (const background of [
+			{kind: 'color', color: 'black'},
+			{kind: 'color', color: 'blue'},
+			{kind: 'photo', id: 'lake'},
+			{kind: 'slideshow'}
+		])
+			expect(read(background)).toEqual(background);
+	});
+
+	it('falls back to the default for anything else', () => {
+		for (const background of [
+			undefined,
+			'blue',
+			[],
+			{kind: 'color', color: 'pink'},
+			{kind: 'photo'},
+			{kind: 'photo', id: ''},
+			{kind: 'video', id: 'x'}
+		])
+			expect(read(background), JSON.stringify(background)).toEqual(dark);
+	});
+
+	it('keeps only the fields of its kind', () => {
+		expect(read({kind: 'slideshow', color: 'blue', id: 'x'})).toEqual({kind: 'slideshow'});
 	});
 });
 
