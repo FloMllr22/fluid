@@ -9,19 +9,38 @@
 //     its size comes back to confirm the transfer
 //  2. install: webOS's developer install service, the same one the Homebrew Channel
 //     and ares-install use; nothing outside the app's own directory is touched
-//  3. launch
+//  3. launch, until the app is in front: installing closes the running app and the TV
+//     brings up LG Home at once (its "last input"); a launch sent in that moment is
+//     dropped. So the launch's reply is read, the foreground app is checked, and the
+//     launch is tried again a few times.
 //
 // Nothing from tv.env reaches a shell: host, port, user and key are ssh arguments, and
 // the commands run on the TV contain only the validated app ID and fixed paths.
 import {spawn} from 'node:child_process';
 import {createReadStream, existsSync, statSync} from 'node:fs';
 import {join} from 'node:path';
-import {APP_ID_PATTERN, ipkName, loadTarget, parseInstallReplies, ROOT, readAppInfo, sshArgs} from './lib/tv.mjs';
+import {
+	APP_ID_PATTERN,
+	ipkName,
+	loadTarget,
+	parseInstallReplies,
+	parseLunaReply,
+	ROOT,
+	readAppInfo,
+	sshArgs
+} from './lib/tv.mjs';
 
 const REMOTE_IPK = '/tmp/fluid-deploy.ipk';
 const INSTALL_TIMEOUT_MS = 60000;
+/** Launch attempts, each after a pause that lets the TV finish closing the old app. */
+const LAUNCH_ATTEMPTS = 5;
+const LAUNCH_PAUSE_MS = 1500;
+/** How long a launched app may take to come to the front. */
+const FOREGROUND_WAIT_MS = 2500;
 
 class DeployError extends Error {}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Runs one command on the TV. Resolves with the exit code and stdout; stderr goes
  *  straight to the console so ssh's own messages stay visible. `until` ends the session
@@ -112,16 +131,37 @@ async function main() {
 		throw new DeployError(`Install failed: ${reason}`);
 	}
 
+	await ssh(target, `rm -f ${REMOTE_IPK}`);
 	console.log(`Launching ${appInfo.id} …`);
-	const launch = await ssh(
-		target,
-		`rm -f ${REMOTE_IPK}; luna-send -n 1 luna://com.webos.applicationManager/launch '${JSON.stringify({id: appInfo.id})}'`
-	);
-	checkConnection(launch.code, target);
-	if (launch.code !== 0 || /"returnValue"\s*:\s*false/.test(launch.stdout)) {
-		throw new DeployError(`Installed, but the launch failed: ${launch.stdout.trim() || `exit code ${launch.code}`}`);
+	await launchInFront(target, appInfo.id);
+	console.log(`Done: ${appInfo.title} ${appInfo.version} is installed and in front on the TV.`);
+}
+
+/** Launches the app and waits until it is the foreground app, trying again when the TV
+ *  drops the launch (see the top of this file). */
+async function launchInFront(target, appId) {
+	const launch = `luna-send -n 1 luna://com.webos.applicationManager/launch '${JSON.stringify({id: appId})}'`;
+	const front = `luna-send -n 1 luna://com.webos.applicationManager/getForegroundAppInfo '{}'`;
+	let problem = '';
+	for (let attempt = 1; attempt <= LAUNCH_ATTEMPTS; attempt++) {
+		await sleep(LAUNCH_PAUSE_MS);
+		const launched = await ssh(target, launch, {tty: true});
+		checkConnection(launched.code, target);
+		const reply = parseLunaReply(launched.stdout);
+		if (!reply.ok) {
+			problem = reply.error || launched.stdout.trim() || `exit code ${launched.code}`;
+			console.log(`  attempt ${attempt}: launch refused (${problem})`);
+			continue;
+		}
+		await sleep(FOREGROUND_WAIT_MS);
+		const shown = parseLunaReply((await ssh(target, front, {tty: true})).stdout);
+		if (shown.appId === appId) return;
+		problem = `${shown.appId || 'another app'} is in front`;
+		console.log(`  attempt ${attempt}: ${problem}`);
 	}
-	console.log(`Done: ${appInfo.title} ${appInfo.version} is installed and running on the TV.`);
+	throw new DeployError(
+		`Installed, but ${appId} did not come to the front (${problem}). Open it from the TV's app list.`
+	);
 }
 
 main().catch((error) => {

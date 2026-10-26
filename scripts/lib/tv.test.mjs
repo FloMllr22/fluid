@@ -1,6 +1,14 @@
 import {resolve} from 'node:path';
 import {describe, expect, it} from 'vitest';
-import {APP_ID_PATTERN, ipkName, parseEnvFile, parseInstallReplies, resolveTarget, sshArgs} from './tv.mjs';
+import {
+	APP_ID_PATTERN,
+	ipkName,
+	parseEnvFile,
+	parseInstallReplies,
+	parseLunaReply,
+	resolveTarget,
+	sshArgs
+} from './tv.mjs';
 
 describe('parseEnvFile', () => {
 	it('reads KEY=VALUE lines and skips comments and blank lines', () => {
@@ -136,5 +144,26 @@ describe('package naming', () => {
 	it('only lets plain app IDs into commands run on the TV', () => {
 		expect(APP_ID_PATTERN.test('io.github.flomllr22.fluid')).toBe(true);
 		expect(APP_ID_PATTERN.test("x'; reboot; '")).toBe(false);
+	});
+});
+
+describe('parseLunaReply', () => {
+	it('reads a successful reply, with the terminal line ending', () => {
+		expect(parseLunaReply('{"returnValue":true}\r\n')).toEqual({ok: true, appId: '', error: ''});
+	});
+
+	it('reads the foreground app', () => {
+		const reply = '{"appId":"io.github.flomllr22.fluid","returnValue":true,"windowId":"","processId":""}\r\n';
+		expect(parseLunaReply(reply)).toMatchObject({ok: true, appId: 'io.github.flomllr22.fluid'});
+	});
+
+	it('reads a refusal and its reason', () => {
+		const reply = '{"returnValue":false,"errorCode":-101,"errorText":"app is being closed"}';
+		expect(parseLunaReply(reply)).toEqual({ok: false, appId: '', error: 'app is being closed'});
+	});
+
+	it('counts no reply or an unreadable one as a failure', () => {
+		for (const output of ['', 'Connection closed', '{broken'])
+			expect(parseLunaReply(output), output).toEqual({ok: false, appId: '', error: ''});
 	});
 });

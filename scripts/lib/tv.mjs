@@ -101,6 +101,24 @@ export function sshArgs(target, {tty = false} = {}) {
 	return args;
 }
 
+/** Reads the reply of a one-shot luna-send call (`-n 1`; it only prints with a terminal,
+ *  see sshArgs' tty): whether it succeeded, the app ID it names (getForegroundAppInfo),
+ *  and its error text. Anything unreadable counts as a failure. */
+export function parseLunaReply(output) {
+	const json = /\{[\s\S]*\}/.exec(output);
+	let reply = {};
+	try {
+		reply = json ? JSON.parse(json[0]) : {};
+	} catch {
+		reply = {};
+	}
+	return {
+		ok: reply.returnValue === true,
+		appId: typeof reply.appId === 'string' ? reply.appId : '',
+		error: typeof reply.errorText === 'string' ? reply.errorText : ''
+	};
+}
+
 /** Reads the replies of appInstallService/dev/install (one JSON object per reply).
  *  `states` lists each install state once, in order. `finished` turns true with the
  *  last reply that matters: the subscription itself stays open until it times out. */
