@@ -28,6 +28,22 @@ names the photographers anyway. For the app, each photo was cropped to 16:9, sca
 | `beach.jpg`, `beach.thumb.jpg` | Waves on a beach at sunset | Eugene Kim (@evgenii__kim) | [unsplash.com](https://unsplash.com/ko/사진/일몰-동안-해안에-부딪히는-바다-파도-mQ1-HR_XdIg) |
 | `sunset.jpg`, `sunset.thumb.jpg` | Waves splashing on sand at sunset | Quino Al (@quinoal) | [unsplash.com](https://unsplash.com/de/fotos/wellen-von-gewassern-die-auf-sand-spritzen-mBQIfKlvowM) |
 
+## Weather and place data
+
+With the weather turned on (it is off until the user turns it on), fluid shows data it
+reads at runtime from [Open-Meteo](https://open-meteo.com), through its free API for
+non-commercial use, which needs no key. None of this data is part of this repository or
+the package.
+
+| Data | Source | Licence |
+|---|---|---|
+| Current weather: temperature, WMO weather code, day or night | [Open-Meteo.com](https://open-meteo.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Place search: names, regions, countries and coordinates | [GeoNames](https://www.geonames.org), through Open-Meteo's geocoding API | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+
+fluid credits both in Settings → Weather. It rounds the temperature to whole degrees and
+converts it to °F where the TV's region uses that; the weather glyphs and the words for
+the sky are fluid's own.
+
 ## Build and test tools (not shipped)
 
 These development dependencies build, check and package fluid. Apart from small helper
