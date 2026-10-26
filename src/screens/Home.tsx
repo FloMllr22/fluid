@@ -103,11 +103,13 @@ export function Home({
 		setFocus(next);
 	};
 
+	/** Sources opens its menu; LG Home and Settings close it (the pointer reaches them
+	 *  while it is open), so that it is not open still when fluid shows Home again. */
 	const activateBar = (index: number) => {
 		const item = BAR_ITEMS[index];
-		if (item === 'sources') setFocus((f) => ({...f, zone: 'sources', bar: index, source: 0}));
-		else if (item === 'lg-home') onLgHome();
-		else onSettings();
+		setFocus((f) => ({...f, zone: item === 'sources' ? 'sources' : 'bar', bar: index, source: 0}));
+		if (item === 'lg-home') onLgHome();
+		else if (item === 'settings') onSettings();
 	};
 	const pickSource = (index: number) => {
 		setFocus((f) => ({...f, zone: 'bar'}));
