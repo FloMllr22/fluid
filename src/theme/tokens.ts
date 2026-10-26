@@ -94,7 +94,7 @@ export const FONT = {
 	menuItem: 21,
 	weather: 26, // the temperature, bottom right
 	weatherNote: 24, // why there is no weather (loading, no place, failed)
-	tileLabel: 20,
+	tileLabel: 19,
 	settingsTitle: 64,
 	settingsClock: 36,
 	settingsTab: 30,
@@ -109,8 +109,7 @@ export const FONT = {
 	onboardingStep: 26, // "Step 1 of 3"
 	onboardingWelcome: 96, // the first step's title
 	onboardingTitle: 80,
-	onboardingLead: 32,
-	onboardingHint: 24
+	onboardingLead: 32
 } as const;
 
 export const LAYOUT = {
@@ -119,8 +118,6 @@ export const LAYOUT = {
 	// the safe area: 5 % of the screen at either side, a little more at top and foot
 	safeX: 96,
 	safeY: 64,
-	edgePadding: 140, // heavy padding around the screen edges
-	headerTop: 84,
 	// the app list on the left: rows of icon and name, the focused one on a light pill
 	listWidth: 520,
 	listRowHeight: 76,
@@ -169,8 +166,7 @@ export const LAYOUT = {
 	pillHeightLarge: 104, // a language choice in the onboarding
 	onboardingTop: 180, // the title of the Apps and Background steps
 	onboardingWelcomeTop: 300, // the title of the first step
-	onboardingGridHeight: 480, // two rows of tiles
-	onboardingFooterBottom: 64, // the step dots and the key hint
+	onboardingGridHeight: 500, // two rows of tiles, and the room around them
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,
 	tileRadius: 24,

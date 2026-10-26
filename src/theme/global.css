@@ -737,10 +737,10 @@ body {
 }
 
 .tile__label {
-	/* up to two lines, using a little of the gutter either side, so long input names fit */
-	width: calc(var(--layout-tile-size) + var(--layout-tile-gap) - 8px);
+	/* up to two lines, using the gutter either side, so long names fit */
+	width: calc(var(--layout-tile-size) + var(--layout-tile-gap));
 	height: calc(var(--font-tile-label) * 2.4);
-	margin: var(--layout-tile-label-gap) 0 0 calc((var(--layout-tile-gap) - 8px) / -2);
+	margin: var(--layout-tile-label-gap) 0 0 calc(var(--layout-tile-gap) / -2);
 	line-height: 1.2;
 	font-size: var(--font-tile-label);
 	font-weight: 500;
@@ -749,7 +749,7 @@ body {
 	overflow: hidden;
 }
 .tile--focused .tile__label {
-	font-weight: 700;
+	font-weight: 600;
 	color: var(--color-text-primary);
 }
 
@@ -1220,23 +1220,26 @@ body {
 
 /* ---------- onboarding ---------- */
 
-/* As in the mockups: the name and the step at the top, title and lead in the middle, the
-   step dots and the key hint at the foot. */
+/* As in the mockups, over the dimmed background: the name and the step at the top, title
+   and lead in the middle, the step dots and the key hint at the foot. */
+.onboarding {
+	background: var(--color-screen-dim);
+}
 .onboarding__brand {
 	position: absolute;
-	left: var(--layout-edge-padding);
-	top: var(--layout-header-top);
+	left: var(--layout-safe-x);
+	top: var(--layout-safe-y);
 	font-size: var(--font-onboarding-brand);
 	font-weight: 700;
-	letter-spacing: -0.5px;
+	letter-spacing: -0.015em;
 	color: var(--color-text-primary);
 }
 .onboarding__step {
 	position: absolute;
-	right: var(--layout-edge-padding);
-	top: calc(var(--layout-header-top) + 8px);
+	right: var(--layout-safe-x);
+	top: calc(var(--layout-safe-y) + 8px);
 	font-size: var(--font-onboarding-step);
-	color: var(--color-text-secondary);
+	color: var(--color-text-muted);
 }
 .onboarding__main {
 	position: absolute;
@@ -1254,17 +1257,18 @@ body {
 .onboarding__title {
 	margin: 0;
 	font-size: var(--font-onboarding-title);
-	font-weight: 600;
-	letter-spacing: -2.5px;
+	font-weight: 700;
+	letter-spacing: -0.03em;
 	color: var(--color-text-primary);
 }
 .onboarding__main--language .onboarding__title {
 	font-size: var(--font-onboarding-welcome);
-	letter-spacing: -3px;
+	font-weight: 800;
+	letter-spacing: -0.035em;
 }
 /* one line where it can, within the safe area */
 .onboarding__lead {
-	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-edge-padding));
+	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-safe-x));
 	margin: 18px 0 0;
 	font-size: var(--font-onboarding-lead);
 	line-height: 1.35;
@@ -1284,7 +1288,7 @@ body {
 	margin: 0 12px;
 }
 .onboarding__empty {
-	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-edge-padding));
+	max-width: calc(var(--layout-screen-width) - 2 * var(--layout-safe-x));
 	margin: 56px 0 0;
 	font-size: var(--font-onboarding-lead);
 	line-height: 1.35;
@@ -1294,7 +1298,7 @@ body {
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: var(--layout-onboarding-footer-bottom);
+	bottom: var(--layout-safe-y);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1320,7 +1324,7 @@ body {
 }
 .onboarding__hint {
 	margin: 0;
-	font-size: var(--font-onboarding-hint);
+	font-size: var(--font-hint);
 	color: var(--color-text-muted);
 }
 
