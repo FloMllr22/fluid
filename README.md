@@ -1,18 +1,20 @@
 # fluid – a home screen for LG webOS TVs
 
-fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: a greeting,
-clock and (if you like) the weather, a row of your apps, a row of your inputs, and a way
-back to LG's own home.
+fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: your apps in a
+list on the left, your inputs and a way back to LG's own home at the top right, and a large
+greeting with the date, the time and (if you like) the weather.
 
 > **Status: early development.** fluid runs on the maintainer's TV, but it is a
 > foundation, not a finished product. Expect changes, and no releases yet.
 
 ## What it does
 
-- **Apps**: the apps you pick, in your order, your favourites first
-- **Sources**: Live TV and the HDMI inputs, with the names set in the TV's input settings
-- **More**: LG's own home screen, and Settings
-- **Background**: dark, OLED black or calm blue, one of three photos, or a slideshow of them
+- **Apps**: the apps you pick, in your order, your favourites first, one below the other
+- **Sources**: a menu of Live TV and the HDMI inputs, with the names set in the TV's input
+  settings
+- **LG** and **Settings**: LG's own home screen, and fluid's settings
+- **Background**: dark, OLED black, calm blue or dusk (an evening sky), one of three photos,
+  or a slideshow of them
 - **Weather** (optional, off until you turn it on): the sky and temperature at a place you
   search for, from [Open-Meteo](https://open-meteo.com), in °C or °F as your TV's region uses
 - **First start**: a short setup in three steps (language, apps, background); all of it can be
@@ -41,12 +43,14 @@ reports (TV model, webOS version, firmware version) are welcome.
 | First start, apps and background | OK | Go on with what is chosen (focus starts on **Next** / **Finish**) |
 | First start, apps and background | ↓, then as in Settings | Choose apps (and re-order them) or a background |
 | First start | Back | Return to the step before |
-| Home | ↑ ↓ | Move between rows |
-| Home | ← → | Move along a row |
-| Home | OK | Open the app or input |
-| Home | Hold OK on an app | Its menu: add to or remove from favourites, move, hide |
-| Moving an app (Home) | ← →, then OK | Move it along the row, keep its new place |
+| Home | ↑ ↓ | Move along the apps |
+| Home | → | To Sources, LG and Settings at the top right (← → along them, ← or ↓ back to the apps) |
+| Home | OK | Open the app, open the Sources menu, LG's home screen or Settings |
+| Sources menu | ↑ ↓, OK | Switch to that input (Back closes the menu) |
+| Home | Hold OK on an app | Its menu beside it: add to or remove from favourites, move, hide |
+| Moving an app (Home) | ↑ ↓, then OK | Move it along the list, keep its new place |
 | Moving an app (Home) | Back | Put it back where it was |
+| Settings | ↑ ↓, then → | Choose a tab on the left, then go into it (← comes back) |
 | Settings | OK | Add or remove an app or source |
 | Settings | Hold OK (or the **Re-order** button) | Enter or leave re-order mode |
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
@@ -59,13 +63,14 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
-Pointing selects, clicking opens, holding the click on an app opens its menu. While an
-app is being moved, its arrows move it and clicking it puts it down.
+Pointing selects, clicking opens, holding the click on an app opens its menu, clicking
+beside a menu closes it. While an app is being moved, its arrows move it and clicking it
+puts it down.
 
 **Where the apps come from.** fluid reads every app on the TV's launcher, with its real
 icon, from the TV itself, through the Homebrew Channel. That is why it needs root. Until you
-pick apps in Settings, the Apps row shows all of them in the order of LG's launcher. If the
-Homebrew Channel is missing or has lost root (a firmware update can do that), the Apps row
+pick apps in Settings, the list shows all of them in the order of LG's launcher. If the
+Homebrew Channel is missing or has lost root (a firmware update can do that), the list
 says so; Sources and LG Home keep working, and fluid tries again when you come back to it.
 
 fluid does not take over the HOME button yet. You can map a remote button to it with
@@ -153,7 +158,7 @@ luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.f
 
 | Command | Does |
 |---|---|
-| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list, `?weather-error=offline` (or `service`) a failed weather and place search, `?weather-code=71` (any WMO code) and `?weather-night=1` other skies. The browser never goes online: places and weather are sample data. `localStorage.clear()` in the console, then reload, shows the first-start setup again |
+| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list, `?weather-error=offline` (or `service`) a failed weather and place search, `?weather-code=71` (any WMO code) and `?weather-night=1` other skies, `?apps=40` a long list of apps. The browser never goes online: places and weather are sample data. `localStorage.clear()` in the console, then reload, shows the first-start setup again |
 | `npm run check` | Lint (Biome), type check (TypeScript) and unit tests (Vitest) |
 | `npm run format` | Formats the code and applies safe lint fixes |
 | `npm run build` | Type-checks, builds `dist/` and checks the bundle's syntax and CSS for webOS 4 |
@@ -207,11 +212,11 @@ src/
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
   i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
   state/       settings: one versioned schema with migrations; the weather cache
-  lib/         clock, ordering, grid navigation, tile adapters, weather
-  hooks/       remote keys, OK press/hold, clock tick, time format, weather, place search,
-               grid tabs (Settings and the first start)
-  components/  Header, Clock, WeatherNow, Row, Grid, Tile, OptionList, WeatherPanel,
-               LanguageChoice, Glyph, Toast
+  lib/         clock, ordering, Home and grid navigation, tile adapters, weather
+  hooks/       remote keys, OK press/hold, pointer hold, clock tick, time format, weather,
+               place search, grid tabs (Settings and the first start)
+  components/  AppList, Bar, Menu, AppMenu, Greeting, WeatherNow, Grid, Tile, AppIcon,
+               OptionList, WeatherPanel, LanguageChoice, Glyph, Time, Toast
   screens/     Home, Settings, Onboarding (first start)
   app.tsx      state, data loading and wiring
 scripts/       package, deploy, bundle check, Homebrew manifest
@@ -236,7 +241,7 @@ package's SHA-256 and attaches both to a GitHub release.
 
 [MIT](LICENSE). fluid started as a fork of
 [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), whose
-copyright notice is kept in the licence. Bundled Preact (MIT) and the Inter typeface
+copyright notice is kept in the licence. Bundled Preact (MIT) and the Manrope typeface
 (SIL OFL 1.1), and the tools used to build fluid, are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), as is the data the weather shows: weather
 data by [Open-Meteo.com](https://open-meteo.com) and place data by
