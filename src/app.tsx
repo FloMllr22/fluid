@@ -67,11 +67,14 @@ export function App() {
 		[showToast]
 	);
 
-	// Settings from an older fluid are stored in the current form at once; settings that
-	// could not be read are reported (fluid then starts with the defaults).
+	// Settings from an older fluid are stored in the current form at once. Settings that
+	// could not be read are reported, then replaced by the defaults fluid starts with, so
+	// the message comes once rather than at every start.
 	useEffect(() => {
-		if (loaded.unreadable) showToast(t('settings.loadFailed'), 'error');
-		else if (loaded.migrated) updateSettings(loaded.settings);
+		if (loaded.unreadable) {
+			showToast(t('settings.loadFailed'), 'error');
+			saveSettings(loaded.settings);
+		} else if (loaded.migrated) updateSettings(loaded.settings);
 	}, [loaded, showToast, updateSettings]);
 
 	// Start in remote (5-way) mode: hide the Magic Remote pointer whenever we come to the
