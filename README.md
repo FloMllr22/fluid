@@ -1,7 +1,8 @@
 # fluid – a home screen for LG webOS TVs
 
-fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: a greeting and
-clock, a row of your apps, a row of your inputs, and a way back to LG's own home.
+fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: a greeting,
+clock and (if you like) the weather, a row of your apps, a row of your inputs, and a way
+back to LG's own home.
 
 > **Status: early development.** fluid runs on the maintainer's TV, but it is a
 > foundation, not a finished product. Expect changes, and no releases yet.
@@ -12,9 +13,12 @@ clock, a row of your apps, a row of your inputs, and a way back to LG's own home
 - **Sources**: Live TV and the HDMI inputs, with the names set in the TV's input settings
 - **More**: LG's own home screen, and Settings
 - **Background**: dark, OLED black or calm blue, one of three photos, or a slideshow of them
+- **Weather** (optional, off until you turn it on): the sky and temperature at a place you
+  search for, from [Open-Meteo](https://open-meteo.com), in °C or °F as your TV's region uses
 - Speaks English and German, following the TV's language, and the TV's 12/24-hour clock setting
 - Works with the remote's arrow keys and with the Magic Remote pointer
-- No network access, no telemetry: your settings stay in the app's storage on the TV
+- No telemetry, and no network access at all unless you turn the weather on (see
+  [Privacy](#privacy)); your settings stay in the app's storage on the TV
 
 ## Requirements
 
@@ -41,6 +45,9 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
 | Re-order mode | Back | Cancel the move or leave re-order mode |
 | Settings, Background tab | OK | Use that background (it changes at once) |
+| Settings, Weather tab | OK | Turn the weather on or off, open the keyboard to search for a place, or use the place found |
+| Typing a place | OK | Search at once (the search also starts when you pause typing) |
+| Typing a place | Back, ↑ ↓ | Leave the field |
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
@@ -56,6 +63,22 @@ says so; Sources and LG Home keep working, and fluid tries again when you come b
 fluid does not take over the HOME button yet. You can map a remote button to it with
 [LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID
 `io.github.flomllr22.fluid`).
+
+## Privacy
+
+fluid has no telemetry and no account. It makes network connections only for the weather,
+and only once you turn it on in Settings → Weather; while it is off, fluid opens no
+connection at all. Both kinds of request go to [Open-Meteo](https://open-meteo.com), which needs
+no account or key:
+
+- **Place search** (`geocoding-api.open-meteo.com`): the name you type and fluid's
+  language (`en` or `de`), only while you search in Settings.
+- **Weather** (`api.open-meteo.com`): the coordinates of the place you picked, rounded to
+  about a kilometre, every 30 minutes while fluid is in front, never while another app is.
+
+fluid itself does not locate you, and sends nothing about you or your TV. Open-Meteo sees
+your TV's IP address, as any server it connects to does. The place you picked (with its
+name) and the last weather stay on the TV, so the weather shows at once, also offline.
 
 ## Install from source
 
@@ -122,7 +145,7 @@ luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.f
 
 | Command | Does |
 |---|---|
-| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list |
+| `npm run dev` | Runs fluid in a desktop browser, with neutral sample apps and inputs; add `?lang=de` (or `en-US` …) for another language, `?apps-error=no-homebrew` (or `no-root`, `timeout` …) to see a failed app list, `?weather-error=offline` (or `service`) a failed weather and place search, `?weather-code=71` (any WMO code) and `?weather-night=1` other skies. The browser never goes online: places and weather are sample data |
 | `npm run check` | Lint (Biome), type check (TypeScript) and unit tests (Vitest) |
 | `npm run format` | Formats the code and applies safe lint fixes |
 | `npm run build` | Type-checks, builds `dist/` and checks the bundle's syntax and CSS for webOS 4 |
@@ -150,6 +173,10 @@ pull requests.
   icon paths are validated and shell-quoted, and app IDs never reach the shell. When that
   fails, `getAppLoadStatus` and the Homebrew Channel's `getConfiguration` tell whether it
   is missing or running without root.
+- **Network.** Only the weather (Open-Meteo, see [Privacy](#privacy)) goes online, through
+  one `XMLHttpRequest` helper in `src/platform/webos/` with a timeout (Chromium 53 has no
+  `AbortController`); a test keeps every other file off the network. Answers are
+  checked field by field before fluid uses them.
 - **Pointer.** The system draws the pointer, so CSS cannot hide it; fluid calls
   `webOSSystem.setCursorHidden(true)` whenever it comes to the foreground.
 - **Language.** fluid follows the TV's UI language (`webOSSystem.locale`) and falls back
@@ -164,15 +191,16 @@ pull requests.
 
 ```
 src/
-  platform/    the only way to the TV: one interface, webos/ (Luna, Homebrew shell) and
-               mock/ (neutral sample data for the desktop browser)
+  platform/    the only way to the TV and the network: one interface, webos/ (Luna,
+               Homebrew shell, Open-Meteo) and mock/ (neutral sample data for the
+               desktop browser)
   config/      constants (app ID, key codes, timings)
   theme/       design tokens (colours, type, layout, motion) and the stylesheet
   i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
-  state/       settings: one versioned schema with migrations
-  lib/         clock, ordering, tile adapters
-  hooks/       remote keys, OK press/hold, clock tick, time format
-  components/  Header, Clock, Row, Grid, Tile, OptionList, Glyph, Toast
+  state/       settings: one versioned schema with migrations; the weather cache
+  lib/         clock, ordering, tile adapters, weather
+  hooks/       remote keys, OK press/hold, clock tick, time format, weather, place search
+  components/  Header, Clock, WeatherNow, Row, Grid, Tile, OptionList, WeatherPanel, Glyph, Toast
   screens/     Home, Settings
   app.tsx      state, data loading and wiring
 scripts/       package, deploy, bundle check, Homebrew manifest
@@ -199,7 +227,9 @@ package's SHA-256 and attaches both to a GitHub release.
 [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), whose
 copyright notice is kept in the licence. Bundled Preact (MIT) and the Inter typeface
 (SIL OFL 1.1), and the tools used to build fluid, are listed in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), as is the data the weather shows: weather
+data by [Open-Meteo.com](https://open-meteo.com) and place data by
+[GeoNames](https://www.geonames.org), both under CC BY 4.0.
 
 fluid ships no third-party logos. This project is not affiliated with LG Electronics or
 any app publisher; "LG" and "webOS" are trademarks of LG Electronics.
