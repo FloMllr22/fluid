@@ -3,7 +3,14 @@
 // places and weather are fixed sample data.
 
 import {PLATFORM_ERROR_CODES, PlatformError, type PlatformErrorCode} from '../errors';
-import {DEFAULT_TIME_FORMAT, PLACE_QUERY_MIN_LENGTH, PLACE_SEARCH_LIMIT, type Platform, type Weather} from '../types';
+import {
+	type AppEntry,
+	DEFAULT_TIME_FORMAT,
+	PLACE_QUERY_MIN_LENGTH,
+	PLACE_SEARCH_LIMIT,
+	type Platform,
+	type Weather
+} from '../types';
 import {MOCK_APPS, MOCK_INPUTS, MOCK_PLACES, MOCK_WEATHER} from './data';
 
 /** A parameter from the page address, e.g. `?lang=de`; null outside a browser. */
@@ -18,6 +25,22 @@ function urlParam(name: string): string | null {
 function errorFromUrl(name: 'apps-error' | 'weather-error'): PlatformErrorCode | undefined {
 	const code = urlParam(name);
 	return PLATFORM_ERROR_CODES.find((c) => c === code);
+}
+
+/** The sample apps; ?apps=<count> lists that many, the samples again and again with a
+ *  number, to see a long list (a TV with many apps). */
+function appsFromUrl(): AppEntry[] {
+	const count = Number(urlParam('apps'));
+	if (!Number.isInteger(count) || count <= MOCK_APPS.length) return MOCK_APPS.slice();
+	const apps: AppEntry[] = [];
+	for (let i = 0; i < count; i++) {
+		const sample = MOCK_APPS[i % MOCK_APPS.length];
+		const round = Math.floor(i / MOCK_APPS.length);
+		apps.push(
+			round === 0 ? sample : {...sample, id: `${sample.id}${round + 1}`, title: `${sample.title} ${round + 1}`}
+		);
+	}
+	return apps;
 }
 
 /** The sample weather; ?weather-code=<WMO code> and ?weather-night=1 show other skies. */
@@ -36,7 +59,7 @@ export function createMockPlatform(): Platform {
 		listApps: () => {
 			const code = errorFromUrl('apps-error');
 			if (code) return Promise.reject(new PlatformError(code, `[mock] app list failed: ${code}`));
-			return Promise.resolve({apps: MOCK_APPS.slice(), failedIcons: 0});
+			return Promise.resolve({apps: appsFromUrl(), failedIcons: 0});
 		},
 		listInputs: () => Promise.resolve(MOCK_INPUTS.slice()),
 		launch: (appId) => {

@@ -49,6 +49,15 @@ describe('outside webOS', () => {
 		await expect(platform.listApps()).rejects.toMatchObject({name: 'PlatformError', code: 'no-homebrew'});
 	});
 
+	it('lists more apps on request, to show a long list in a browser', async () => {
+		vi.stubGlobal('location', {search: '?apps=20'});
+		const {apps} = await platform.listApps();
+		expect(apps).toHaveLength(20);
+		expect(new Set(apps.map((app) => app.id)).size).toBe(20);
+		expect(apps[0]).toEqual(MOCK_APPS[0]);
+		expect(apps[MOCK_APPS.length].title).toBe(`${MOCK_APPS[0].title} 2`);
+	});
+
 	it('ignores an unknown error code in the address', async () => {
 		vi.stubGlobal('location', {search: '?apps-error=reboot'});
 		await expect(platform.listApps()).resolves.toEqual({apps: MOCK_APPS, failedIcons: 0});
