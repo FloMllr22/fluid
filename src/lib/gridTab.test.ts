@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {TileModel} from '../components/Tile';
-import {gridStep, heldTarget, keepFocus} from './gridTab';
+import {firstShownRow, gridStep, heldTarget, keepFocus} from './gridTab';
 
 const tiles = (...keys: string[]): TileModel[] => keys.map((key) => ({key, label: key}));
 
@@ -66,5 +66,26 @@ describe('keepFocus', () => {
 	it('goes to the first tile when its tile is not in the other list', () => {
 		expect(keepFocus(tiles('a', 'b', 'c'), tiles('a', 'c'), 1)).toBe(0);
 		expect(keepFocus(tiles(), tiles('a'), 0)).toBe(0);
+	});
+});
+
+describe('firstShownRow', () => {
+	it('keeps the focused row in the middle of three', () => {
+		expect(firstShownRow(4, 10, 3)).toBe(3);
+	});
+
+	it('starts at the first row and ends at the last', () => {
+		expect(firstShownRow(0, 10, 3)).toBe(0);
+		expect(firstShownRow(1, 10, 3)).toBe(0);
+		expect(firstShownRow(9, 10, 3)).toBe(7);
+	});
+
+	it('does not scroll a grid that fits', () => {
+		expect(firstShownRow(1, 2, 3)).toBe(0);
+	});
+
+	it('keeps the focused row on top of two, but at the end', () => {
+		expect(firstShownRow(3, 10, 2)).toBe(3);
+		expect(firstShownRow(9, 10, 2)).toBe(8);
 	});
 });

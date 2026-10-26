@@ -24,7 +24,7 @@ export interface WeatherChoice {
 interface Props extends WeatherChoice {
 	/** has the remote's keys */
 	active: boolean;
-	/** ↑ from the first row: back to the tabs */
+	/** ←: back to the tabs */
 	onExit: () => void;
 	/** Back: home */
 	onClose: () => void;
@@ -39,7 +39,7 @@ const FIRST_PLACE = 2;
 
 /** The Weather tab: a switch, the place in use with its weather, a search field and the
  *  places found. ↑ ↓ move between the rows, OK switches, opens the keyboard or picks a
- *  place. While the field has the keyboard, it keeps every key (the arrows move the
+ *  place, ← goes back to the tabs. While the field has the keyboard, it keeps every key (the arrows move the
  *  caret) except OK, which searches at once, Back, and ↑ ↓, which leave it. Off, there is
  *  only the switch and no search, so nothing is sent. */
 export function WeatherPanel({settings, view, unit, onToggle, onPick, active, onExit, onClose, onPointer}: Props) {
@@ -69,10 +69,9 @@ export function WeatherPanel({settings, view, unit, onToggle, onPick, active, on
 
 	const handleKey = useCallback(
 		(key: NavKey): boolean => {
-			if (key === 'up') {
-				if (focus === SWITCH) onExit();
-				else setSelected(focus - 1);
-			} else if (key === 'down') setSelected(clamp(focus + 1, SWITCH, last));
+			if (key === 'up') setSelected(clamp(focus - 1, SWITCH, last));
+			else if (key === 'down') setSelected(clamp(focus + 1, SWITCH, last));
+			else if (key === 'left') onExit();
 			else if (key === 'back') onClose();
 			return true; // OK goes through useOkPress
 		},

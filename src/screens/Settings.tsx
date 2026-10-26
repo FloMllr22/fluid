@@ -2,9 +2,12 @@ import type {ComponentChildren} from 'preact';
 import {useCallback, useState} from 'preact/hooks';
 import {Grid} from '../components/Grid';
 import {type OptionItem, OptionList} from '../components/OptionList';
+import {timeText} from '../components/Time';
+import {useClock} from '../hooks/useClock';
 import {type SettingsTab, useGridTab} from '../hooks/useGridTab';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
+import {useTimeFormat} from '../hooks/useTimeFormat';
 import {t} from '../i18n';
 import {LAYOUT} from '../theme/tokens';
 
@@ -14,7 +17,7 @@ export type {SettingsTab} from '../hooks/useGridTab';
 export interface PanelNav {
 	/** has the remote's keys */
 	active: boolean;
-	/** ↑ from its first row: back to the tabs */
+	/** ← from the panel's left edge: back to the tabs */
 	onExit: () => void;
 	/** Back: home */
 	onClose: () => void;
@@ -27,7 +30,7 @@ export interface PanelNav {
 export interface SettingsPanel {
 	id: string;
 	label: string;
-	/** the key hint under the title */
+	/** the key hint at the foot */
 	hint: string;
 	render: (nav: PanelNav) => ComponentChildren;
 }
@@ -45,17 +48,22 @@ interface Props {
 	onClose: () => void;
 }
 
-/** Focus is on the tabs row (a tab, or the re-order button) or in the tab's content. */
+/** Focus is on the tabs (left), the re-order button, or in the tab's content. */
 type Zone = 'tabs' | 'button' | 'content';
 
-/** Settings: pick which apps and sources appear on the home rows and their order, the
- *  background, plus panels (weather, language) and options.
+const COLS = LAYOUT.settingsGridColumns;
+
+/** Settings: pick which apps and sources Home shows and their order, the background,
+ *  plus panels (weather, language) and options.
  *
- *  Tabs: one grid tab per row (Apps, Sources), then Background, the panels, then Options
- *  if there are any.
+ *  The tabs stand one below the other on the left, the open tab's content on the right:
+ *  ↑ ↓ choose a tab, → or OK go into its content, ← from its left edge comes back.
+ *  Tabs: one grid tab for the apps and one for the sources, then Background, the panels,
+ *  then Options if there are any.
  *  Grid tabs, select mode: everything available; OK adds/removes an item.
- *  Grid tabs, re-order mode (hold OK, or the button): only what's on the home screen, in order;
- *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave.
+ *  Grid tabs, re-order mode (hold OK, or the button above the grid): only what's on the
+ *  home screen, in order; OK picks an item up, arrows move it, OK puts it down. Hold OK
+ *  or press Done to leave.
  *  Background tab: previews of every background; OK picks one, which shows at once.
  *  Panels: their own content, which takes the keys while focus is in it. */
 export function Settings({tabs, panels, options, active, onToggle, onReorder, onOption, onClose}: Props) {
@@ -68,18 +76,23 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 	const tab: SettingsTab | undefined = tabIndex < tabs.length ? tabs[tabIndex] : undefined;
 	const panel: SettingsPanel | undefined = tab ? undefined : panels[tabIndex - tabs.length];
 	const onOptions = tabIndex === tabs.length + panels.length;
-	const grid = useGridTab(tab, onToggle, onReorder);
+	const grid = useGridTab(tab, onToggle, onReorder, COLS);
 	// a panel always has something to focus
 	const count = onOptions ? options.length : panel ? 1 : grid.items.length;
 	/** focus is in a panel, which then takes the keys */
 	const inPanel = panel !== undefined && zone === 'content';
-	const cols = LAYOUT.gridColumns;
 
 	const selectTab = (i: number) => {
 		if (grid.reordering) return; // tab is locked while re-ordering
 		setTabIndex(i);
 		grid.reset();
 		setOptionIndex(0);
+	};
+
+	/** Into the tab's content; with nothing in it, to its re-order button if it has one. */
+	const enter = () => {
+		if (count > 0) setZone('content');
+		else if (tab && grid.canReorder) setZone('button');
 	};
 
 	/** Switch re-order mode; entering it from the tabs, or with nothing to show, focuses
@@ -96,7 +109,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 			return;
 		}
 		if (zone === 'tabs') {
-			if (count > 0) setZone('content');
+			enter();
 			return;
 		}
 		if (onOptions) {
@@ -127,9 +140,9 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 			}
 
 			if (zone === 'tabs') {
-				if (key === 'left') selectTab(clamp(tabIndex - 1, 0, tabCount - 1));
-				else if (key === 'right') selectTab(clamp(tabIndex + 1, 0, tabCount - 1));
-				else if (key === 'down' && count > 0) setZone('content');
+				if (key === 'up') selectTab(clamp(tabIndex - 1, 0, tabCount - 1));
+				else if (key === 'down') selectTab(clamp(tabIndex + 1, 0, tabCount - 1));
+				else if (key === 'right') enter();
 				return true;
 			}
 			if (zone === 'button') {
@@ -139,17 +152,16 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 			}
 
 			if (onOptions) {
-				if (key === 'up') {
-					if (optionIndex === 0) setZone('tabs');
-					else setOptionIndex(optionIndex - 1);
-				} else if (key === 'down') setOptionIndex(clamp(optionIndex + 1, 0, count - 1));
+				if (key === 'left') setZone('tabs');
+				else if (key === 'up') setOptionIndex(clamp(optionIndex - 1, 0, count - 1));
+				else if (key === 'down') setOptionIndex(clamp(optionIndex + 1, 0, count - 1));
 				return true;
 			}
 
-			// Up from the top row: the button sits top-right, so leave the grid towards
-			// whichever is above.
-			if (!grid.arrow(key))
-				setZone(grid.canReorder && (grid.reordering || grid.index % cols >= cols / 2) ? 'button' : 'tabs');
+			// ← from the left column goes back to the tabs (not while re-ordering, when they
+			// are locked); ↑ from the top row to the re-order button above the grid
+			if (key === 'left' && grid.index % COLS === 0 && !grid.reordering) setZone('tabs');
+			else if (!grid.arrow(key) && grid.canReorder) setZone('button');
 			return true;
 		},
 		[zone, tabIndex, tabCount, optionIndex, count, onOptions, options, grid, onClose]
@@ -181,48 +193,53 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 	]
 		.filter(Boolean)
 		.join(' ');
+	const toolbar = tab !== undefined && grid.canReorder;
 
 	return (
-		<div class="screen">
-			<div class="settings">
-				<h1 class="settings__title">{t('settings.title')}</h1>
-				<p class="settings__hint">{hint}</p>
-				<div class="settings__tabs">
-					{labels.map((label, i) => (
-						<div
-							key={label}
-							class={[
-								'tab',
-								i === tabIndex && 'tab--active',
-								grid.reordering && i !== tabIndex && 'tab--locked',
-								zone === 'tabs' && i === tabIndex && 'tab--focused'
-							]
-								.filter(Boolean)
-								.join(' ')}
-							onMouseEnter={() => {
-								if (!grid.reordering) {
-									setZone('tabs');
-									selectTab(i);
-								}
-							}}
-						>
-							{label}
-						</div>
-					))}
-					{tab && grid.canReorder && (
+		<div class="screen settings">
+			<h1 class="settings__title">{t('settings.title')}</h1>
+			<SettingsClock />
+			<nav class="settings__tabs">
+				{labels.map((label, i) => (
+					<div
+						key={label}
+						class={[
+							'settings__tab',
+							i === tabIndex && 'settings__tab--active',
+							grid.reordering && i !== tabIndex && 'settings__tab--locked',
+							zone === 'tabs' && i === tabIndex && 'settings__tab--focused'
+						]
+							.filter(Boolean)
+							.join(' ')}
+						onMouseEnter={() => {
+							if (!grid.reordering) {
+								setZone('tabs');
+								selectTab(i);
+							}
+						}}
+					>
+						{label}
+					</div>
+				))}
+			</nav>
+			<div class="settings__content">
+				{toolbar && (
+					<div class="settings__toolbar">
 						<div class={buttonClass} onMouseEnter={() => setZone('button')} onClick={() => setMode(!grid.reordering)}>
 							{grid.reordering ? t('settings.done') : tab.reorderLabel}
 						</div>
-					)}
-				</div>
-				{tab && (
+					</div>
+				)}
+				{tab && count > 0 && (
 					<Grid
 						items={grid.items}
+						cols={COLS}
 						mode={grid.mode}
 						checkedKeys={tab.shown.map((tile) => tile.key)}
 						liftedIndex={grid.held}
 						focused={zone === 'content'}
 						selected={grid.index}
+						height={toolbar ? LAYOUT.settingsGridHeight : LAYOUT.settingsGridHeight + LAYOUT.settingsToolbar}
 						onSelect={(i) => {
 							if (grid.point(i)) setZone('content');
 						}}
@@ -231,6 +248,9 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 							grid.activate(i);
 						}}
 					/>
+				)}
+				{tab && count === 0 && (
+					<p class="settings__empty">{grid.reordering ? t('settings.reorderEmpty') : tab.emptyText}</p>
 				)}
 				{panel?.render({
 					active: active && inPanel,
@@ -253,10 +273,15 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 						}}
 					/>
 				)}
-				{tab && count === 0 && (
-					<p class="settings__hint">{grid.reordering ? t('settings.reorderEmpty') : tab.emptyText}</p>
-				)}
 			</div>
+			<p class="settings__hint">{hint}</p>
 		</div>
 	);
+}
+
+/** The time at the top right; on its own, so that its tick redraws nothing else. */
+function SettingsClock() {
+	const now = useClock();
+	const format = useTimeFormat();
+	return <div class="settings__clock">{timeText(now, format)}</div>;
 }

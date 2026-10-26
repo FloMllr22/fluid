@@ -52,7 +52,7 @@ interface PanelProps {
 	onChoose: (choice: LanguageChoice) => void;
 	/** has the remote's keys */
 	active: boolean;
-	/** ↑: back to the tabs */
+	/** ← from the first choice: back to the tabs */
 	onExit: () => void;
 	/** Back: home */
 	onClose: () => void;
@@ -60,7 +60,8 @@ interface PanelProps {
 	onPointer: () => void;
 }
 
-/** The Language tab: ← → choose, OK uses the language at once, ↑ back to the tabs. */
+/** The Language tab: ← → choose, OK uses the language at once, ← from the first choice
+ *  back to the tabs. */
 export function LanguagePanel({chosen, tvLocale, onChoose, active, onExit, onClose, onPointer}: PanelProps) {
 	const [focus, setFocus] = useState(() => Math.max(0, LANGUAGE_CHOICES.indexOf(chosen)));
 	const last = LANGUAGE_CHOICES.length - 1;
@@ -72,13 +73,14 @@ export function LanguagePanel({chosen, tvLocale, onChoose, active, onExit, onClo
 
 	const handleKey = useCallback(
 		(key: NavKey): boolean => {
-			if (key === 'left') setFocus((i) => clamp(i - 1, 0, last));
-			else if (key === 'right') setFocus((i) => clamp(i + 1, 0, last));
-			else if (key === 'up') onExit();
+			if (key === 'left') {
+				if (focus === 0) onExit();
+				else setFocus(focus - 1);
+			} else if (key === 'right') setFocus(clamp(focus + 1, 0, last));
 			else if (key === 'back') onClose();
 			return true; // OK goes through useOkPress
 		},
-		[last, onExit, onClose]
+		[focus, last, onExit, onClose]
 	);
 	useKeys(handleKey, active);
 

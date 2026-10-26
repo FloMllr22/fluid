@@ -15,6 +15,12 @@ export function gridStep(index: number, key: ArrowKey, count: number, cols: numb
 	return index + cols < count ? index + cols : index;
 }
 
+/** The first of `visible` whole rows a grid of `rows` shows, with `row` in focus: the
+ *  focused row in the middle where it can be, the grid's first or last rows at its ends. */
+export function firstShownRow(row: number, rows: number, visible: number): number {
+	return clamp(row - Math.floor((visible - 1) / 2), 0, Math.max(0, rows - visible));
+}
+
 /** Where a tile picked up at `from` may go when moved towards `to`: within its group, the
  *  first `pinned` tiles (favourites) or the rest. */
 export function heldTarget(from: number, to: number, pinned: number, count: number): number {

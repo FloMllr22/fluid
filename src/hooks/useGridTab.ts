@@ -2,7 +2,6 @@ import {useState} from 'preact/hooks';
 import type {TileModel} from '../components/Tile';
 import {type ArrowKey, gridStep, heldTarget, keepFocus} from '../lib/gridTab';
 import {moveItem} from '../lib/order';
-import {LAYOUT} from '../theme/tokens';
 
 /** A tab of tiles to choose from (Apps, Sources, Background). */
 export interface SettingsTab {
@@ -59,7 +58,7 @@ export interface GridTab {
 	reset: () => void;
 }
 
-/** The state and keys of one grid tab (none: an empty grid). OK adds or removes a tile
+/** The state and keys of one grid tab (none: an empty grid) of `cols` columns. OK adds or removes a tile
  *  (select), or picks one (a tab without a re-order button). In re-order mode the grid
  *  shows only what is shown on Home: OK picks a tile up, the arrows move it within its
  *  group (favourites stay in front), OK puts it down, Back puts it back. Changes go out
@@ -67,12 +66,12 @@ export interface GridTab {
 export function useGridTab(
 	tab: SettingsTab | undefined,
 	onToggle: (tabId: string, key: string) => void,
-	onReorder: (tabId: string, keys: string[]) => void
+	onReorder: (tabId: string, keys: string[]) => void,
+	cols: number
 ): GridTab {
 	const [index, setIndex] = useState(0);
 	const [reordering, setReorderingState] = useState(false);
 	const [held, setHeld] = useState<Held | null>(null);
-	const cols = LAYOUT.gridColumns;
 	const canReorder = tab !== undefined && tab.reorderLabel !== undefined;
 	const items = tab ? (reordering ? tab.shown : tab.items) : [];
 	const keysOf = (list: TileModel[]) => list.map((tile) => tile.key);

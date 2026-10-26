@@ -70,7 +70,6 @@ body {
 	top: 0;
 	width: 100%;
 	height: 100%;
-	padding: 0 var(--layout-edge-padding);
 }
 /* Home under Settings: mounted, so it keeps its focus, but not drawn over the background */
 .screen--hidden {
@@ -222,7 +221,7 @@ body {
 	width: var(--layout-list-width);
 	margin: 0;
 	transform: translateY(-50%);
-	font-size: var(--font-list-empty);
+	font-size: var(--font-empty-note);
 	font-weight: 500;
 	line-height: 1.35;
 	color: var(--color-text-secondary);
@@ -668,6 +667,7 @@ body {
 
 /* ---------- tiles ---------- */
 
+/* In the grids of Settings and the onboarding: apps, sources and backgrounds. */
 .tile {
 	flex: 0 0 auto;
 	width: var(--layout-tile-size);
@@ -684,21 +684,21 @@ body {
 	width: var(--layout-tile-size);
 	height: var(--layout-tile-size);
 	border-radius: var(--layout-tile-radius);
-	background: var(--color-tile-bg);
-	box-shadow: 0 0 0 2px var(--color-tile-border);
+	background: var(--color-surface);
+	box-shadow: 0 0 0 1px var(--color-surface-edge);
 	overflow: hidden;
+	text-shadow: none;
 	transform: scale(1);
 	transition:
 		transform var(--motion-focus-ms) ease-out,
-		box-shadow var(--motion-focus-ms) ease-out,
-		background var(--motion-focus-ms) ease-out,
 		opacity var(--motion-focus-ms) ease-out;
 }
 .tile--focused .tile__box {
-	transform: scale(var(--motion-focus-scale));
-	background: var(--color-tile-bg-focus);
-	box-shadow: 0 0 0 5px var(--color-tile-border-focus);
 	z-index: 1;
+	box-shadow:
+		0 0 0 4px var(--color-focus-fill),
+		0 20px 40px var(--color-focus-shadow);
+	transform: scale(var(--motion-focus-scale));
 }
 
 .tile__image {
@@ -731,7 +731,8 @@ body {
 	align-items: center;
 	justify-content: center;
 	font-size: 64px;
-	font-weight: 600;
+	font-weight: 800;
+	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
 
@@ -739,16 +740,16 @@ body {
 	/* up to two lines, using a little of the gutter either side, so long input names fit */
 	width: calc(var(--layout-tile-size) + var(--layout-tile-gap) - 8px);
 	height: calc(var(--font-tile-label) * 2.4);
-	margin: 14px 0 0 calc((var(--layout-tile-gap) - 8px) / -2);
+	margin: var(--layout-tile-label-gap) 0 0 calc((var(--layout-tile-gap) - 8px) / -2);
 	line-height: 1.2;
 	font-size: var(--font-tile-label);
-	font-weight: 400;
+	font-weight: 500;
 	color: var(--color-text-secondary);
 	white-space: normal;
 	overflow: hidden;
-	transition: color var(--motion-focus-ms) ease-out;
 }
 .tile--focused .tile__label {
+	font-weight: 700;
 	color: var(--color-text-primary);
 }
 
@@ -759,8 +760,8 @@ body {
 	width: 34px;
 	height: 34px;
 	border-radius: 50%;
-	background: var(--color-badge);
-	color: var(--color-badge-text);
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -785,10 +786,68 @@ body {
 	stroke-width: 1.5;
 }
 
+/* not on Home (Settings: select): darkened inside, so that its focus frame stays bright */
+.tile__box::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--color-tile-dim);
+	opacity: 0;
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.tile--dimmed .tile__box::after {
+	opacity: 1;
+}
+.tile--dimmed .tile__label {
+	color: var(--color-text-muted);
+}
+
+/* re-order mode: the picked-up tile floats above the others */
+.tile--lifted .tile__box,
+.tile--lifted.tile--focused .tile__box {
+	z-index: 2;
+	box-shadow:
+		0 0 0 4px var(--color-focus-fill),
+		0 18px 40px var(--color-lift-shadow);
+	transform: scale(var(--motion-lift-scale)) translateY(var(--layout-lift-offset));
+}
+.tile--lifted .tile__label {
+	color: var(--color-text-primary);
+}
+
+/* ---------- grid ---------- */
+
+/* its height comes from Grid; the padding leaves room for a focused or lifted tile, which
+   grows by up to a sixth of its size, rises, and has a frame */
+.grid__viewport {
+	overflow: hidden;
+	padding: var(--layout-grid-bleed) 0;
+}
+/* A wrapping flex row instead of CSS Grid (Chromium 57+). The track (its width set by
+   Grid) holds exactly as many tiles as the grid has columns, each followed by one gap,
+   so it wraps after the last column; shifted right by half a gap, the visible tiles are
+   centred. */
+.grid__track {
+	position: relative;
+	left: calc(var(--layout-tile-gap) / 2);
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0 auto;
+	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+	will-change: transform;
+}
+.grid__track .tile {
+	margin: 0 var(--layout-tile-gap) var(--layout-grid-row-gap) 0;
+}
+
 /* ---------- text over a photo ---------- */
 
 /* Over a photo, all text on the screens has a dark halo right behind its letters, so it
-   keeps its contrast however bright the photo is there; letters on tiles do not need it.
+   keeps its contrast however bright the photo is there; letters on tiles, icons and light
+   pills do not need it.
    Each layer darkens a little more: dark right behind the letters, soft further out. */
 .app--photo .screen {
 	text-shadow:
@@ -799,151 +858,163 @@ body {
 		0 0 8px var(--color-photo-text-halo),
 		0 0 14px var(--color-photo-text-halo);
 }
-.app--photo .tile__box {
+
+/* ---------- light focus ---------- */
+
+/* What has focus outside the app list is a light pill with dark text (see focusFill); its
+   letters need no halo over a photo. */
+.settings__tab--focused,
+.settings__button--focused,
+.option--focused,
+.pill--focused {
 	text-shadow: none;
 }
 
 /* ---------- settings ---------- */
 
+/* Over the dimmed background: the title and the time at the top, the tabs on the left,
+   the open tab's content on the right, the keys at the foot. */
 .settings {
-	position: absolute;
-	left: var(--layout-edge-padding);
-	right: var(--layout-edge-padding);
-	top: var(--layout-header-top);
-	bottom: 60px;
+	background: var(--color-screen-dim);
 }
 .settings__title {
+	position: absolute;
+	left: var(--layout-safe-x);
+	top: var(--layout-safe-y);
 	margin: 0;
 	font-size: var(--font-settings-title);
-	font-weight: 300;
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.025em;
 	color: var(--color-text-primary);
 }
-.settings__hint {
-	margin: 8px 0 0;
-	font-size: var(--font-tile-label);
-	color: var(--color-text-muted);
+.settings__clock {
+	position: absolute;
+	right: var(--layout-safe-x);
+	top: calc(var(--layout-safe-y) + 16px);
+	font-size: var(--font-settings-clock);
+	color: var(--color-text-secondary);
 }
+
 .settings__tabs {
-	display: flex;
-	flex-direction: row;
-	margin: 36px 0 30px;
+	position: absolute;
+	left: var(--layout-safe-x);
+	top: var(--layout-settings-top);
+	width: var(--layout-settings-tabs-width);
 }
-.tab {
-	margin-right: 40px;
-	padding: 10px 4px;
+.settings__tab {
+	display: flex;
+	align-items: center;
+	height: var(--layout-settings-tab-height);
+	margin-bottom: 8px;
+	padding: 0 28px;
+	border-radius: calc(var(--layout-settings-tab-height) / 2);
 	font-size: var(--font-settings-tab);
 	font-weight: 500;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
 	color: var(--color-text-muted);
-	border-bottom: 3px solid transparent;
-	transition:
-		color var(--motion-focus-ms) ease-out,
-		border-color var(--motion-focus-ms) ease-out;
+	transition: opacity var(--motion-focus-ms) ease-out;
 }
-.tab--active {
-	color: var(--color-text-secondary);
-	border-bottom-color: var(--color-tile-border);
-}
-.tab--focused {
+.settings__tab--active {
+	background: var(--color-tab-open);
+	font-weight: 600;
 	color: var(--color-text-primary);
-	border-bottom-color: var(--color-tile-border-focus);
 }
-.tab--locked {
+.settings__tab--focused {
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+	box-shadow: 0 24px 56px var(--color-focus-shadow);
+}
+/* the other tabs while re-ordering */
+.settings__tab--locked {
 	opacity: 0.35;
 }
 
-/* top-right of the tabs row */
-.settings__button {
-	margin-left: auto;
-	align-self: center;
-	padding: 12px 28px;
-	border-radius: 999px;
-	font-size: var(--font-settings-button);
+.settings__content {
+	position: absolute;
+	left: var(--layout-settings-content-left);
+	right: var(--layout-safe-x);
+	top: var(--layout-settings-top);
+}
+/* The grid starts at the content's left edge; its padding lets the focused tile there
+   grow without being cut. */
+.settings__content .grid__viewport {
+	margin: calc(-1 * var(--layout-grid-bleed)) calc(-1 * var(--layout-grid-bleed)) 0;
+	padding: var(--layout-grid-bleed);
+}
+.settings__content .grid__track {
+	left: 0;
+	margin: 0;
+}
+.settings__toolbar {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	height: var(--layout-settings-toolbar);
+}
+.settings__empty {
+	margin: 0;
+	max-width: 900px;
+	font-size: var(--font-empty-note);
 	font-weight: 500;
+	line-height: 1.35;
 	color: var(--color-text-secondary);
-	box-shadow: 0 0 0 2px var(--color-button-border);
+}
+.settings__hint {
+	position: absolute;
+	left: var(--layout-settings-content-left);
+	right: var(--layout-safe-x);
+	bottom: var(--layout-safe-y);
+	margin: 0;
+	font-size: var(--font-hint);
+	color: var(--color-text-muted);
+}
+
+/* a button above a grid: re-order (Settings), Next and re-order (the onboarding) */
+.settings__button {
+	display: flex;
+	align-items: center;
+	height: var(--layout-settings-button-height);
+	padding: 0 32px;
+	border: 1px solid var(--color-glass-border);
+	border-radius: calc(var(--layout-settings-button-height) / 2);
+	background: var(--color-surface);
+	font-size: var(--font-settings-button);
+	font-weight: 700;
+	color: var(--color-text-primary);
 	transform: scale(1);
-	transition:
-		transform var(--motion-focus-ms) ease-out,
-		box-shadow var(--motion-focus-ms) ease-out,
-		background var(--motion-focus-ms) ease-out,
-		color var(--motion-focus-ms) ease-out;
+	transition: transform var(--motion-focus-ms) ease-out;
+}
+/* re-order mode is on: the button reads Done */
+.settings__button--active {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
 }
 .settings__button--focused {
-	color: var(--color-text-primary);
-	box-shadow: 0 0 0 4px var(--color-tile-border-focus);
-	transform: scale(1.06);
-}
-.settings__button--active {
-	background: var(--color-button-active-bg);
-	color: var(--color-button-active-text);
-}
-
-/* its height comes from Grid (gridHeight in Settings) */
-.grid__viewport {
-	overflow: hidden;
-	padding: 16px 0;
-}
-/* A wrapping flex row instead of CSS Grid (Chromium 57+). The track holds exactly
-   `grid-columns` tiles, each followed by one gap, so it wraps after the last column;
-   shifting it right by half a gap centres the visible tiles. */
-.grid__track {
-	position: relative;
-	left: calc(var(--layout-tile-gap) / 2);
-	display: flex;
-	flex-wrap: wrap;
-	width: calc(var(--layout-grid-columns) * (var(--layout-tile-size) + var(--layout-tile-gap)));
-	margin: 0 auto;
-	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
-	will-change: transform;
-}
-.grid__track .tile {
-	margin: 0 var(--layout-tile-gap) var(--layout-grid-row-gap) 0;
-}
-.tile--dimmed .tile__box {
-	opacity: 0.45;
-}
-
-/* re-order mode: the picked-up tile floats above the others */
-.tile--lifted .tile__box,
-.tile--lifted.tile--focused .tile__box {
-	transform: scale(var(--motion-lift-scale)) translateY(var(--layout-lift-offset));
-	box-shadow:
-		0 0 0 5px var(--color-tile-border-focus),
-		0 18px 40px var(--color-lift-shadow);
-	z-index: 2;
-}
-.tile--lifted .tile__label {
-	color: var(--color-text-primary);
-}
-.tile--dimmed .tile__label {
-	color: var(--color-text-muted);
+	border-color: var(--color-focus-fill);
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+	box-shadow: 0 20px 48px var(--color-focus-shadow);
+	transform: scale(var(--motion-bar-focus-scale));
 }
 
 /* ---------- options ---------- */
 
-.options {
-	width: 1100px;
-	padding-top: 8px;
-}
-
+/* Rows of the options, the weather and the places found: light when focused. */
 .option {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	padding: 24px 28px;
-	margin-bottom: 16px;
-	border-radius: var(--layout-tile-radius);
-	background: var(--color-tile-bg);
-	box-shadow: 0 0 0 2px var(--color-tile-border);
-	transition:
-		box-shadow var(--motion-focus-ms) ease-out,
-		background var(--motion-focus-ms) ease-out;
+	min-height: var(--layout-option-height);
+	margin-bottom: 14px;
+	padding: 20px 36px;
+	border-radius: var(--layout-option-radius);
+	background: var(--color-surface);
+	color: var(--color-text-primary);
 }
 .option--focused {
-	background: var(--color-tile-bg-focus);
-	box-shadow: 0 0 0 5px var(--color-tile-border-focus);
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+	box-shadow: 0 24px 56px var(--color-focus-shadow);
 }
 .option__text {
 	flex: 1 1 auto;
@@ -951,13 +1022,19 @@ body {
 }
 .option__label {
 	font-size: var(--font-option-label);
-	color: var(--color-text-primary);
+	font-weight: 500;
+}
+.option--focused .option__label {
+	font-weight: 600;
 }
 .option__description {
-	margin-top: 8px;
+	margin-top: 6px;
 	font-size: var(--font-option-description);
 	line-height: 1.4;
 	color: var(--color-text-secondary);
+}
+.option--focused .option__description {
+	color: var(--color-focus-text-soft);
 }
 
 .switch {
@@ -967,7 +1044,6 @@ body {
 	height: 40px;
 	border-radius: 20px;
 	background: var(--color-switch-track);
-	transition: background var(--motion-focus-ms) ease-out;
 }
 .switch__knob {
 	position: absolute;
@@ -977,27 +1053,34 @@ body {
 	height: 32px;
 	border-radius: 50%;
 	background: var(--color-switch-knob);
-	transition:
-		transform var(--motion-focus-ms) ease-out,
-		background var(--motion-focus-ms) ease-out;
+	transition: transform var(--motion-focus-ms) ease-out;
 }
 .switch--on {
-	background: var(--color-switch-track-on);
+	background: var(--color-accent);
 }
 .switch--on .switch__knob {
+	background: var(--color-focus-text);
 	transform: translateX(36px);
-	background: var(--color-switch-knob-on);
+}
+/* on a focused (light) row */
+.option--focused .switch {
+	background: var(--color-switch-track-focused);
+}
+.option--focused .switch__knob {
+	background: var(--color-switch-knob-focused);
+}
+.option--focused .switch--on {
+	background: var(--color-focus-text);
+}
+.option--focused .switch--on .switch__knob {
+	background: var(--color-focus-fill);
 }
 
 /* ---------- weather settings ---------- */
 
 /* rows like the options: the switch, the search field, the places found */
-.weather-settings {
-	width: 1100px;
-	padding-top: 8px;
-}
 .weather-settings__note {
-	margin: 0 0 16px 28px;
+	margin: 0 0 14px 36px;
 	font-size: var(--font-weather-note);
 	line-height: 1.3;
 	color: var(--color-text-muted);
@@ -1008,7 +1091,7 @@ body {
 	flex-direction: row;
 	align-items: center;
 	min-height: var(--layout-weather-glyph);
-	margin: 0 0 16px 28px;
+	margin: 0 0 14px 36px;
 	font-size: var(--font-weather-note);
 	color: var(--color-text-secondary);
 }
@@ -1022,28 +1105,27 @@ body {
 	font-size: var(--font-weather-note);
 }
 
-.field {
-	padding-top: 14px;
-	padding-bottom: 14px;
-}
 .field__input {
 	flex: 1 1 auto;
 	height: var(--layout-field-height);
 	margin-left: 32px;
 	padding: 0 20px;
 	border: 0;
-	border-radius: 12px;
+	border-radius: 14px;
 	background: var(--color-field-bg);
 	color: var(--color-text-primary);
 	font-family: inherit;
 	font-size: var(--font-option-label);
 	outline: none;
-	box-shadow: 0 0 0 2px var(--color-tile-border);
-	transition: box-shadow var(--motion-focus-ms) ease-out;
+	box-shadow: 0 0 0 1px var(--color-surface-edge);
+}
+.option--focused .field__input {
+	background: var(--color-field-bg-focused);
+	color: var(--color-focus-text);
 }
 /* typing: the field has the frame, not its row */
 .field--editing .field__input {
-	box-shadow: 0 0 0 4px var(--color-tile-border-focus);
+	box-shadow: 0 0 0 3px var(--color-accent);
 }
 /* two rules: an unknown selector would void a list (::placeholder is Chromium 57) */
 .field__input::-webkit-input-placeholder {
@@ -1052,29 +1134,35 @@ body {
 .field__input::placeholder {
 	color: var(--color-text-muted);
 }
+.option--focused .field__input::-webkit-input-placeholder {
+	color: var(--color-focus-text-soft);
+}
+.option--focused .field__input::placeholder {
+	color: var(--color-focus-text-soft);
+}
 
 .place {
-	height: var(--layout-place-height);
+	min-height: var(--layout-place-height);
+	margin-bottom: 10px;
 	padding-top: 0;
 	padding-bottom: 0;
-	margin-bottom: 8px;
 }
 .place__name {
 	margin-right: 20px;
 	font-size: var(--font-option-label);
-	color: var(--color-text-primary);
+	font-weight: 600;
 }
 .place__where {
 	font-size: var(--font-option-description);
 	color: var(--color-text-secondary);
 }
+.option--focused .place__where {
+	color: var(--color-focus-text-soft);
+}
 
 /* ---------- language ---------- */
 
-/* the choices side by side; the focused one is a white pill, the one in use ticked */
-.language-settings {
-	padding-top: 8px;
-}
+/* the choices side by side; the focused one is a light pill, the one in use ticked */
 .pills {
 	display: flex;
 	flex-direction: row;
@@ -1087,26 +1175,23 @@ body {
 	margin-right: 20px;
 	padding: 0 40px;
 	border-radius: calc(var(--layout-pill-height) / 2);
-	background: var(--color-pill-bg);
+	background: var(--color-surface);
 	color: var(--color-text-secondary);
 	font-size: var(--font-pill);
+	font-weight: 500;
 	white-space: nowrap;
-	transition:
-		background var(--motion-focus-ms) ease-out,
-		color var(--motion-focus-ms) ease-out,
-		box-shadow var(--motion-focus-ms) ease-out;
+	transform: scale(1);
+	transition: transform var(--motion-focus-ms) ease-out;
 }
 .pill:last-child {
 	margin-right: 0;
 }
 .pill--focused {
-	background: var(--color-button-active-bg);
-	color: var(--color-button-active-text);
-	font-weight: 600;
-	box-shadow: 0 24px 56px var(--color-lift-shadow);
-}
-.app--photo .pill--focused {
-	text-shadow: none;
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+	font-weight: 700;
+	box-shadow: 0 24px 56px var(--color-focus-shadow);
+	transform: scale(var(--motion-bar-focus-scale));
 }
 .pill__check {
 	width: 28px;

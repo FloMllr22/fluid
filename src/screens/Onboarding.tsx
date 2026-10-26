@@ -65,7 +65,7 @@ export function Onboarding({
 	const name = STEPS[step];
 	const last = step === STEPS.length - 1;
 	const tab = name === 'apps' ? apps : name === 'background' ? background : undefined;
-	const grid = useGridTab(tab, onToggle, onReorder);
+	const grid = useGridTab(tab, onToggle, onReorder, LAYOUT.onboardingGridColumns);
 	// while re-ordering, only its Done button: the step cannot be left halfway
 	const buttons: ButtonId[] = grid.canReorder ? (grid.reordering ? ['reorder'] : ['reorder', 'next']) : ['next'];
 	const focused: ButtonId = buttons.indexOf(button) === -1 ? buttons[0] : button;
@@ -223,6 +223,7 @@ export function Onboarding({
 						{grid.items.length > 0 ? (
 							<Grid
 								items={grid.items}
+								cols={LAYOUT.onboardingGridColumns}
 								mode={grid.mode}
 								checkedKeys={tab.shown.map((tile) => tile.key)}
 								liftedIndex={grid.held}

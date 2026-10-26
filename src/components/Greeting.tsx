@@ -1,6 +1,7 @@
 import {dayMonth, t, weekday} from '../i18n';
-import {greetingKey, timeParts} from '../lib/clock';
+import {greetingKey} from '../lib/clock';
 import type {TimeFormat} from '../platform';
+import {timeText} from './Time';
 
 interface Props {
 	now: Date;
@@ -13,14 +14,12 @@ interface Props {
 
 /** The greeting at the foot of Home, with weekday, date and time below it. */
 export function Greeting({now, format, moving, note}: Props) {
-	const {time, period} = timeParts(now, format);
-	const clock = period ? t('clock.withPeriod', {time, period: t(period === 'am' ? 'clock.am' : 'clock.pm')}) : time;
 	return (
 		<div class="greeting">
 			{moving !== undefined && <p class="greeting__mode">{t('move.title')}</p>}
 			<h1 class="greeting__title">{moving === undefined ? t(greetingKey(now)) : moving}</h1>
 			<p class="greeting__line">
-				{note || t('clock.dateLine', {weekday: weekday(now), date: dayMonth(now), time: clock})}
+				{note || t('clock.dateLine', {weekday: weekday(now), date: dayMonth(now), time: timeText(now, format)})}
 			</p>
 		</div>
 	);

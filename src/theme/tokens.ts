@@ -59,22 +59,23 @@ export const COLOR = {
 	iconShadow: 'rgba(0, 0, 0, 0.3)',
 	liftedShadow: 'rgba(0, 0, 0, 0.4)',
 	menuShadow: 'rgba(0, 0, 0, 0.45)',
-	tileBg: '#161616',
-	tileBgFocus: '#202020',
-	tileBorder: '#2a2a2a',
-	tileBorderFocus: '#EEEEEE',
-	badge: '#EEEEEE',
-	badgeText: '#000000',
+	focusTextSoft: 'rgba(7, 8, 11, 0.7)', // a description on a focused row
+	focusShadow: 'rgba(0, 0, 0, 0.5)', // under a focused row or tile
+	// Settings and the onboarding: the background, dimmed, so that their text keeps its
+	// contrast on any colour or photo; tiles, rows and choices without focus on it
+	screenDim: 'rgba(6, 9, 22, 0.72)',
+	surface: 'rgba(255, 255, 255, 0.07)',
+	surfaceEdge: 'rgba(255, 255, 255, 0.1)',
+	tileDim: 'rgba(6, 9, 22, 0.6)', // over a tile that is not chosen
+	tabOpen: 'rgba(255, 255, 255, 0.1)', // the tab whose content is shown
 	liftShadow: 'rgba(0, 0, 0, 0.7)',
-	buttonBorder: '#3a3a3a',
-	buttonActiveBg: '#EEEEEE',
-	buttonActiveText: '#000000',
-	switchTrack: '#333333',
-	switchTrackOn: '#EEEEEE',
-	switchKnob: '#AAAAAA',
-	switchKnobOn: '#000000',
-	fieldBg: '#0a0a0a', // a text field, inside its row
-	pillBg: 'rgba(255, 255, 255, 0.08)', // a language choice without focus
+	// on/off switches; on a focused (light) row they turn dark
+	switchTrack: 'rgba(255, 255, 255, 0.18)',
+	switchKnob: '#C9CDD3',
+	switchTrackFocused: 'rgba(7, 8, 11, 0.15)',
+	switchKnobFocused: '#6B7078',
+	fieldBg: 'rgba(0, 0, 0, 0.3)', // a text field, inside its row
+	fieldBgFocused: 'rgba(7, 8, 11, 0.08)',
 	dot: 'rgba(255, 255, 255, 0.25)', // an onboarding step still to come
 	dotDone: 'rgba(255, 255, 255, 0.5)', // an onboarding step done
 	danger: '#e0564f'
@@ -87,18 +88,20 @@ export const FONT = {
 	moveMode: 22, // "MOVING" above the app's name, in place of the greeting
 	appName: 42, // an app in the list, laid out at its focused size (see appNameRestScale)
 	appMonogram: 26, // the first letter of an app without artwork
-	listEmpty: 28, // why the list has no apps (loading, failed, none chosen)
+	emptyNote: 28, // why a list has nothing in it (loading, failed, none chosen)
 	barLabel: 20, // "Sources"
 	barMonogram: 23, // "LG"
 	menuItem: 21,
 	weather: 26, // the temperature, bottom right
 	weatherNote: 24, // why there is no weather (loading, no place, failed)
-	tileLabel: 19,
-	settingsTitle: 40,
-	settingsTab: 26,
+	tileLabel: 20,
+	settingsTitle: 64,
+	settingsClock: 36,
+	settingsTab: 30,
 	settingsButton: 22,
-	optionLabel: 26,
-	optionDescription: 20,
+	hint: 24, // the keys, at the foot of Settings and the onboarding
+	optionLabel: 30,
+	optionDescription: 22,
 	toast: 24,
 	pill: 28, // a language choice in Settings
 	pillLarge: 34, // a language choice in the onboarding
@@ -148,8 +151,20 @@ export const LAYOUT = {
 	weatherGlyphHome: 32,
 	weatherGap: 16, // between the glyph, the temperature and the sky
 	weatherNoteWidth: 460, // a longer note wraps, clear of the greeting
-	fieldHeight: 56, // the place search field
-	placeHeight: 64, // a place found by the search
+	// Settings: the title and the time at the top, the tabs on the left, the open tab's
+	// content on the right, the keys at the foot
+	settingsTop: 210, // the tabs and the content
+	settingsTabsWidth: 480,
+	settingsTabHeight: 72,
+	settingsContentLeft: 680,
+	settingsButtonHeight: 64, // the re-order button above a grid
+	settingsToolbar: 80, // the button and the space below it
+	settingsGridColumns: 6,
+	settingsGridHeight: 738, // below the button: three rows of tiles, and the room around them
+	optionHeight: 100, // a row of the options, the weather and the places (at least)
+	optionRadius: 28,
+	fieldHeight: 60, // the place search field
+	placeHeight: 76, // a place found by the search
 	pillHeight: 80, // a language choice in Settings
 	pillHeightLarge: 104, // a language choice in the onboarding
 	onboardingTop: 180, // the title of the Apps and Background steps
@@ -159,9 +174,10 @@ export const LAYOUT = {
 	tileSize: 144, // app / source tiles are square
 	tileGap: 28,
 	tileRadius: 24,
-	gridColumns: 9, // settings picker grid
-	gridHeight: 720, // the visible part of the settings picker grid, which scrolls
-	gridRowGap: 40, // vertical space between rows of the settings picker grid
+	tileLabelGap: 14, // between a tile and its name
+	onboardingGridColumns: 9,
+	gridRowGap: 32, // vertical space between rows of a grid of tiles
+	gridBleed: 28, // room around a grid for its focused or lifted tile
 	liftOffset: -6 // a tile picked up in re-order mode rises by this much
 } as const;
 
