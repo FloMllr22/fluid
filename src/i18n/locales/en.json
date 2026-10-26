@@ -60,6 +60,9 @@
 	"background.blue": "Calm blue",
 	"background.slideshow": "Slideshow",
 	"background.loadFailed": "A background photo couldn't be loaded.",
+	"background.photo.fuji": "Mount Fuji at night",
+	"background.photo.beach": "Beach",
+	"background.photo.sunset": "Sunset",
 
 	"settings.title": "Settings",
 	"settings.options": "Options",

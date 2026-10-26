@@ -60,6 +60,9 @@
 	"background.blue": "Ruhiges Blau",
 	"background.slideshow": "Diashow",
 	"background.loadFailed": "Ein Hintergrundbild konnte nicht geladen werden.",
+	"background.photo.fuji": "Fuji bei Nacht",
+	"background.photo.beach": "Strand",
+	"background.photo.sunset": "Sonnenuntergang",
 
 	"settings.title": "Einstellungen",
 	"settings.options": "Optionen",

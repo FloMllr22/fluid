@@ -11,7 +11,7 @@ clock, a row of your apps, a row of your inputs, and a way back to LG's own home
 - **Apps**: the apps you pick, in your order, your favourites first
 - **Sources**: Live TV and the HDMI inputs, with the names set in the TV's input settings
 - **More**: LG's own home screen, and Settings
-- **Background**: dark, OLED black or calm blue
+- **Background**: dark, OLED black or calm blue, one of three photos, or a slideshow of them
 - Speaks English and German, following the TV's language, and the TV's 12/24-hour clock setting
 - Works with the remote's arrow keys and with the Magic Remote pointer
 - No network access, no telemetry: your settings stay in the app's storage on the TV
