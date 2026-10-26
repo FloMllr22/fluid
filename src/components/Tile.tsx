@@ -1,6 +1,6 @@
 import {useRef} from 'preact/hooks';
 import {TIMING} from '../config/constants';
-import {CheckMark, Glyph, type GlyphName, StarMark} from './Glyph';
+import {CheckMark, ChevronMark, Glyph, type GlyphName, StarMark} from './Glyph';
 
 /** Everything a tile needs to draw itself; rows and grids build these from app/input data. */
 export interface TileModel {
@@ -16,11 +16,20 @@ export interface TileModel {
 	favorite?: boolean;
 }
 
+/** Which ways a tile being moved can go, shown as arrows either side of it. */
+export interface MoveArrows {
+	left: boolean;
+	right: boolean;
+}
+
 interface Props {
 	model: TileModel;
 	focused: boolean;
-	/** picked up in re-order mode */
+	/** picked up in re-order mode, or being moved on Home */
 	lifted?: boolean;
+	/** move mode on Home: arrows beside the lifted tile; clicking one moves it */
+	arrows?: MoveArrows;
+	onMove?: (step: -1 | 1) => void;
 	/** shown with a tick badge (settings picker) */
 	checked?: boolean;
 	/** greyed out (settings picker: not on the home screen) */
@@ -31,7 +40,18 @@ interface Props {
 	onLongPress?: () => void;
 }
 
-export function Tile({model, focused, lifted, checked, dimmed, onHover, onActivate, onLongPress}: Props) {
+export function Tile({
+	model,
+	focused,
+	lifted,
+	arrows,
+	onMove,
+	checked,
+	dimmed,
+	onHover,
+	onActivate,
+	onLongPress
+}: Props) {
 	// A pointer press held for TIMING.longPressMs is a long press; the click that ends it
 	// then does nothing.
 	const hold = useRef({timer: 0, fired: false});
@@ -80,7 +100,26 @@ export function Tile({model, focused, lifted, checked, dimmed, onHover, onActiva
 					</div>
 				)}
 			</div>
+			{arrows && <MoveArrow side="left" shown={arrows.left} onMove={onMove} />}
+			{arrows && <MoveArrow side="right" shown={arrows.right} onMove={onMove} />}
 			<div class="tile__label">{model.label}</div>
+		</div>
+	);
+}
+
+/** One arrow beside a tile being moved; hidden where the tile cannot go. Its clicks and
+ *  presses stay its own: they neither put the tile down nor start a held press on it. */
+function MoveArrow({side, shown, onMove}: {side: 'left' | 'right'; shown: boolean; onMove?: (step: -1 | 1) => void}) {
+	return (
+		<div
+			class={`tile__arrow tile__arrow--${side}${shown ? '' : ' tile__arrow--off'}`}
+			onMouseDown={(e) => e.stopPropagation()}
+			onClick={(e) => {
+				e.stopPropagation();
+				if (shown && onMove) onMove(side === 'left' ? -1 : 1);
+			}}
+		>
+			<ChevronMark side={side} />
 		</div>
 	);
 }

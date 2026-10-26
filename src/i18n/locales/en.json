@@ -47,9 +47,13 @@
 
 	"menu.favorite": "Add to favourites",
 	"menu.unfavorite": "Remove from favourites",
+	"menu.move": "Move",
 	"menu.hide": "Hide",
 	"menu.cancel": "Cancel",
 	"menu.hint": "← → choose · OK confirms · Back closes",
+
+	"move.title": "Moving",
+	"move.hint": "← → move · OK puts it down · Back cancels",
 
 	"settings.title": "Settings",
 	"settings.options": "Options",

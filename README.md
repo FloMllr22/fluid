@@ -32,7 +32,9 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Home | ↑ ↓ | Move between rows |
 | Home | ← → | Move along a row |
 | Home | OK | Open the app or input |
-| Home | Hold OK on an app | Its menu: add to or remove from favourites, hide |
+| Home | Hold OK on an app | Its menu: add to or remove from favourites, move, hide |
+| Moving an app (Home) | ← →, then OK | Move it along the row, keep its new place |
+| Moving an app (Home) | Back | Put it back where it was |
 | Settings | OK | Add or remove an app or source |
 | Settings | Hold OK (or the **Re-order** button) | Enter or leave re-order mode |
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
@@ -40,7 +42,8 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
-Pointing selects, clicking opens, holding the click on an app opens its menu.
+Pointing selects, clicking opens, holding the click on an app opens its menu. While an
+app is being moved, its arrows move it and clicking it puts it down.
 
 **Where the apps come from.** fluid reads every app on the TV's launcher, with its real
 icon, from the TV itself, through the Homebrew Channel. That is why it needs root. Until you

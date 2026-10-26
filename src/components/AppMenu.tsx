@@ -4,7 +4,7 @@ import {useOkPress} from '../hooks/useOkPress';
 import {t} from '../i18n';
 import {Tile, type TileModel} from './Tile';
 
-export type AppMenuAction = 'favorite' | 'hide' | 'cancel';
+export type AppMenuAction = 'favorite' | 'move' | 'hide' | 'cancel';
 
 interface Props {
 	app: TileModel;
@@ -13,11 +13,13 @@ interface Props {
 }
 
 /** The options for one app, over the dimmed home screen: make it a favourite or take that
- *  back, hide it, or cancel. ← → choose, OK confirms, Back closes; the pointer chooses
- *  by pointing and clicking. Opened by holding OK, whose release it ignores. */
+ *  back, move it along the row, hide it, or cancel. ← → choose, OK confirms, Back closes;
+ *  the pointer chooses by pointing and clicking. Opened by holding OK, whose release it
+ *  ignores. */
 export function AppMenu({app, onChoose, onClose}: Props) {
 	const actions: {id: AppMenuAction; label: string}[] = [
 		{id: 'favorite', label: t(app.favorite ? 'menu.unfavorite' : 'menu.favorite')},
+		{id: 'move', label: t('menu.move')},
 		{id: 'hide', label: t('menu.hide')},
 		{id: 'cancel', label: t('menu.cancel')}
 	];
@@ -56,7 +58,7 @@ export function AppMenu({app, onChoose, onClose}: Props) {
 					</div>
 				))}
 			</div>
-			<p class="menu__hint">{t('menu.hint')}</p>
+			<p class="hint">{t('menu.hint')}</p>
 		</div>
 	);
 }

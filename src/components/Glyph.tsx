@@ -1,5 +1,5 @@
-// Inline SVG line icons (24×24, drawn as strokes): the More row, the input sources and
-// the settings badge. All drawn for fluid; no third-party artwork.
+// Inline SVG line icons (24×24, drawn as strokes): the More row, the input sources, the
+// tile badges and the arrows of move mode. All drawn for fluid; no third-party artwork.
 
 import type {ComponentChildren} from 'preact';
 
@@ -81,6 +81,15 @@ export function CheckMark() {
 	return (
 		<svg viewBox="0 0 24 24" aria-hidden="true">
 			<path d="M5 12.5l4.5 4.5L19 7.5" />
+		</svg>
+	);
+}
+
+/** The arrows either side of an app being moved. */
+export function ChevronMark({side}: {side: 'left' | 'right'}) {
+	return (
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d={side === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
 		</svg>
 	);
 }

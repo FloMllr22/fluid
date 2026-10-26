@@ -5,10 +5,10 @@ import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
 import {TIMING} from './config/constants';
 import {errorMessage, t, tn} from './i18n';
-import {favoritesFirst, setFavorite, toggleId} from './lib/order';
+import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, inputTile, pickInOrder} from './lib/tiles';
 import {type AppEntry, type InputSource, PlatformError, platform} from './platform';
-import {Home, type HomeRow} from './screens/Home';
+import {Home, type HomeRow, type MovingItem} from './screens/Home';
 import {Settings, type SettingsTab} from './screens/Settings';
 import {loadSettings, saveSettings, type Settings as UserSettings} from './state/settings';
 
@@ -16,6 +16,13 @@ type Screen = 'home' | 'settings';
 
 /** The app list: still loading, read from the TV, or failed. */
 type AppsState = {status: 'loading'} | {status: 'ready'; apps: AppEntry[]} | {status: 'failed'; error: unknown};
+
+/** An app being moved along the Apps row (move mode), and the row's order meanwhile;
+ *  stored once OK puts it down. */
+interface Moving {
+	id: string;
+	order: string[];
+}
 
 const ROW = {apps: 'apps', sources: 'sources', misc: 'misc'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings'} as const;
@@ -45,6 +52,7 @@ export function App() {
 	const [screen, setScreen] = useState<Screen>('home');
 	/** the app whose menu is open (OK held on it) */
 	const [menuAppId, setMenuAppId] = useState<string | null>(null);
+	const [moving, setMoving] = useState<Moving | null>(null);
 	const [loaded] = useState(loadSettings);
 	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
@@ -133,6 +141,11 @@ export function App() {
 		);
 		return pickInOrder(chosen, order, (a) => a.id);
 	}, [apps, settings.appIds, settings.favoriteIds]);
+	// while an app is being moved, the Apps row shows the order it has meanwhile
+	const rowApps = useMemo(
+		() => (moving ? pickInOrder(apps, moving.order, (a) => a.id) : shownApps),
+		[apps, moving, shownApps]
+	);
 	const isFavorite = (id: string) => settings.favoriteIds.indexOf(id) !== -1;
 	const tileOf = (app: AppEntry) => appTile(app, isFavorite(app.id));
 	const favoriteCount = shownApps.filter((a) => isFavorite(a.id)).length;
@@ -146,7 +159,7 @@ export function App() {
 			{
 				id: ROW.apps,
 				label: t('rows.apps'),
-				items: shownApps.map(tileOf),
+				items: rowApps.map(tileOf),
 				emptyText: appsText || t('apps.noneSelected')
 			},
 			{
@@ -164,7 +177,7 @@ export function App() {
 				]
 			}
 		],
-		[shownApps, shownInputs, appsText, settings.favoriteIds]
+		[rowApps, shownInputs, appsText, settings.favoriteIds]
 	);
 
 	const tabs: SettingsTab[] = useMemo(
@@ -251,6 +264,8 @@ export function App() {
 		if (action === 'favorite') {
 			const next = setFavorite(order, settings.favoriteIds, menuApp.id, !isFavorite(menuApp.id));
 			updateSettings({...settings, appIds: next.order, favoriteIds: next.favoriteIds});
+		} else if (action === 'move') {
+			setMoving({id: menuApp.id, order});
 		} else {
 			updateSettings({
 				...settings,
@@ -260,6 +275,37 @@ export function App() {
 			showToast(t('apps.hidden', {name: menuApp.title}));
 		}
 	};
+
+	/** Move mode: ← → swap the app with its neighbour, within its group (favourites or not). */
+	const onMove = useCallback(
+		(step: -1 | 1) => {
+			setMoving((m) => {
+				if (!m) return m;
+				const order = swapNeighbour(m.order, settings.favoriteIds, m.id, step);
+				return order === m.order ? m : {...m, order};
+			});
+		},
+		[settings.favoriteIds]
+	);
+
+	/** OK stores the new order, Back drops it. An app put down where it was changes
+	 *  nothing, so a row of all apps (no choice stored yet) stays one. */
+	const onMoveEnd = useCallback(
+		(keep: boolean) => {
+			setMoving(null);
+			if (!keep || !moving) return;
+			const saved = shownApps.map((a) => a.id);
+			if (moving.order.some((id, i) => id !== saved[i])) updateSettings({...settings, appIds: moving.order});
+		},
+		[moving, shownApps, settings, updateSettings]
+	);
+
+	const movingItem = useMemo((): MovingItem | undefined => {
+		if (!moving) return undefined;
+		const canMove = (step: -1 | 1) =>
+			swapNeighbour(moving.order, settings.favoriteIds, moving.id, step) !== moving.order;
+		return {rowId: ROW.apps, key: moving.id, arrows: {left: canMove(-1), right: canMove(1)}};
+	}, [moving, settings.favoriteIds]);
 
 	/** Replace a row's order with `keys` (the full list of what's shown). */
 	const onReorder = useCallback(
@@ -273,7 +319,15 @@ export function App() {
 	return (
 		<>
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
-			<Home rows={rows} active={screen === 'home' && !menuApp} onActivate={onActivate} onLongPress={onLongPress} />
+			<Home
+				rows={rows}
+				active={screen === 'home' && !menuApp}
+				onActivate={onActivate}
+				onLongPress={onLongPress}
+				moving={movingItem}
+				onMove={onMove}
+				onMoveEnd={onMoveEnd}
+			/>
 			{screen === 'home' && menuApp && (
 				<AppMenu app={tileOf(menuApp)} onChoose={onMenuChoose} onClose={() => setMenuAppId(null)} />
 			)}

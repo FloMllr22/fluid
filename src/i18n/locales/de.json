@@ -47,9 +47,13 @@
 
 	"menu.favorite": "Zu Favoriten hinzufügen",
 	"menu.unfavorite": "Aus Favoriten entfernen",
+	"menu.move": "Verschieben",
 	"menu.hide": "Ausblenden",
 	"menu.cancel": "Abbrechen",
 	"menu.hint": "← → wählen · OK bestätigen · Zurück schließt",
+
+	"move.title": "Verschieben",
+	"move.hint": "← → verschieben · OK ablegen · Zurück abbrechen",
 
 	"settings.title": "Einstellungen",
 	"settings.options": "Optionen",

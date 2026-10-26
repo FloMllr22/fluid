@@ -42,7 +42,8 @@ export const FONT = {
 	optionDescription: 20,
 	clockPeriod: 22,
 	toast: 24,
-	menuAction: 26
+	menuAction: 26,
+	moveName: 44 // the app being moved, above its row
 } as const;
 
 export const LAYOUT = {
@@ -56,16 +57,22 @@ export const LAYOUT = {
 	tileRadius: 24,
 	rowLabelGap: 14, // gap between a row's subheader and its tiles
 	rowGap: 28, // vertical space between rows
+	rowBleed: 32, // room above and below a row's tiles for a focused or lifted tile
 	gridColumns: 9, // settings picker grid
-	gridRowGap: 40 // vertical space between rows of the settings picker grid
+	gridRowGap: 40, // vertical space between rows of the settings picker grid
+	liftOffset: -6, // a tile picked up in re-order or move mode rises by this much
+	moveRoom: 28, // extra space either side of the tile being moved on Home, for its arrows
+	moveArrowSize: 40, // the arrows either side of it (and what the pointer can click)
+	moveArrowGap: 16 // between the tile and an arrow
 } as const;
 
 export const MOTION = {
 	focusMs: 160,
 	scrollMs: 260,
 	focusScale: 1.12,
-	liftScale: 1.2, // a tile picked up in re-order mode
-	unfocusedRowOpacity: 0.55
+	liftScale: 1.2, // a tile picked up in re-order or move mode
+	unfocusedRowOpacity: 0.55,
+	moveBackdropOpacity: 0.25 // the clock while an app is being moved
 } as const;
 
 /** Writes every token onto :root as --color-*, --font-*, --layout-*, --motion-*. */
