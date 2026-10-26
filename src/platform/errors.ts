@@ -5,7 +5,9 @@ export const PLATFORM_ERROR_CODES = [
 	'rejected', // the service answered with an error
 	'invalid-reply', // the answer could not be read
 	'no-homebrew', // the Homebrew Channel is not installed
-	'no-root' // the Homebrew Channel is installed but runs without root
+	'no-root', // the Homebrew Channel is installed but runs without root
+	'offline', // the weather service cannot be reached: no network, or no answer in time
+	'service' // the weather service answered with an error, or with nothing usable
 ] as const;
 
 export type PlatformErrorCode = (typeof PLATFORM_ERROR_CODES)[number];

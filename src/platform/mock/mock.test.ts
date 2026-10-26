@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {platform} from '..';
-import {MOCK_APPS, MOCK_INPUTS} from './data';
+import {MOCK_APPS, MOCK_INPUTS, MOCK_PLACES, MOCK_WEATHER} from './data';
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -16,6 +16,15 @@ describe('browser sample data', () => {
 		for (const app of MOCK_APPS) {
 			expect(app.iconUrl).toBeUndefined();
 			expect(app.color).toMatch(/^#[0-9A-F]{6}$/i);
+		}
+	});
+
+	it('has places that could come from the place search', () => {
+		for (const place of MOCK_PLACES) {
+			expect(place.name).not.toBe('');
+			expect(place.region).not.toBe(place.name);
+			expect(Math.abs(place.latitude)).toBeLessThanOrEqual(90);
+			expect(Math.abs(place.longitude)).toBeLessThanOrEqual(180);
 		}
 	});
 
@@ -54,6 +63,32 @@ describe('outside webOS', () => {
 		vi.stubGlobal('location', {search: ''});
 		vi.stubGlobal('navigator', {language: 'en-GB'});
 		expect(platform.getLocale()).toBe('en-GB');
+	});
+
+	it('finds sample places from the start of their name, without going online', async () => {
+		vi.stubGlobal('location', {search: ''});
+		const found = await platform.searchPlaces('spring', 'en');
+		expect(found.map((place) => place.region)).toEqual(['Illinois', 'Missouri', 'Massachusetts']);
+		await expect(platform.searchPlaces('Xyzzy', 'en')).resolves.toEqual([]);
+		await expect(platform.searchPlaces('B', 'en')).resolves.toEqual([]);
+	});
+
+	it('has the same weather everywhere', async () => {
+		vi.stubGlobal('location', {search: ''});
+		await expect(platform.getWeather(52.52, 13.41)).resolves.toEqual(MOCK_WEATHER);
+	});
+
+	it('shows other skies on request', async () => {
+		vi.stubGlobal('location', {search: '?weather-code=71&weather-night=1'});
+		await expect(platform.getWeather(52.52, 13.41)).resolves.toMatchObject({code: 71, isDay: false});
+		vi.stubGlobal('location', {search: '?weather-code=snow'});
+		await expect(platform.getWeather(52.52, 13.41)).resolves.toEqual(MOCK_WEATHER);
+	});
+
+	it('fails the place search and the weather on request', async () => {
+		vi.stubGlobal('location', {search: '?weather-error=offline'});
+		await expect(platform.searchPlaces('Berlin', 'en')).rejects.toMatchObject({code: 'offline'});
+		await expect(platform.getWeather(52.52, 13.41)).rejects.toMatchObject({code: 'offline'});
 	});
 
 	it('only logs what it would launch', async () => {

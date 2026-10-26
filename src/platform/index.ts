@@ -15,6 +15,10 @@ export {
 	DEFAULT_TIME_FORMAT,
 	type InputSource,
 	LIVE_TV_ID,
+	PLACE_QUERY_MIN_LENGTH,
+	PLACE_SEARCH_LIMIT,
+	type Place,
 	type Platform,
-	type TimeFormat
+	type TimeFormat,
+	type Weather
 } from './types';

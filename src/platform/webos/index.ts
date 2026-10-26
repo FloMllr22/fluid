@@ -5,6 +5,7 @@ import {listApps} from './apps';
 import {listInputs} from './inputs';
 import {hidePointer, onBackground, onForeground} from './pointer';
 import {getLocale, getTimeFormat, launch, launchLgHome} from './system';
+import {getWeather, searchPlaces} from './weather';
 
 export {isWebOS} from './luna';
 
@@ -19,6 +20,8 @@ export function createWebOSPlatform(): Platform {
 		getTimeFormat,
 		hidePointer,
 		onForeground,
-		onBackground
+		onBackground,
+		searchPlaces,
+		getWeather
 	};
 }

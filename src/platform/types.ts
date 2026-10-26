@@ -39,6 +39,34 @@ export type TimeFormat = '12h' | '24h';
 /** Used before the TV has answered, and when it cannot. */
 export const DEFAULT_TIME_FORMAT: TimeFormat = '24h';
 
+/** A place found by the place search; fluid keeps it for the weather. */
+export interface Place {
+	/** "Berlin" */
+	name: string;
+	/** state or region, e.g. "Land Berlin"; empty when there is none or it repeats the name */
+	region: string;
+	/** in the language of the search; empty when unknown */
+	country: string;
+	latitude: number;
+	longitude: number;
+}
+
+/** The weather now at a place. */
+export interface Weather {
+	/** air temperature 2 m above the ground, in °C */
+	temperature: number;
+	/** WMO weather code: 0 clear sky … 99 thunderstorm with hail */
+	code: number;
+	/** daytime at the place (the sun rather than the moon) */
+	isDay: boolean;
+}
+
+/** Shorter queries find nothing, so they are not sent. */
+export const PLACE_QUERY_MIN_LENGTH = 2;
+
+/** How many places a search lists at most; Settings has room for that many. */
+export const PLACE_SEARCH_LIMIT = 6;
+
 export interface Platform {
 	/** 'webos' on the TV; 'mock' in a desktop browser and in unit tests */
 	readonly kind: 'webos' | 'mock';
@@ -64,4 +92,12 @@ export interface Platform {
 	/** Calls back whenever fluid leaves the foreground (another app or input in front, or
 	 *  the screen off), so timers can pause. Returns a function that stops it. */
 	onBackground(callback: () => void): () => void;
+	/** Places whose name matches `query`, best first, named in `language` ("de"). Asks
+	 *  Open-Meteo's place search over the network, sending the query and the language.
+	 *  Resolves with none for a query shorter than PLACE_QUERY_MIN_LENGTH, without asking.
+	 *  Rejects with `offline` or `service`. */
+	searchPlaces(query: string, language: string): Promise<Place[]>;
+	/** The weather now at a place, from Open-Meteo over the network; only the coordinates
+	 *  are sent. Rejects with `offline` or `service`. */
+	getWeather(latitude: number, longitude: number): Promise<Weather>;
 }

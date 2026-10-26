@@ -85,5 +85,7 @@
 	"error.invalid-reply": "Die Antwort des TVs war nicht lesbar.",
 	"error.no-homebrew": "fluid braucht den Homebrew Channel, um deine Apps zu lesen. Installiere ihn auf einem gerooteten TV.",
 	"error.no-root": "Der Homebrew Channel hat keinen Root-Zugriff, daher kann fluid deine Apps nicht lesen. Ein Firmware-Update hat Root vielleicht entfernt: Roote den TV erneut.",
+	"error.offline": "Der Wetterdienst ist nicht erreichbar. Prüfe die Internetverbindung des TVs.",
+	"error.service": "Der Wetterdienst hat nicht richtig geantwortet.",
 	"error.unknown": "Etwas ist schiefgelaufen."
 }

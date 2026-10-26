@@ -19,6 +19,12 @@ const offenders = (list: [string, string][], pattern: RegExp) =>
 /** Things only a webOS TV has: the service bridge, Luna URIs, system objects and events. */
 const TV_ACCESS = /PalmServiceBridge|luna:\/\/|webOSSystem|PalmSystem|webOSRelaunch/;
 
+/** Ways to open a network connection from a page. */
+const NETWORK = /XMLHttpRequest|\bfetch\s*\(|WebSocket|EventSource|sendBeacon|RTCPeerConnection/;
+
+/** The one file allowed to open network connections: the weather's. */
+const NETWORK_FILE = './platform/webos/http.ts';
+
 describe('architecture', () => {
 	it('sees the source files', () => {
 		expect(outside('./platform/').length).toBeGreaterThan(10);
@@ -36,5 +42,10 @@ describe('architecture', () => {
 	it('keeps the TV and the browser mock apart', () => {
 		expect(offenders(inside('./platform/mock/'), /from '[./]*webos/)).toEqual([]);
 		expect(offenders(inside('./platform/webos/'), /from '[./]*mock/)).toEqual([]);
+	});
+
+	it('opens network connections in one place only, never in the browser mock', () => {
+		expect(offenders([[NETWORK_FILE, sources[NETWORK_FILE]]], NETWORK)).toEqual([NETWORK_FILE]);
+		expect(offenders(outside(NETWORK_FILE), NETWORK)).toEqual([]);
 	});
 });
