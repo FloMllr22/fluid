@@ -118,9 +118,15 @@ export function Home({
 	};
 	const closeSources = () => setFocus((f) => ({...f, zone: 'bar'}));
 
+	// Holding OK keeps focus on the app, as the pointer does: before focus has moved, none
+	// is kept, and moving the app would then leave focus at the first place, not on the app.
 	const press = (held: boolean) => () => {
 		if (zone === 'apps') {
-			if (apps[app]) (held ? onAppMenu : onOpen)(apps[app]);
+			if (!apps[app]) return;
+			if (held) {
+				focusApp(app);
+				onAppMenu(apps[app]);
+			} else onOpen(apps[app]);
 		} else if (zone === 'bar') activateBar(focus.bar);
 		else if (sources.length === 0) closeSources();
 		else pickSource(focus.source);
