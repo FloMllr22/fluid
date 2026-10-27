@@ -3,7 +3,7 @@ import {useInFront} from '../hooks/useInFront';
 import {useSlideshow} from '../hooks/useSlideshow';
 import type {Photo} from '../lib/backgrounds';
 import type {Background as BackgroundChoice} from '../state/settings';
-import {COLOR_BACKGROUNDS, DUSK_LIGHTS, DUSK_SKY} from '../theme/backgrounds';
+import {COLOR_BACKGROUNDS, DUSK_LAYERS, DUSK_SKY} from '../theme/backgrounds';
 
 interface Props {
 	/** what to draw: a colour, a photo or a slideshow that is there (see shownBackground) */
@@ -21,8 +21,8 @@ interface Layer {
 
 /** The layer behind every screen: a colour, or a photo that fades in over the last one,
  *  darkened so that text on it stays readable. A photo is shown once it has loaded, so
- *  it never fades in half drawn. The moving dusk has its lights on layers of their own,
- *  which drift while fluid is in front. */
+ *  it never fades in half drawn. The moving dusk has its lights, stars and gleams on layers
+ *  of their own, which move while fluid is in front. */
 export function Background({background, photos, onError}: Props) {
 	const slide = useSlideshow(
 		photos.map((p) => p.id),
@@ -67,8 +67,8 @@ export function Background({background, photos, onError}: Props) {
 			style={color ? {background: color} : undefined}
 		>
 			{moving &&
-				DUSK_LIGHTS.map((light) => (
-					<div key={light.name} class={`background__light background__light--${light.name}`} style={light.style} />
+				DUSK_LAYERS.map((part) => (
+					<div key={part.name} class={`background__light background__light--${part.name}`} style={part.style} />
 				))}
 			{url && layers.map((layer) => <img key={layer.n} class="background__photo" src={layer.url} alt="" />)}
 			{url && <div class="background__scrim" />}

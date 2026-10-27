@@ -24,6 +24,15 @@ export const COLOR = {
 	duskGlowEdge: 'rgba(255, 160, 96, 0)',
 	duskBloom: 'rgba(206, 86, 170, 0.5)',
 	duskBloomEdge: 'rgba(206, 86, 170, 0)',
+	// the moving dusk only: the bright band on the horizon (a core in a softer halo), the
+	// gleams on the sea below it, and the first stars
+	duskBand: 'rgba(255, 210, 170, 0.95)',
+	duskBandHalo: 'rgba(255, 170, 120, 0.45)',
+	duskBandEdge: 'rgba(255, 170, 120, 0)',
+	duskGleam: 'rgba(255, 190, 150, 0.55)',
+	duskGleamEdge: 'rgba(255, 190, 150, 0)',
+	duskStar: 'rgba(255, 244, 232, 0.9)',
+	duskStarEdge: 'rgba(255, 244, 232, 0)',
 	// A soft shade behind the app wheel on Home, from the left edge to clear of the names, so
 	// that they read without a shadow of their own. With it the names that are not selected
 	// keep WCAG AA for their large text on every colour (on dusk at least 3.8:1, where a name
@@ -203,10 +212,15 @@ export const MOTION = {
 	backdropOpacity: 0.25, // the bar and the weather while an app is moved
 	barFocusScale: 1.06,
 	photoFadeMs: 1500, // a new background photo fading in over the last one
-	// the moving dusk: its glow and its bloom drift there and back in these times, which
-	// do not divide each other, so that they rarely meet in the same place again
+	// the moving dusk: each of its layers goes there and back in its own time; the times
+	// do not divide each other, so that the scene rarely looks the same again
 	duskGlowMs: 23000,
-	duskBloomMs: 29000
+	duskBloomMs: 29000,
+	duskBandMs: 17000,
+	duskSeaMs: 7000,
+	duskSeaAltMs: 11000,
+	duskStarsMs: 6000,
+	duskStarsAltMs: 8500
 } as const;
 
 /** The app wheel's shape: a circle whose right-most point, in the middle of the screen,

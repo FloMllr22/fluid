@@ -121,10 +121,12 @@ body {
 		opacity: 1;
 	}
 }
-/* The lights of the moving dusk, each a layer of its own (placed by DUSK_LIGHTS): they
-   drift there and back, only by transform and opacity, so the TV's graphics chip moves
-   them without drawing anything anew. The glow stays clear of the names on the wheel
-   (their contrast is that of the still dusk). They stop while fluid is not in front. */
+/* The layers of the moving dusk (placed by DUSK_LAYERS): each goes there and back in its
+   own time, only by transform and opacity, so the TV's graphics chip moves them without
+   drawing anything anew. Soft light alone hardly shows moving, so the scene also breathes
+   (the bloom fades far down) and has edges that show it: the band on the horizon, the
+   gleams on the sea and the stars. All keep clear of the names on the wheel (their
+   contrast is that of the still dusk). They stop while fluid is not in front. */
 .background__light {
 	position: absolute;
 	animation-timing-function: ease-in-out;
@@ -139,12 +141,33 @@ body {
 	animation-name: dusk-bloom;
 	animation-duration: var(--motion-dusk-bloom-ms);
 }
+.background__light--band {
+	animation-name: dusk-band;
+	animation-duration: var(--motion-dusk-band-ms);
+}
+.background__light--sea {
+	animation-name: dusk-sea;
+	animation-duration: var(--motion-dusk-sea-ms);
+}
+.background__light--sea-alt {
+	animation-name: dusk-sea-alt;
+	animation-duration: var(--motion-dusk-sea-alt-ms);
+}
+.background__light--stars {
+	animation-name: dusk-stars;
+	animation-duration: var(--motion-dusk-stars-ms);
+}
+.background__light--stars-alt {
+	animation-name: dusk-stars-alt;
+	animation-duration: var(--motion-dusk-stars-alt-ms);
+}
 .background--still .background__light {
 	animation-play-state: paused;
 }
+/* the glow drifts right, away from the names, growing and brightening */
 @keyframes dusk-glow {
 	from {
-		opacity: 0.75;
+		opacity: 0.6;
 		transform: translate(-40px, 10px) scale(0.95);
 	}
 	to {
@@ -152,14 +175,64 @@ body {
 		transform: translate(320px, -40px) scale(1.18);
 	}
 }
+/* the bloom drifts left towards the middle, fading far down */
 @keyframes dusk-bloom {
 	from {
 		opacity: 1;
 		transform: translate(120px, 20px) scale(1.1);
 	}
 	to {
-		opacity: 0.6;
+		opacity: 0.35;
 		transform: translate(-260px, -20px) scale(0.95);
+	}
+}
+/* the band glides along the horizon, stretching and glowing up */
+@keyframes dusk-band {
+	from {
+		opacity: 0.45;
+		transform: translate(-260px, 0) scale(0.85, 1);
+	}
+	to {
+		opacity: 1;
+		transform: translate(200px, 0) scale(1.15, 1);
+	}
+}
+/* the two sets of gleams drift against each other and flicker in turn */
+@keyframes dusk-sea {
+	from {
+		opacity: 0.15;
+		transform: translate(-30px, 0);
+	}
+	to {
+		opacity: 0.9;
+		transform: translate(30px, 0);
+	}
+}
+@keyframes dusk-sea-alt {
+	from {
+		opacity: 0.9;
+		transform: translate(25px, 0);
+	}
+	to {
+		opacity: 0.15;
+		transform: translate(-25px, 0);
+	}
+}
+/* the two sets of stars twinkle in turn */
+@keyframes dusk-stars {
+	from {
+		opacity: 0.25;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes dusk-stars-alt {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0.25;
 	}
 }
 
