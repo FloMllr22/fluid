@@ -241,8 +241,8 @@ package's SHA-256 and attaches both to a GitHub release.
 
 [MIT](LICENSE). fluid started as a fork of
 [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher), whose
-copyright notice is kept in the licence. Bundled Preact (MIT) and the Manrope typeface
-(SIL OFL 1.1), and the tools used to build fluid, are listed in
+copyright notice is kept in the licence. Bundled Preact (MIT) and the Manrope and Outfit
+typefaces (SIL OFL 1.1), and the tools used to build fluid, are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), as is the data the weather shows: weather
 data by [Open-Meteo.com](https://open-meteo.com) and place data by
 [GeoNames](https://www.geonames.org), both under CC BY 4.0.

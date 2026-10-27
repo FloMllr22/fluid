@@ -10,8 +10,9 @@ is **not** covered by that licence.
 |---|---|---|
 | [Preact](https://preactjs.com) | MIT, © Jason Miller | compiled into `assets/app.js`; licence text in [public/licenses/preact-MIT.txt](public/licenses/preact-MIT.txt) |
 | [Manrope](https://github.com/sharanda/manrope) typeface | SIL Open Font License 1.1, © 2019 The Manrope Project Authors | `src/assets/fonts/manrope-latin-*.woff2` (weights 400 to 800, Latin subset, as packaged by [Fontsource](https://fontsource.org)); licence text in [public/licenses/Manrope-OFL.txt](public/licenses/Manrope-OFL.txt) |
+| [Outfit](https://github.com/Outfitio/Outfit-Fonts) typeface | SIL Open Font License 1.1, © 2021 The Outfit Project Authors | `src/assets/fonts/outfit-latin-*.woff2` (weights 500 and 700, Latin subset, as packaged by [Fontsource](https://fontsource.org)); licence text in [public/licenses/Outfit-OFL.txt](public/licenses/Outfit-OFL.txt) |
 
-Both licence texts are included in the installed app under `licenses/`.
+All three licence texts are included in the installed app under `licenses/`.
 
 ## Background photos
 

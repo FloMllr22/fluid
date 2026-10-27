@@ -83,6 +83,7 @@ export const COLOR = {
 
 export const FONT = {
 	family: 'Manrope, "LG Smart UI", "Helvetica Neue", Arial, sans-serif',
+	appNameFamily: 'Outfit, Manrope, "LG Smart UI", "Helvetica Neue", Arial, sans-serif', // the apps' names on Home
 	greeting: 96,
 	dateLine: 30, // weekday, date and time under the greeting
 	moveMode: 22, // "MOVING" above the app's name, in place of the greeting
