@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'preact/hooks';
-import {AppList, listRowTop, type MoveArrows} from '../components/AppList';
+import {useCallback, useEffect, useRef, useState} from 'preact/hooks';
 import {AppMenu, type AppMenuAction} from '../components/AppMenu';
+import {AppWheel, type MoveArrows, WHEEL_ROW_TOP, wheelMenuLeft} from '../components/AppWheel';
 import {Bar} from '../components/Bar';
 import {Greeting} from '../components/Greeting';
 import type {TileModel} from '../components/Tile';
@@ -14,7 +14,7 @@ import {focusIndex, followItem, type RowFocus} from '../lib/focus';
 import {BAR_ITEMS, type HomeFocus, homeStep, homeZone} from '../lib/home';
 import type {TemperatureUnit, WeatherView} from '../lib/weather';
 
-/** The app being moved along the list, and which ways it can go. */
+/** The app being moved along the wheel, and which ways it can go. */
 export interface MovingApp {
 	key: string;
 	arrows: MoveArrows;
@@ -47,7 +47,7 @@ interface Props {
 	onAppMenu: (app: TileModel) => void;
 	/** the focused app's menu, open beside it; it then has the keys */
 	menu?: OpenMenu;
-	/** move mode: the focused app, being moved; the list shows its new place as it goes */
+	/** move mode: the focused app, being moved; the wheel shows its new place as it goes */
 	moving?: MovingApp;
 	/** ↑ or ↓ in move mode */
 	onMove: (step: -1 | 1) => void;
@@ -55,13 +55,13 @@ interface Props {
 	onMoveEnd: (keep: boolean) => void;
 }
 
-/** The home screen: the apps in a list on the left, Sources, LG Home and Settings at the
+/** The home screen: the apps on a wheel on the left, Sources, LG Home and Settings at the
  *  top right, the greeting with date and time at the foot, and the weather.
- *  In the list ↑ ↓ move and → goes to the bar; in the bar ← → move, ← from Sources or ↓
- *  go back to the list (see homeStep). OK opens what has focus; on Sources it opens the
- *  menu of the inputs below it (↑ ↓ choose, OK switches, Back closes). Holding OK on an
- *  app opens its menu beside it.
- *  Move mode is a variant of this: the focused app stays focused and lifted while ↑ ↓
+ *  On the wheel ↑ ↓ turn it, round and round, and → goes to the bar; in the bar ← → move,
+ *  ← from Sources or ↓ go back to the wheel (see homeStep). OK opens what has focus; on
+ *  Sources it opens the menu of the inputs below it (↑ ↓ choose, OK switches, Back
+ *  closes). Holding OK on an app opens its menu beside it.
+ *  Move mode is a variant of this: the focused app stays in the middle, lifted, while ↑ ↓
  *  move it along the list, OK keeps its new place and Back cancels. Focus is kept by app,
  *  so it follows the app and stays on it afterwards. */
 export function Home({
@@ -87,6 +87,7 @@ export function Home({
 	/** where focus is; the app is kept apart, by key (appFocus) */
 	const [focus, setFocus] = useState<HomeFocus>({zone: 'apps', app: 0, bar: 0, source: 0});
 	const [appFocus, setAppFocus] = useState<RowFocus | undefined>(undefined);
+	const wheel = useRef<HTMLElement>(null);
 
 	const keys = apps.map((app) => app.key);
 	const app = focusIndex(keys, appFocus);
@@ -147,7 +148,7 @@ export function Home({
 				if (key === 'up') onMove(-1);
 				else if (key === 'down') onMove(1);
 				else if (key === 'back') onMoveEnd(false);
-				return true; // OK goes through useOkPress; ← → stay in the list
+				return true; // OK goes through useOkPress; ← → stay on the wheel
 			}
 			if (key === 'enter') return true; // handled by useOkPress (press vs hold)
 			if (key === 'back') {
@@ -166,26 +167,26 @@ export function Home({
 	const note = moving ? t('move.hint') : menu ? t('menu.hint') : zone === 'sources' ? t('sources.hint') : undefined;
 	const classes = ['screen', 'home', hidden && 'screen--hidden', moving && 'home--moving'].filter(Boolean).join(' ');
 
-	// In move mode the pointer neither moves focus nor opens anything: it clicks the
-	// arrows, or the moving app to put it down. Holding the pointer's button focuses the
-	// app before its menu opens, as the arrow keys may have moved focus away meanwhile:
-	// the menu, and move mode, act on the focused app. While a menu is open, a click
-	// anywhere else closes it.
+	// The pointer does not select by pointing, which would turn the wheel beneath it: a
+	// click turns the wheel to the app, and a click on the app in the middle opens it. In
+	// move mode it neither moves focus nor opens anything: it clicks the arrows, or the
+	// moving app to put it down. Holding the pointer's button focuses the app before its
+	// menu opens: the menu, and move mode, act on the focused app. While a menu is open, a
+	// click anywhere else closes it.
 	return (
 		<div class={classes}>
-			<AppList
+			<AppWheel
 				items={apps}
 				emptyText={appsEmptyText}
 				focused={zone === 'apps' || moving !== undefined || menu !== undefined}
 				selected={app}
 				moving={moving?.arrows}
 				dimmed={moving !== undefined || menu !== undefined}
-				onSelect={(i) => {
-					if (!moving && !menu) focusApp(i);
-				}}
 				onActivate={(i) => {
-					if (!moving) onOpen(apps[i]);
-					else if (i === app) drop();
+					if (moving) {
+						if (i === app) drop();
+					} else if (i === app) onOpen(apps[i]);
+					else focusApp(i);
 				}}
 				onLongPress={(i) => {
 					if (moving) return;
@@ -193,6 +194,7 @@ export function Home({
 					onAppMenu(apps[i]);
 				}}
 				onMove={onMove}
+				navRef={wheel}
 			/>
 			<Greeting now={now} format={timeFormat} moving={movingApp?.label} note={note} />
 			<WeatherNow view={weather} unit={unit} where="home" />
@@ -217,7 +219,8 @@ export function Home({
 			{menu && !hidden && apps[app] && (
 				<AppMenu
 					app={menu.app}
-					rowTop={listRowTop(apps.length, app, app)}
+					rowTop={WHEEL_ROW_TOP}
+					left={wheelMenuLeft(wheel.current, menu.app.key)}
 					onChoose={menu.onChoose}
 					onClose={menu.onClose}
 				/>

@@ -121,7 +121,7 @@ body {
 		opacity: 1;
 	}
 }
-/* Darkens a photo behind the app list (left) and the greeting (foot), and only lightly
+/* Darkens a photo behind the app wheel (left) and the greeting (foot), and only lightly
    elsewhere, where the text has its own halo (see .app--photo). */
 .background__scrim {
 	position: absolute;
@@ -209,31 +209,34 @@ body {
 	color: var(--color-text-primary);
 }
 
-/* ---------- app list ---------- */
+/* ---------- app wheel ---------- */
 
-/* As tall as the screen, so that a long list runs out at its top and foot. */
-.applist {
+/* The apps on a large circle on the left (placed by AppWheel), on a soft shade so that
+   their names read on any background without a shadow of their own. As large as the
+   screen, which the outermost apps run out to; only the apps take the pointer. */
+.wheel {
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: var(--layout-main-left);
+	z-index: 0;
+	width: 100%;
 	height: 100%;
-	overflow: hidden;
+	pointer-events: none;
 }
-/* The icons sit on the safe area; the rows' padding reaches a little beyond it, where the
-   pill of the focused app only shows once it has moved right. */
-.applist__track {
+.wheel::before {
+	content: "";
 	position: absolute;
-	left: calc(var(--layout-safe-x) - var(--layout-list-row-padding));
-	width: var(--layout-list-width);
-	transition: transform var(--motion-scroll-ms) cubic-bezier(0.2, 0.7, 0.2, 1);
-	will-change: transform;
+	left: 0;
+	top: 0;
+	width: var(--layout-wheel-shade-width);
+	height: 100%;
+	background: linear-gradient(to right, var(--color-wheel-shade), var(--color-wheel-shade-edge));
 }
-.applist__empty {
+.wheel__empty {
 	position: absolute;
 	left: var(--layout-safe-x);
 	top: 50%;
-	width: var(--layout-list-width);
+	width: var(--layout-wheel-note-width);
 	margin: 0;
 	transform: translateY(-50%);
 	font-size: var(--font-empty-note);
@@ -242,106 +245,156 @@ body {
 	color: var(--color-text-secondary);
 }
 
-.applist__row {
-	position: relative;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	height: var(--layout-list-row-height);
-	margin-bottom: var(--layout-list-row-gap);
-	padding: 0 16px 0 var(--layout-list-row-padding);
-	opacity: var(--motion-app-rest-opacity);
-	transform: translateX(0);
-	transition:
-		transform var(--motion-focus-ms) ease-out,
-		opacity var(--motion-focus-ms) ease-out;
-}
-.applist__row:last-child {
-	margin-bottom: 0;
-}
-/* the light pill behind the focused app, faded in */
-.applist__row::before {
-	content: "";
+/* One app, placed (transform) and faded (opacity) by AppWheel. It is laid out as when
+   selected: icon, name and the room around them, which the pill of the selected app fills. */
+.wheel__row {
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 100%;
-	height: 100%;
-	border-radius: var(--layout-list-row-radius);
-	background: var(--color-highlight);
-	opacity: 0;
-	transition: opacity var(--motion-focus-ms) ease-out;
+	z-index: 1;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: var(--layout-wheel-row-height);
+	padding: 0 var(--layout-wheel-pad-end) 0 var(--layout-wheel-pad);
+	white-space: nowrap;
+	text-shadow: none;
+	transition:
+		transform var(--motion-wheel-turn-ms) cubic-bezier(0.3, 0.8, 0.3, 1),
+		opacity var(--motion-wheel-grow-ms) ease-out,
+		visibility var(--motion-wheel-grow-ms);
 }
-.applist__row--focused {
-	opacity: 1;
-	transform: translateX(var(--motion-list-shift));
+/* over a photo the names keep the halo all text has there */
+.app--photo .wheel__row {
+	text-shadow: inherit;
 }
-.applist__row--focused::before {
-	opacity: 1;
+.wheel__row--selected {
+	z-index: 2;
 }
-/* move mode: the app is lifted, the others step back */
-.applist__row--lifted::before {
-	background: var(--color-highlight-lifted);
-	box-shadow: 0 10px 28px var(--color-lifted-shadow);
+/* beyond the apps shown, or left behind by an app that came round to the other end:
+   hidden once faded out */
+.wheel__row--away,
+.wheel__row--ghost {
+	visibility: hidden;
 }
-.applist__row--dimmed {
-	opacity: var(--motion-dimmed-opacity);
+/* an app that came round to the other end fades in there */
+.wheel__row--entering {
+	animation: wheel-in var(--motion-wheel-grow-ms) ease-out;
+}
+@keyframes wheel-in {
+	from {
+		opacity: 0;
+	}
 }
 
-.applist__icon {
+/* above the pills, which belong to the name */
+.wheel__icon {
 	position: relative;
+	z-index: 1;
 	flex: 0 0 auto;
 	width: var(--layout-app-icon);
 	height: var(--layout-app-icon);
-	margin-right: var(--layout-list-icon-gap);
+	margin-right: var(--layout-wheel-gap);
+	pointer-events: auto;
 	transform: scale(1);
-	transition: transform var(--motion-focus-ms) ease-out;
+	transition: transform var(--motion-wheel-grow-ms) cubic-bezier(0.3, 0.8, 0.3, 1);
 }
-.applist__row--focused .applist__icon {
-	transform: scale(var(--motion-app-icon-focus-scale));
+.wheel__row--selected .wheel__icon {
+	transform: scale(var(--motion-wheel-icon-scale));
 }
-.applist__row--focused .app-icon {
+.wheel__row--focused .app-icon {
 	box-shadow:
 		0 0 0 3px var(--color-accent),
-		0 10px 28px var(--color-lifted-shadow);
+		0 12px 32px var(--color-icon-shadow-focused);
 }
 
-/* The name is laid out at its focused size and drawn smaller without focus. */
-.applist__name {
+/* The name is laid out at its selected size; not selected, it is drawn smaller and closer
+   to the icon. It takes the pointer, with its pills. */
+.wheel__name {
 	position: relative;
-	flex: 1 1 auto;
-	min-width: 0;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	font-family: var(--font-app-name-family);
 	font-size: var(--font-app-name);
 	font-weight: 500;
+	line-height: 1.3;
 	letter-spacing: -0.005em;
 	color: var(--color-text-primary);
-	transform: scale(var(--motion-app-name-rest-scale));
+	pointer-events: auto;
+	transform: translateX(calc(var(--layout-wheel-gap-rest) - var(--layout-wheel-gap)))
+		scale(var(--motion-wheel-name-rest-scale));
 	transform-origin: 0 50%;
-	transition: transform var(--motion-focus-ms) ease-out;
+	transition: transform var(--motion-wheel-name-ms) ease-out;
 }
-.applist__row--focused .applist__name {
+.wheel__row--selected .wheel__name {
 	font-weight: 700;
-	transform: scale(1);
+	transform: translateX(0) scale(1);
 }
-.applist__label {
-	min-width: 0;
+
+/* Behind the name, from the row's left edge: the light pill of the focused app, sized for
+   the name at its selected size, and the fainter one beneath the pointer, sized for the
+   name drawn smaller (so larger here by the inverse of that scale). Both scale with the
+   name, the first growing as it fades in. */
+.wheel__name::before,
+.wheel__name::after {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	top: 50%;
+	opacity: 0;
+	transition: opacity var(--motion-wheel-name-ms) ease-out;
+}
+.wheel__name::before {
+	left: calc(-1 * (var(--layout-wheel-pad) + var(--layout-app-icon) + var(--layout-wheel-gap)));
+	right: calc(-1 * var(--layout-wheel-pad-end));
+	height: var(--layout-wheel-row-height);
+	margin-top: calc(var(--layout-wheel-row-height) / -2);
+	border-radius: calc(var(--layout-wheel-row-height) / 2);
+	background: var(--color-highlight);
+}
+.wheel__name::after {
+	left: calc(
+		-1 *
+		(var(--layout-wheel-pad) + var(--layout-app-icon) + var(--layout-wheel-gap-rest)) /
+		var(--motion-wheel-name-rest-scale)
+	);
+	right: calc(-1 * var(--layout-wheel-pad-end-rest) / var(--motion-wheel-name-rest-scale));
+	height: calc(var(--layout-wheel-row-height) / var(--motion-wheel-name-rest-scale));
+	margin-top: calc(var(--layout-wheel-row-height) / var(--motion-wheel-name-rest-scale) / -2);
+	border-radius: calc(var(--layout-wheel-row-height) / var(--motion-wheel-name-rest-scale) / 2);
+	background: var(--color-highlight-hover);
+}
+/* no pill beneath the pointer for the selected app, nor while an app is moved or has its
+   menu open */
+.wheel__row--selected .wheel__name::after,
+.wheel--still .wheel__name::after {
+	display: none;
+}
+.wheel__row--focused .wheel__name::before,
+.wheel__row:hover .wheel__name::after {
+	opacity: 1;
+}
+/* move mode: the app is lifted */
+.wheel__row--lifted .wheel__name::before {
+	background: var(--color-highlight-lifted);
+	box-shadow: 0 10px 28px var(--color-lifted-shadow);
+}
+
+.wheel__label {
+	max-width: var(--layout-wheel-name-max);
 	overflow: hidden;
-	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 /* raised a little to the middle of the letters, which sit above the middle of the line */
-.applist__star {
+.wheel__star {
 	flex: 0 0 auto;
 	width: 30px;
 	height: 30px;
 	margin: 0 0 18px 14px;
 	color: var(--color-text-secondary);
 }
-.applist__star svg {
+.wheel__star svg {
 	width: 100%;
 	height: 100%;
 	fill: currentColor;
@@ -350,24 +403,18 @@ body {
 	stroke-linejoin: round;
 }
 
-/* the arrows of the app being moved, at the right of its row */
-.applist__row--lifted .applist__name {
-	margin-right: calc(2 * var(--layout-list-arrow-size) + 8px);
-}
-.applist__arrows {
-	position: absolute;
-	right: 12px;
-	top: 50%;
-	margin-top: calc(var(--layout-list-arrow-size) / -2);
+/* the arrows of the app being moved, beside its name on its pill */
+.wheel__arrows {
 	display: flex;
 	flex-direction: row;
+	margin-left: 8px;
 }
-.applist__arrow {
+.wheel__arrow {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--layout-list-arrow-size);
-	height: var(--layout-list-arrow-size);
+	width: var(--layout-wheel-arrow-size);
+	height: var(--layout-wheel-arrow-size);
 	margin-left: 8px;
 	border: 1px solid var(--color-glass-border);
 	border-radius: 50%;
@@ -375,11 +422,11 @@ body {
 	color: var(--color-text-primary);
 	transition: opacity var(--motion-focus-ms) ease-out;
 }
-.applist__arrow--off {
+.wheel__arrow--off {
 	opacity: 0;
 	pointer-events: none;
 }
-.applist__arrow svg {
+.wheel__arrow svg {
 	width: 26px;
 	height: 26px;
 	fill: none;
@@ -474,7 +521,7 @@ body {
 
 /* ---------- menus ---------- */
 
-/* Sources, below its button, and an app's menu, beside it in the list */
+/* Sources, below its button, and an app's menu, beside it on the wheel */
 .menu {
 	position: absolute;
 	width: var(--layout-menu-width);
@@ -490,14 +537,8 @@ body {
 	right: 0;
 	animation: menu-down var(--motion-menu-in-ms) ease-out both;
 }
+/* placed beside the app by AppMenu */
 .menu--app {
-	left: calc(
-		var(--layout-safe-x) -
-		var(--layout-list-row-padding) +
-		var(--layout-list-width) +
-		var(--motion-list-shift) +
-		var(--layout-menu-gap)
-	);
 	z-index: 5;
 	animation: menu-aside var(--motion-menu-in-ms) ease-out both;
 }
@@ -580,7 +621,7 @@ body {
 
 /* ---------- greeting ---------- */
 
-/* at the foot, right of the list: the greeting, then weekday, date and time; in move
+/* at the foot, right of the wheel: the greeting, then weekday, date and time; in move
    mode the app's name, and the keys in place of the date */
 .greeting {
 	position: absolute;
@@ -877,7 +918,7 @@ body {
 
 /* ---------- light focus ---------- */
 
-/* What has focus outside the app list is a light pill with dark text (see focusFill); its
+/* What has focus outside the app wheel is a light pill with dark text (see focusFill); its
    letters need no halo over a photo. */
 .settings__tab--focused,
 .settings__button--focused,
@@ -1346,7 +1387,7 @@ body {
 
 /* ---------- toast ---------- */
 
-/* top centre, clear of the list, the bar and the greeting */
+/* top centre, clear of the wheel, the bar and the greeting */
 .toast {
 	position: absolute;
 	left: 50%;

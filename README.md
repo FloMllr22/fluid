@@ -1,7 +1,7 @@
 # fluid – a home screen for LG webOS TVs
 
-fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: your apps in a
-list on the left, your inputs and a way back to LG's own home at the top right, and a large
+fluid is a calm, fast home-screen launcher for **rooted** LG webOS TVs: your apps on a
+wheel on the left, your inputs and a way back to LG's own home at the top right, and a large
 greeting with the date, the time and (if you like) the weather.
 
 > **Status: early development.** fluid runs on the maintainer's TV, but it is a
@@ -9,7 +9,8 @@ greeting with the date, the time and (if you like) the weather.
 
 ## What it does
 
-- **Apps**: the apps you pick, in your order, your favourites first, one below the other
+- **Apps**: the apps you pick, in your order, your favourites first, on a wheel that turns the
+  one you choose to the middle, round and round
 - **Sources**: a menu of Live TV and the HDMI inputs, with the names set in the TV's input
   settings
 - **LG** and **Settings**: LG's own home screen, and fluid's settings
@@ -43,7 +44,7 @@ reports (TV model, webOS version, firmware version) are welcome.
 | First start, apps and background | OK | Go on with what is chosen (focus starts on **Next** / **Finish**) |
 | First start, apps and background | ↓, then as in Settings | Choose apps (and re-order them) or a background |
 | First start | Back | Return to the step before |
-| Home | ↑ ↓ | Move along the apps |
+| Home | ↑ ↓ | Turn the wheel to the next app (after the last comes the first again) |
 | Home | → | To Sources, LG and Settings at the top right (← → along them, ← or ↓ back to the apps) |
 | Home | OK | Open the app, open the Sources menu, LG's home screen or Settings |
 | Sources menu | ↑ ↓, OK | Switch to that input (Back closes the menu) |
@@ -63,9 +64,10 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
-Pointing selects, clicking opens, holding the click on an app opens its menu, clicking
-beside a menu closes it. While an app is being moved, its arrows move it and clicking it
-puts it down.
+On Home, clicking an app turns the wheel to it, and clicking the app in the middle opens it;
+elsewhere pointing selects and clicking opens. Holding the click on an app opens its menu,
+clicking beside a menu closes it. While an app is being moved, its arrows move it and
+clicking it puts it down.
 
 **Where the apps come from.** fluid reads every app on the TV's launcher, with its real
 icon, from the TV itself, through the Homebrew Channel. That is why it needs root. Until you

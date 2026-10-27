@@ -13,18 +13,20 @@ interface Props {
 	focus: number;
 	/** said in place of the entries while there are none */
 	emptyText?: string;
-	/** placed by its own class (the Sources menu) or by its top (an app's menu) */
+	/** placed by its own class (the Sources menu) or by its top and left (an app's menu) */
 	className: string;
 	top?: number;
+	left?: number;
 	onPoint: (index: number) => void;
 	onPick: (index: number) => void;
 }
 
 /** Choices on dark glass, one below the other, each with its glyph: the Sources menu and
  *  an app's menu. Who shows it handles the keys; the pointer points and clicks. */
-export function Menu({entries, focus, emptyText, className, top, onPoint, onPick}: Props) {
+export function Menu({entries, focus, emptyText, className, top, left, onPoint, onPick}: Props) {
+	const px = (value?: number) => (value === undefined ? undefined : `${value}px`);
 	return (
-		<div class={`menu ${className}`} style={top === undefined ? undefined : {top: `${top}px`}}>
+		<div class={`menu ${className}`} style={{top: px(top), left: px(left)}}>
 			{entries.length === 0 ? (
 				<p class="menu__empty">{emptyText}</p>
 			) : (

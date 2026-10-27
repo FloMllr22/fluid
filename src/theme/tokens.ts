@@ -24,12 +24,13 @@ export const COLOR = {
 	duskGlowEdge: 'rgba(255, 160, 96, 0)',
 	duskBloom: 'rgba(206, 86, 170, 0.5)',
 	duskBloomEdge: 'rgba(206, 86, 170, 0)',
-	// shade over its left part, where the app list crosses the horizon: the names of the
-	// apps without focus keep WCAG AA there (5.3:1 on the brightest line; 3.7:1, enough
-	// for their large text, where a long name reaches the end of the list)
-	duskShade: 'rgba(6, 10, 28, 0.5)',
-	duskShadeEdge: 'rgba(6, 10, 28, 0)',
-	// Over a photo: darker behind the app list (left) and the greeting (foot), light
+	// A soft shade behind the app wheel on Home, from the left edge to clear of the names, so
+	// that they read without a shadow of their own. With it the names that are not selected
+	// keep WCAG AA for their large text on every colour (on dusk at least 3.8:1, where a name
+	// of the greatest length ends just above the horizon).
+	wheelShade: 'rgba(4, 8, 24, 0.5)',
+	wheelShadeEdge: 'rgba(4, 8, 24, 0)',
+	// Over a photo: darker behind the app wheel (left) and the greeting (foot), light
 	// elsewhere so the photo shows. Text keeps WCAG AA through a dark halo right behind its
 	// letters (photoTextHalo), measured behind the letters on every bundled photo.
 	photoScrimSide: 'rgba(0, 0, 0, 0.5)',
@@ -49,14 +50,16 @@ export const COLOR = {
 	glass: 'rgba(10, 14, 32, 0.6)',
 	glassMenu: 'rgba(10, 14, 32, 0.92)',
 	glassBorder: 'rgba(255, 255, 255, 0.16)',
-	highlight: 'rgba(255, 255, 255, 0.16)', // behind the focused app in the list
+	highlight: 'rgba(255, 255, 255, 0.14)', // behind the focused app on the wheel
+	highlightHover: 'rgba(255, 255, 255, 0.1)', // behind an app beneath the pointer
 	highlightLifted: 'rgba(255, 255, 255, 0.24)', // behind the app being moved
 	glyphWell: 'rgba(255, 255, 255, 0.12)', // behind a glyph in a menu
 	glyphWellFocus: 'rgba(7, 8, 11, 0.1)',
-	// what has focus, where it is not an app in the list: a light pill with dark text
+	// what has focus, where it is not an app on the wheel: a light pill with dark text
 	focusFill: '#F4F5F7',
 	focusText: '#07080B',
 	iconShadow: 'rgba(0, 0, 0, 0.3)',
+	iconShadowFocused: 'rgba(0, 0, 0, 0.45)',
 	liftedShadow: 'rgba(0, 0, 0, 0.4)',
 	menuShadow: 'rgba(0, 0, 0, 0.45)',
 	focusTextSoft: 'rgba(7, 8, 11, 0.7)', // a description on a focused row
@@ -87,8 +90,8 @@ export const FONT = {
 	greeting: 96,
 	dateLine: 30, // weekday, date and time under the greeting
 	moveMode: 22, // "MOVING" above the app's name, in place of the greeting
-	appName: 42, // an app in the list, laid out at its focused size (see appNameRestScale)
-	appMonogram: 26, // the first letter of an app without artwork
+	appName: 46, // an app on the wheel, laid out at its selected size (see wheelNameRestScale)
+	appMonogram: 28, // the first letter of an app without artwork
 	emptyNote: 28, // why a list has nothing in it (loading, failed, none chosen)
 	barLabel: 20, // "Sources"
 	barMonogram: 23, // "LG"
@@ -119,22 +122,26 @@ export const LAYOUT = {
 	// the safe area: 5 % of the screen at either side, a little more at top and foot
 	safeX: 96,
 	safeY: 64,
-	// the app list on the left: rows of icon and name, the focused one on a light pill
-	listWidth: 520,
-	listRowHeight: 76,
-	listRowGap: 10,
-	listRowRadius: 24,
-	listRowPadding: 8, // left of the icon; the icon itself sits on the safe area
-	listIconGap: 24, // between icon and name
-	listArrowSize: 44, // the arrows of the app being moved, at the right of its row
-	appIcon: 64,
-	appIconRadius: 18,
-	mainLeft: 700, // the greeting, right of the list
+	// the app wheel on the left (its shape: WHEEL): rows of icon and name, each laid out as
+	// when selected, with the room around them then; the focused one on a light pill
+	wheelRowHeight: 96,
+	wheelPad: 6, // left of the icon
+	wheelGap: 40, // between icon and name; the icon has grown into part of it
+	wheelGapRest: 26, // the same, not selected
+	wheelPadEnd: 40, // right of the name
+	wheelPadEndRest: 14, // the same, not selected (the pill beneath the pointer)
+	wheelNameMax: 560, // a longer name is cut short
+	wheelArrowSize: 44, // the arrows of the app being moved, beside its name
+	wheelShadeWidth: 820,
+	wheelNoteWidth: 520, // why there are no apps, in place of the wheel
+	appIcon: 76,
+	appIconRadius: 21,
+	mainLeft: 700, // the greeting, right of the wheel
 	// the bar at the top right: Sources, LG Home, Settings
 	barHeight: 60,
 	barGap: 14,
 	barGlyph: 26,
-	// the menus: Sources, below its button, and an app's menu, beside it in the list
+	// the menus: Sources, below its button, and an app's menu, beside it on the wheel
 	menuWidth: 400,
 	menuPadding: 12,
 	menuRadius: 28,
@@ -144,7 +151,7 @@ export const LAYOUT = {
 	menuGlyphWell: 40,
 	menuGlyph: 24,
 	menuOffset: 12, // between a button and the menu it opens
-	menuGap: 24, // between the app list and an app's menu
+	menuGap: 24, // between the app's pill and an app's menu
 	weatherGlyph: 44, // the sky, left of the temperature (Settings)
 	weatherGlyphHome: 32,
 	weatherGap: 16, // between the glyph, the temperature and the sky
@@ -184,14 +191,27 @@ export const MOTION = {
 	menuInMs: 160, // a menu opening
 	focusScale: 1.12,
 	liftScale: 1.2, // a tile picked up in re-order mode
-	listShift: 20, // the focused app moves right by this much
-	appIconFocusScale: 1.3,
-	appNameRestScale: 32 / 42, // a name without focus is drawn at 32 px (FONT.appName: 42)
-	appRestOpacity: 0.78, // the apps without focus
+	wheelTurnMs: 500, // the wheel turning another app to the middle
+	wheelGrowMs: 400, // the selected app's icon growing; an app fading in or out
+	wheelNameMs: 300, // its name growing, the pills fading
+	wheelIconScale: 1.37,
+	wheelNameRestScale: 30 / 46, // a name not selected is drawn at 30 px (FONT.appName: 46)
+	// the apps not selected: 0.84 beside it, fainter by the step with each place further out
+	wheelRestOpacity: 0.9,
+	wheelOpacityStep: 0.06,
 	dimmedOpacity: 0.35, // the other apps while one is moved or has its menu open
 	backdropOpacity: 0.25, // the bar and the weather while an app is moved
 	barFocusScale: 1.06,
 	photoFadeMs: 1500 // a new background photo fading in over the last one
+} as const;
+
+/** The app wheel's shape: a circle whose right-most point, in the middle of the screen,
+ *  holds the selected app (see AppWheel; not written to CSS). */
+export const WHEEL = {
+	radius: 1100,
+	step: 4.66, // degrees between neighbours
+	gap: 2, // degrees of extra room either side of the selected app
+	reach: 5 // apps shown either side of it: the outermost run out to the screen's top and foot
 } as const;
 
 /** Writes every token onto :root as --color-*, --font-*, --layout-*, --motion-*. */
