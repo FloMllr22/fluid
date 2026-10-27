@@ -205,8 +205,8 @@ export const MOTION = {
 	photoFadeMs: 1500, // a new background photo fading in over the last one
 	// the moving dusk: its glow and its bloom drift there and back in these times, which
 	// do not divide each other, so that they rarely meet in the same place again
-	duskGlowMs: 47000,
-	duskBloomMs: 61000
+	duskGlowMs: 23000,
+	duskBloomMs: 29000
 } as const;
 
 /** The app wheel's shape: a circle whose right-most point, in the middle of the screen,

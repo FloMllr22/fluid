@@ -144,22 +144,22 @@ body {
 }
 @keyframes dusk-glow {
 	from {
-		opacity: 0.85;
-		transform: translate(-40px, 0) scale(1);
+		opacity: 0.75;
+		transform: translate(-40px, 10px) scale(0.95);
 	}
 	to {
 		opacity: 1;
-		transform: translate(120px, -10px) scale(1.08);
+		transform: translate(320px, -40px) scale(1.18);
 	}
 }
 @keyframes dusk-bloom {
 	from {
 		opacity: 1;
-		transform: translate(60px, 8px) scale(1.06);
+		transform: translate(120px, 20px) scale(1.1);
 	}
 	to {
-		opacity: 0.8;
-		transform: translate(-90px, -6px) scale(1);
+		opacity: 0.6;
+		transform: translate(-260px, -20px) scale(0.95);
 	}
 }
 
