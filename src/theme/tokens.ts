@@ -202,7 +202,11 @@ export const MOTION = {
 	dimmedOpacity: 0.35, // the other apps while one is moved or has its menu open
 	backdropOpacity: 0.25, // the bar and the weather while an app is moved
 	barFocusScale: 1.06,
-	photoFadeMs: 1500 // a new background photo fading in over the last one
+	photoFadeMs: 1500, // a new background photo fading in over the last one
+	// the moving dusk: its glow and its bloom drift there and back in these times, which
+	// do not divide each other, so that they rarely meet in the same place again
+	duskGlowMs: 47000,
+	duskBloomMs: 61000
 } as const;
 
 /** The app wheel's shape: a circle whose right-most point, in the middle of the screen,

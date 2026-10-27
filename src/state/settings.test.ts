@@ -324,6 +324,7 @@ describe('background', () => {
 			{kind: 'color', color: 'black'},
 			{kind: 'color', color: 'blue'},
 			{kind: 'color', color: 'dusk'},
+			{kind: 'color', color: 'duskMoving'},
 			{kind: 'photo', id: 'lake'},
 			{kind: 'slideshow'}
 		])

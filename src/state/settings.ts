@@ -7,9 +7,10 @@
 import {LANGUAGES, type Language} from '../i18n';
 import type {Place} from '../platform';
 
-/** The colours fluid offers as a background; dark is the gradient fluid always had. A
- *  colour added later needs no new version: an older fluid reads it as the default. */
-export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk'] as const;
+/** The colours fluid offers as a background; dark is the gradient fluid always had,
+ *  duskMoving the dusk with its lights slowly moving. A colour added later needs no new
+ *  version: an older fluid reads it as the default. */
+export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving'] as const;
 export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
 
 /** What is behind the screens: a colour, one of the photos that come with fluid (by its

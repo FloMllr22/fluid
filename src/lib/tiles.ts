@@ -54,7 +54,8 @@ const COLOR_NAMES: Record<BackgroundColor, MessageKey> = {
 	dark: 'background.dark',
 	black: 'background.black',
 	blue: 'background.blue',
-	dusk: 'background.dusk'
+	dusk: 'background.dusk',
+	duskMoving: 'background.duskMoving'
 };
 
 /** The name of a photo that comes with fluid. Every photo has one in every language (see

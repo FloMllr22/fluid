@@ -25,6 +25,24 @@ export function photosFrom(full: Record<string, string>, thumbs: Record<string, 
 		.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
+/** A light in a colour background: an ellipse centred at x, y with radii rx, ry, all in %
+ *  of the screen, that fades out at 70 % of its radii. */
+export interface Light {
+	x: number;
+	y: number;
+	rx: number;
+	ry: number;
+}
+
+/** Where a light goes as a layer of its own, in % of the screen: just large enough for
+ *  the ellipse up to where it has faded out, so that it can move without being redrawn. */
+export function lightLayer(light: Light): {left: number; top: number; width: number; height: number} {
+	const round = (n: number) => Math.round(n * 100) / 100;
+	const rx = 0.7 * light.rx;
+	const ry = 0.7 * light.ry;
+	return {left: round(light.x - rx), top: round(light.y - ry), width: round(2 * rx), height: round(2 * ry)};
+}
+
 /** The key of a background's tile in Settings. */
 export function backgroundKey(background: Background): string {
 	if (background.kind === 'color') return `color:${background.color}`;

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {Background} from '../state/settings';
-import {backgroundFromKey, backgroundKey, photosFrom, shownBackground, slideOrder} from './backgrounds';
+import {backgroundFromKey, backgroundKey, lightLayer, photosFrom, shownBackground, slideOrder} from './backgrounds';
 
 const dark: Background = {kind: 'color', color: 'dark'};
 
@@ -22,6 +22,17 @@ describe('photosFrom', () => {
 	});
 });
 
+describe('lightLayer', () => {
+	it('is just large enough for the light up to where it has faded out', () => {
+		// radii 50 % and 20 %, faded out at 35 % and 14 %
+		expect(lightLayer({x: 60, y: 70, rx: 50, ry: 20})).toEqual({left: 25, top: 56, width: 70, height: 28});
+	});
+
+	it('may reach beyond the screen', () => {
+		expect(lightLayer({x: 84, y: 64, rx: 47, ry: 35})).toEqual({left: 51.1, top: 39.5, width: 65.8, height: 49});
+	});
+});
+
 describe('background keys', () => {
 	it('turn every kind of background into a key and back', () => {
 		const backgrounds: Background[] = [
@@ -29,6 +40,7 @@ describe('background keys', () => {
 			{kind: 'color', color: 'black'},
 			{kind: 'color', color: 'blue'},
 			{kind: 'color', color: 'dusk'},
+			{kind: 'color', color: 'duskMoving'},
 			{kind: 'photo', id: 'lake'},
 			{kind: 'slideshow'}
 		];

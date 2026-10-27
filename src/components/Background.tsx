@@ -1,8 +1,9 @@
 import {useEffect, useRef, useState} from 'preact/hooks';
+import {useInFront} from '../hooks/useInFront';
 import {useSlideshow} from '../hooks/useSlideshow';
 import type {Photo} from '../lib/backgrounds';
 import type {Background as BackgroundChoice} from '../state/settings';
-import {COLOR_BACKGROUNDS} from '../theme/backgrounds';
+import {COLOR_BACKGROUNDS, DUSK_LIGHTS, DUSK_SKY} from '../theme/backgrounds';
 
 interface Props {
 	/** what to draw: a colour, a photo or a slideshow that is there (see shownBackground) */
@@ -20,7 +21,8 @@ interface Layer {
 
 /** The layer behind every screen: a colour, or a photo that fades in over the last one,
  *  darkened so that text on it stays readable. A photo is shown once it has loaded, so
- *  it never fades in half drawn. */
+ *  it never fades in half drawn. The moving dusk has its lights on layers of their own,
+ *  which drift while fluid is in front. */
 export function Background({background, photos, onError}: Props) {
 	const slide = useSlideshow(
 		photos.map((p) => p.id),
@@ -56,9 +58,18 @@ export function Background({background, photos, onError}: Props) {
 		};
 	}, [url]);
 
-	const color = background.kind === 'color' ? COLOR_BACKGROUNDS[background.color] : undefined;
+	const moving = background.kind === 'color' && background.color === 'duskMoving';
+	const inFront = useInFront(moving);
+	const color = background.kind === 'color' ? (moving ? DUSK_SKY : COLOR_BACKGROUNDS[background.color]) : undefined;
 	return (
-		<div class="background" style={color ? {background: color} : undefined}>
+		<div
+			class={inFront ? 'background' : 'background background--still'}
+			style={color ? {background: color} : undefined}
+		>
+			{moving &&
+				DUSK_LIGHTS.map((light) => (
+					<div key={light.name} class={`background__light background__light--${light.name}`} style={light.style} />
+				))}
 			{url && layers.map((layer) => <img key={layer.n} class="background__photo" src={layer.url} alt="" />)}
 			{url && <div class="background__scrim" />}
 		</div>
