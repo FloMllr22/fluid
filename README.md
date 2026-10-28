@@ -72,9 +72,13 @@ clicking it puts it down.
 
 **Where the apps come from.** fluid reads every app on the TV's launcher, with its real
 icon, from the TV itself, through the Homebrew Channel. That is why it needs root. Until you
-pick apps in Settings, the list shows all of them in the order of LG's launcher. If the
-Homebrew Channel is missing or has lost root (a firmware update can do that), the list
-says so; Sources and LG Home keep working, and fluid tries again when you come back to it.
+pick apps in Settings, the list shows all of them in the order of LG's launcher. fluid reads
+the list again whenever you come back to it, so an app you uninstall is gone without
+restarting fluid. An app you install joins the list where LG's launcher puts it while the
+list shows all apps; once you have picked, hidden, moved or favourited apps, it waits in
+Settings → Apps for you to add it. If the Homebrew Channel is missing or has lost root (a firmware update can do that),
+the list says so; Sources and LG Home keep working, and fluid tries again when you come back
+to it.
 
 fluid does not take over the HOME button yet. You can map a remote button to it with
 [LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID

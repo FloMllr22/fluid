@@ -35,6 +35,7 @@
 	"apps.noneFound": "Der TV meldet keine Apps",
 	"apps.loadFailed": "fluid konnte deine Apps nicht lesen.",
 	"apps.retryHint": "fluid versucht es erneut, sobald du zurückkommst.",
+	"apps.refreshFailed": "fluid konnte die Liste deiner Apps nicht neu lesen.",
 	"apps.iconsFailed_one": "{count} App-Icon konnte nicht geladen werden",
 	"apps.iconsFailed_other": "{count} App-Icons konnten nicht geladen werden",
 	"apps.hidden": "{name} ist ausgeblendet. In den Einstellungen wieder einblenden.",

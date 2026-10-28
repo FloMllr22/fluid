@@ -9,6 +9,7 @@ import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
+import {sameApps} from './lib/apps';
 import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
@@ -119,28 +120,37 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		return platform.onForeground(() => platform.hidePointer());
 	}, []);
 
-	// Load apps at start. After a failure, try again whenever fluid comes back to the front:
-	// the Homebrew Channel may have been installed or rooted again meanwhile, or its service
-	// may just have started late after the TV booted.
+	// Load apps at start, and read them again whenever fluid comes back to the front: apps
+	// may have been installed or uninstalled meanwhile (in LG's store, on LG Home, in the
+	// Homebrew Channel). After a failure the Homebrew Channel may also have been installed
+	// or rooted again, or its service may just have started late after the TV booted. A
+	// reading that changes nothing is not drawn again, so icons that still fail are not
+	// reported again either; one that fails while apps are shown leaves them, and says so.
 	useEffect(() => {
-		let failed = false;
+		let shown: AppEntry[] | undefined;
+		let reading = false;
 		const load = () => {
-			failed = false;
+			if (reading) return;
+			reading = true;
 			platform.listApps().then(
 				(list) => {
+					reading = false;
+					if (shown && sameApps(shown, list.apps)) return;
+					shown = list.apps;
 					setAppsState({status: 'ready', apps: list.apps});
+					// a move under way was of the list as it was: it is dropped, not stored
+					setMoving(null);
 					if (list.failedIcons > 0) showToast(tn('apps.iconsFailed', list.failedIcons), 'error');
 				},
 				(error: unknown) => {
-					failed = true;
-					setAppsState({status: 'failed', error});
+					reading = false;
+					if (shown) showToast(failure(t('apps.refreshFailed'), error), 'error');
+					else setAppsState({status: 'failed', error});
 				}
 			);
 		};
 		load();
-		return platform.onForeground(() => {
-			if (failed) load();
-		});
+		return platform.onForeground(load);
 	}, [showToast]);
 
 	// Refresh inputs whenever fluid comes back to the foreground (labels or connections may
