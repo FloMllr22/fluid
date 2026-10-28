@@ -422,13 +422,6 @@ body {
 	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
-/* on the app's own colour: light in every theme */
-.app-icon--color .app-icon__glyph {
-	stroke: var(--color-on-color);
-}
-.app-icon--color .app-icon__monogram {
-	color: var(--color-on-color);
-}
 
 /* ---------- app wheel ---------- */
 
@@ -1013,12 +1006,6 @@ body {
 	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
-.tile__box--color .tile__glyph {
-	stroke: var(--color-on-color);
-}
-.tile__box--color .tile__monogram {
-	color: var(--color-on-color);
-}
 
 .tile__label {
 	/* up to two lines, using the gutter either side, so long names fit */
@@ -1234,14 +1221,6 @@ body {
 	flex-direction: row;
 	justify-content: flex-end;
 	height: var(--layout-settings-toolbar);
-}
-/* in place of the toolbar: why a tab has so little to choose from */
-.settings__note {
-	height: var(--layout-settings-toolbar);
-	margin: 0;
-	font-size: var(--font-option-description);
-	line-height: 1.4;
-	color: var(--color-text-secondary);
 }
 .settings__empty {
 	margin: 0;

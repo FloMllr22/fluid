@@ -1,8 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {t} from '../i18n';
 import {LIVE_TV_ID} from '../platform';
-import type {Photo} from './backgrounds';
-import {appTile, backgroundTiles, inputGlyph, inputTile, pickInOrder} from './tiles';
+import {appTile, inputGlyph, inputTile, pickInOrder} from './tiles';
 
 describe('pickInOrder', () => {
 	const items = [{id: 'x'}, {id: 'y'}, {id: 'z'}];
@@ -78,31 +77,5 @@ describe('inputGlyph', () => {
 	it('is not fooled by names of built-in object properties', () => {
 		expect(inputGlyph('constructor')).toBe('input');
 		expect(inputGlyph('__proto__')).toBe('input');
-	});
-});
-
-describe('backgroundTiles', () => {
-	const photos: Photo[] = [
-		{id: 'dunes', url: '/dunes.jpg', thumbUrl: '/dunes.thumb.jpg'},
-		{id: 'lake', url: '/lake.jpg', thumbUrl: '/lake.thumb.jpg'}
-	];
-
-	it('offers the colours, the photos and the slideshow with a dark theme, but not the light one', () => {
-		const keys = backgroundTiles(photos, 'dark').map((tile) => tile.key);
-		expect(keys).toEqual([
-			'color:dark',
-			'color:black',
-			'color:blue',
-			'color:dusk',
-			'color:duskMoving',
-			'photo:dunes',
-			'photo:lake',
-			'slideshow'
-		]);
-		expect(backgroundTiles(photos, 'black').map((tile) => tile.key)).toEqual(keys);
-	});
-
-	it('offers only the light one with the light theme', () => {
-		expect(backgroundTiles(photos, 'light').map((tile) => tile.key)).toEqual(['color:light']);
 	});
 });

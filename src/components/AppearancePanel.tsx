@@ -3,7 +3,7 @@ import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {type MessageKey, t} from '../i18n';
 import {valueKey} from '../lib/values';
-import {ACCENTS, type Appearance, GLOW_LEVELS, ICON_SIZES, THEMES} from '../state/settings';
+import {ACCENTS, type Appearance, GLOW_LEVELS, ICON_SIZES} from '../state/settings';
 import {accentColor} from '../theme/appearance';
 import {COLOR} from '../theme/tokens';
 import {ChevronMark} from './Glyph';
@@ -40,8 +40,8 @@ interface Row {
 /** The accent from the app has no colour of its own: three apps' colours stand for it. */
 const APP_SWATCH = `linear-gradient(135deg, ${COLOR.previewAppBefore}, ${COLOR.previewApp}, ${COLOR.previewAppAfter})`;
 
-/** The Appearance tab, as the Settings mockup draws it: a row each for the theme, the
- *  accent, the glow behind the app, the icon size and reduced motion. ↑ ↓ move between the rows; ← → step through a row's values
+/** The Appearance tab, as the Settings mockup draws it: a row each for the accent, the
+ *  glow behind the app, the icon size and reduced motion. ↑ ↓ move between the rows; ← → step through a row's values
  *  (shown with arrows while it has focus), and ← on its first value goes back to the
  *  tabs; OK goes on to the next value, round to the first, or turns the switch. Every
  *  change shows at once. */
@@ -51,19 +51,11 @@ export function AppearancePanel({appearance, onChange, active, onExit, onClose, 
 
 	const rows: Row[] = [
 		{
-			id: 'theme',
-			label: t('appearance.theme'),
-			description: t('appearance.themeDescription'),
-			values: THEMES.map((theme) => t(`theme.${theme}` as MessageKey)),
-			index: THEMES.indexOf(appearance.theme),
-			set: (i) => change({theme: THEMES[i]})
-		},
-		{
 			id: 'accent',
 			label: t('appearance.accent'),
 			description: t('appearance.accentDescription'),
 			values: ACCENTS.map((accent) => t(`accent.${accent}` as MessageKey)),
-			swatches: ACCENTS.map((accent) => (accent === 'app' ? APP_SWATCH : accentColor(accent, appearance.theme))),
+			swatches: ACCENTS.map((accent) => (accent === 'app' ? APP_SWATCH : accentColor(accent))),
 			index: ACCENTS.indexOf(appearance.accent),
 			set: (i) => change({accent: ACCENTS[i]})
 		},

@@ -8,15 +8,10 @@ import {LANGUAGES, type Language} from '../i18n';
 import type {Place} from '../platform';
 
 /** The colours fluid offers as a background; dark is the gradient fluid always had,
- *  duskMoving the dusk with its lights slowly moving, light the light theme's only one (it
- *  is never stored, see shownBackground). A colour added later needs no new version: an
- *  older fluid reads it as the default. */
-export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving', 'light'] as const;
+ *  duskMoving the dusk with its lights slowly moving. A colour added later needs no new
+ *  version: an older fluid reads it as the default. */
+export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving'] as const;
 export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
-
-/** The themes, as offered: the colours of text, surfaces, menus and focus. */
-export const THEMES = ['black', 'dark', 'light'] as const;
-export type Theme = (typeof THEMES)[number];
 
 /** The accent colours, as offered: the one of the app in the middle of the wheel, or one
  *  of fluid's own. A colour added later needs no new version (read as the default). */
@@ -33,7 +28,6 @@ export type IconSize = (typeof ICON_SIZES)[number];
 
 /** How fluid looks. */
 export interface Appearance {
-	theme: Theme;
 	accent: Accent;
 	glow: GlowLevel;
 	iconSize: IconSize;
@@ -113,7 +107,7 @@ export function defaultWeather(): WeatherSettings {
 }
 
 export function defaultAppearance(): Appearance {
-	return {theme: 'dark', accent: 'ice', glow: 0, iconSize: 100, reduceMotion: false};
+	return {accent: 'ice', glow: 0, iconSize: 100, reduceMotion: false};
 }
 
 export function defaultSettings(): Settings {
@@ -207,7 +201,6 @@ function appearanceOf(value: unknown): Appearance {
 	const oneOf = <T>(list: readonly T[], stored: unknown, otherwise: T): T =>
 		list.indexOf(stored as T) !== -1 ? (stored as T) : otherwise;
 	return {
-		theme: oneOf(THEMES, value.theme, fallback.theme),
 		accent: oneOf(ACCENTS, value.accent, fallback.accent),
 		glow: oneOf(GLOW_LEVELS, value.glow, fallback.glow),
 		iconSize: oneOf(ICON_SIZES, value.iconSize, fallback.iconSize),

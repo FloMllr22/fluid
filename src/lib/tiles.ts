@@ -4,7 +4,7 @@ import type {GlyphName} from '../components/Glyph';
 import type {TileModel} from '../components/Tile';
 import {type MessageKey, t} from '../i18n';
 import {type AppEntry, type InputSource, LIVE_TV_ID} from '../platform';
-import {BACKGROUND_COLORS, type BackgroundColor, type Theme} from '../state/settings';
+import {BACKGROUND_COLORS, type BackgroundColor} from '../state/settings';
 import {COLOR_BACKGROUNDS} from '../theme/backgrounds';
 import {backgroundKey, type Photo} from './backgrounds';
 
@@ -55,8 +55,7 @@ const COLOR_NAMES: Record<BackgroundColor, MessageKey> = {
 	black: 'background.black',
 	blue: 'background.blue',
 	dusk: 'background.dusk',
-	duskMoving: 'background.duskMoving',
-	light: 'background.light'
+	duskMoving: 'background.duskMoving'
 };
 
 /** The name of a photo that comes with fluid. Every photo has one in every language (see
@@ -65,18 +64,14 @@ export function photoName(id: string): string {
 	return t(`background.photo.${id}` as MessageKey);
 }
 
-const colorTile = (color: BackgroundColor): TileModel => ({
-	key: backgroundKey({kind: 'color', color}),
-	label: t(COLOR_NAMES[color]),
-	swatch: COLOR_BACKGROUNDS[color]
-});
-
-/** The choices of the Background tab: with a dark theme the colours, each photo, and a
- *  slideshow when there are two photos or more; with the light theme only its light
- *  background (see shownBackground). Each tile is a preview. */
-export function backgroundTiles(photos: Photo[], theme: Theme): TileModel[] {
-	if (theme === 'light') return [colorTile('light')];
-	const tiles = BACKGROUND_COLORS.filter((color) => color !== 'light').map(colorTile);
+/** The choices of the Background tab: the colours, each photo, and a slideshow when
+ *  there are two photos or more. Each tile is a preview. */
+export function backgroundTiles(photos: Photo[]): TileModel[] {
+	const tiles: TileModel[] = BACKGROUND_COLORS.map((color) => ({
+		key: backgroundKey({kind: 'color', color}),
+		label: t(COLOR_NAMES[color]),
+		swatch: COLOR_BACKGROUNDS[color]
+	}));
 	for (const photo of photos)
 		tiles.push({
 			key: backgroundKey({kind: 'photo', id: photo.id}),

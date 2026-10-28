@@ -184,12 +184,12 @@ export function Home({
 
 	// The accent "app" and the glow follow the app in the middle, once the wheel stands
 	// still; the accent only here (Settings keep the fallback, Ice blue).
-	const {theme, accent, glow} = appearance;
+	const {accent, glow} = appearance;
 	const layout = layoutFor(appearance.iconSize);
 	const follows = accent === 'app' || glow > 0;
 	const settledKey = useSettled(apps[app] ? apps[app].key : undefined, TIMING.appColorSettleMs);
 	const appColor = useAppColor(follows ? apps.find((item) => item.key === settledKey) : undefined);
-	const style = accent === 'app' ? {'--color-accent': appAccent(appColor, theme)} : undefined;
+	const style = accent === 'app' ? {'--color-accent': appAccent(appColor)} : undefined;
 
 	// The pointer does not select by pointing, which would turn the wheel beneath it: a
 	// click turns the wheel to the app, and a click on the app in the middle opens it. In
@@ -201,7 +201,7 @@ export function Home({
 		<div class={classes} style={style}>
 			{glow > 0 && apps.length > 0 && (
 				<Glow
-					color={glowColor(appColor, accentColor(accent, theme), theme)}
+					color={glowColor(appColor, accentColor(accent))}
 					strength={glow / 100}
 					x={layout.centreX}
 					y={layout.centreY}

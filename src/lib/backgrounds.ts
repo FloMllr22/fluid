@@ -1,13 +1,7 @@
 // Pure helpers for the background: the photos found in the bundle, the keys of the
 // choices in Settings, what to draw for a stored choice, and the slideshow's order.
 
-import {
-	BACKGROUND_COLORS,
-	type Background,
-	type BackgroundColor,
-	defaultBackground,
-	type Theme
-} from '../state/settings';
+import {BACKGROUND_COLORS, type Background, type BackgroundColor, defaultBackground} from '../state/settings';
 
 /** A photo that comes with fluid: full screen, and a small one for its tile. */
 export interface Photo {
@@ -66,30 +60,14 @@ export function backgroundFromKey(key: string): Background | null {
 	return null;
 }
 
-/** The light theme's only background. */
-export const LIGHT_BACKGROUND: Background = {kind: 'color', color: 'light'};
-
-/** What to draw for the stored background, given the theme and the photos this fluid has.
- *  The light theme always has its own light background; the stored one waits for a dark
- *  theme, which never has the light one (dark text is not readable there). A photo that is
- *  gone falls back to the default, a slideshow needs two photos (one is shown as itself,
- *  none falls back to the default). */
-export function shownBackground(background: Background, photoIds: string[], theme: Theme): Background {
-	if (theme === 'light') return {...LIGHT_BACKGROUND};
-	if (background.kind === 'color' && background.color === 'light') return defaultBackground();
+/** What to draw for the stored background, given the photos this fluid has: a photo that
+ *  is gone falls back to the default, a slideshow needs two photos (one is shown as
+ *  itself, none falls back to the default). */
+export function shownBackground(background: Background, photoIds: string[]): Background {
 	if (background.kind === 'photo' && photoIds.indexOf(background.id) === -1) return defaultBackground();
 	if (background.kind === 'slideshow' && photoIds.length < 2)
 		return photoIds.length === 1 ? {kind: 'photo', id: photoIds[0]} : defaultBackground();
 	return background;
-}
-
-/** The background to store when the theme changes: the plain colour of a dark theme
- *  follows it (dark for Dark, black for OLED black), anything else stays as it is. The
- *  light theme stores nothing of its own (see shownBackground). */
-export function backgroundForTheme(background: Background, theme: Theme): Background {
-	if (theme === 'light' || background.kind !== 'color') return background;
-	if (background.color !== 'dark' && background.color !== 'black') return background;
-	return {kind: 'color', color: theme === 'black' ? 'black' : 'dark'};
 }
 
 /** The next round of a slideshow: every photo once, shuffled, and never starting with

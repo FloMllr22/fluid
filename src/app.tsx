@@ -11,7 +11,7 @@ import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
 import {sameApps, withNewApps} from './lib/apps';
-import {backgroundForTheme, backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
+import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
@@ -218,15 +218,10 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	// Live TV is named in the user's language, again when it changes
 	const homeSources = useMemo(() => shownInputs.map(inputTile), [shownInputs, settings.language]);
 
-	const theme = settings.appearance.theme;
-	// the stored background as it can be drawn: a photo this fluid lacks falls back, the
-	// light theme has its own
-	const background = useMemo(
-		() => shownBackground(settings.background, PHOTO_IDS, theme),
-		[settings.background, theme]
-	);
+	// the stored background as it can be drawn: a photo this fluid lacks falls back
+	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
 	// named in the user's language, again when it changes
-	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS, theme), [settings.language, theme]);
+	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), [settings.language]);
 
 	const tabs: SettingsTab[] = useMemo(
 		() => [
@@ -252,8 +247,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				label: t('settings.background'),
 				items: backgroundChoices,
 				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(background)),
-				emptyText: t('rows.empty'), // never: the colours are always there
-				note: theme === 'light' ? t('settings.background.lightOnly') : undefined
+				emptyText: t('rows.empty') // never: the colours are always there
 			}
 		],
 		[
@@ -266,8 +260,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			favoriteCount,
 			backgroundChoices,
 			background,
-			settings.language,
-			theme
+			settings.language
 		]
 	);
 
@@ -295,10 +288,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const onToggle = useCallback(
 		(tabId: string, key: string, order: string[]) => {
 			if (tabId === TAB.background) {
-				// the light theme's one background is never stored: the stored one waits for a
-				// dark theme
 				const picked = backgroundFromKey(key);
-				if (picked && theme !== 'light') updateSettings({...settings, background: picked});
+				if (picked) updateSettings({...settings, background: picked});
 			} else if (tabId === TAB.apps) {
 				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key, order);
 				// a hidden app is no favourite any more
@@ -309,7 +300,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				updateSettings({...settings, sourceIds: toggleId(current, key, order)});
 			}
 		},
-		[settings, apps, inputs, theme, updateSettings]
+		[settings, apps, inputs, updateSettings]
 	);
 
 	const onBackgroundError = useCallback(() => showToast(t('background.loadFailed'), 'error'), [showToast]);
@@ -336,15 +327,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[settings, updateSettings]
 	);
 
-	/** A new theme takes the plain background of a dark theme along (see backgroundForTheme). */
 	const onAppearance = useCallback(
-		(appearance: Appearance) => {
-			const background =
-				appearance.theme === settings.appearance.theme
-					? settings.background
-					: backgroundForTheme(settings.background, appearance.theme);
-			updateSettings({...settings, appearance, background});
-		},
+		(appearance: Appearance) => updateSettings({...settings, appearance}),
 		[settings, updateSettings]
 	);
 

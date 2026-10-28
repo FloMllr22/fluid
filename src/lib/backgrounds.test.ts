@@ -1,15 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {Background} from '../state/settings';
-import {
-	backgroundForTheme,
-	backgroundFromKey,
-	backgroundKey,
-	LIGHT_BACKGROUND,
-	lightLayer,
-	photosFrom,
-	shownBackground,
-	slideOrder
-} from './backgrounds';
+import {backgroundFromKey, backgroundKey, lightLayer, photosFrom, shownBackground, slideOrder} from './backgrounds';
 
 const dark: Background = {kind: 'color', color: 'dark'};
 
@@ -50,7 +41,6 @@ describe('background keys', () => {
 			{kind: 'color', color: 'blue'},
 			{kind: 'color', color: 'dusk'},
 			{kind: 'color', color: 'duskMoving'},
-			LIGHT_BACKGROUND,
 			{kind: 'photo', id: 'lake'},
 			{kind: 'slideshow'}
 		];
@@ -65,56 +55,18 @@ describe('background keys', () => {
 
 describe('shownBackground', () => {
 	it('shows a colour, and a photo that is there, as they are', () => {
-		expect(shownBackground({kind: 'color', color: 'blue'}, [], 'dark')).toEqual({kind: 'color', color: 'blue'});
-		expect(shownBackground({kind: 'photo', id: 'lake'}, ['dunes', 'lake'], 'black')).toEqual({
-			kind: 'photo',
-			id: 'lake'
-		});
+		expect(shownBackground({kind: 'color', color: 'blue'}, [])).toEqual({kind: 'color', color: 'blue'});
+		expect(shownBackground({kind: 'photo', id: 'lake'}, ['dunes', 'lake'])).toEqual({kind: 'photo', id: 'lake'});
 	});
 
 	it('falls back to the default for a photo that is gone', () => {
-		expect(shownBackground({kind: 'photo', id: 'gone'}, ['lake'], 'dark')).toEqual(dark);
+		expect(shownBackground({kind: 'photo', id: 'gone'}, ['lake'])).toEqual(dark);
 	});
 
 	it('shows a slideshow only with two photos or more', () => {
-		expect(shownBackground({kind: 'slideshow'}, ['dunes', 'lake'], 'dark')).toEqual({kind: 'slideshow'});
-		expect(shownBackground({kind: 'slideshow'}, ['lake'], 'dark')).toEqual({kind: 'photo', id: 'lake'});
-		expect(shownBackground({kind: 'slideshow'}, [], 'dark')).toEqual(dark);
-	});
-
-	it('is always the light one with the light theme', () => {
-		for (const background of [dark, {kind: 'photo', id: 'lake'} as Background, {kind: 'slideshow'} as Background])
-			expect(shownBackground(background, ['dunes', 'lake'], 'light')).toEqual(LIGHT_BACKGROUND);
-	});
-
-	it('is never the light one with a dark theme', () => {
-		expect(shownBackground(LIGHT_BACKGROUND, [], 'dark')).toEqual(dark);
-		expect(shownBackground(LIGHT_BACKGROUND, [], 'black')).toEqual(dark);
-	});
-});
-
-describe('backgroundForTheme', () => {
-	const black: Background = {kind: 'color', color: 'black'};
-
-	it('lets the plain colour of a dark theme follow it', () => {
-		expect(backgroundForTheme(dark, 'black')).toEqual(black);
-		expect(backgroundForTheme(black, 'dark')).toEqual(dark);
-		expect(backgroundForTheme(dark, 'dark')).toEqual(dark);
-	});
-
-	it('leaves any other background as it is', () => {
-		for (const background of [
-			{kind: 'color', color: 'blue'},
-			{kind: 'color', color: 'duskMoving'},
-			{kind: 'photo', id: 'lake'},
-			{kind: 'slideshow'}
-		] as Background[])
-			for (const theme of ['dark', 'black', 'light'] as const)
-				expect(backgroundForTheme(background, theme)).toEqual(background);
-	});
-
-	it('keeps the stored one for later with the light theme', () => {
-		expect(backgroundForTheme(black, 'light')).toEqual(black);
+		expect(shownBackground({kind: 'slideshow'}, ['dunes', 'lake'])).toEqual({kind: 'slideshow'});
+		expect(shownBackground({kind: 'slideshow'}, ['lake'])).toEqual({kind: 'photo', id: 'lake'});
+		expect(shownBackground({kind: 'slideshow'}, [])).toEqual(dark);
 	});
 });
 

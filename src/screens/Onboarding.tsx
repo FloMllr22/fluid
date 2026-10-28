@@ -182,7 +182,7 @@ export function Onboarding({
 			<div class="onboarding__step">{t('onboarding.step', {step: step + 1, count: STEPS.length})}</div>
 			<div class={`onboarding__main onboarding__main--${name}`}>
 				<h1 class="onboarding__title">{t(TEXTS[name].title)}</h1>
-				<p class="onboarding__lead">{tab?.note || t(TEXTS[name].lead)}</p>
+				<p class="onboarding__lead">{t(TEXTS[name].lead)}</p>
 				{name === 'language' && (
 					<div class="onboarding__choices">
 						<LanguagePills

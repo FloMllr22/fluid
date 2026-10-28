@@ -15,7 +15,6 @@ import {
 	SETTINGS_KEY,
 	SETTINGS_VERSION,
 	saveSettings,
-	THEMES,
 	type WeatherSettings
 } from './settings';
 
@@ -52,7 +51,7 @@ const dark: Background = {kind: 'color', color: 'dark'};
 const off: WeatherSettings = {enabled: false, place: null};
 
 /** how fluid looked before there was a choice */
-const plain: Appearance = {theme: 'dark', accent: 'ice', glow: 0, iconSize: 100, reduceMotion: false};
+const plain: Appearance = {accent: 'ice', glow: 0, iconSize: 100, reduceMotion: false};
 
 const berlin: Place = {name: 'Berlin', region: 'Land Berlin', country: 'Germany', latitude: 52.52, longitude: 13.41};
 
@@ -75,7 +74,7 @@ describe('loadSettings', () => {
 			background: {kind: 'photo', id: 'lake'} as Background,
 			weather: {enabled: true, place: berlin},
 			language: 'de' as const,
-			appearance: {theme: 'light', accent: 'app', glow: 30, iconSize: 115, reduceMotion: true} as Appearance
+			appearance: {accent: 'app', glow: 30, iconSize: 115, reduceMotion: true} as Appearance
 		};
 		expect(saveSettings(settings)).toBe(true);
 		expect(loadSettings()).toEqual({settings, unreadable: false, migrated: false, firstStart: false});
@@ -344,12 +343,7 @@ describe('appearance', () => {
 		expect(defaultSettings().appearance).toEqual(plain);
 	});
 
-	it('offers the themes as the mockup orders them', () => {
-		expect(THEMES).toEqual(['black', 'dark', 'light']);
-	});
-
 	it('reads back every value of every field', () => {
-		for (const theme of THEMES) expect(read({...plain, theme}).theme).toBe(theme);
 		for (const accent of ACCENTS) expect(read({...plain, accent}).accent).toBe(accent);
 		for (const glow of GLOW_LEVELS) expect(read({...plain, glow}).glow).toBe(glow);
 		for (const iconSize of ICON_SIZES) expect(read({...plain, iconSize}).iconSize).toBe(iconSize);
@@ -357,7 +351,7 @@ describe('appearance', () => {
 	});
 
 	it('falls back field by field, also for a value of a later fluid', () => {
-		expect(read({...plain, theme: 'sepia', glow: 30})).toEqual({...plain, glow: 30});
+		expect(read({...plain, glow: 75, iconSize: 115})).toEqual({...plain, iconSize: 115});
 		expect(read({...plain, accent: 'teal', iconSize: 85})).toEqual({...plain, iconSize: 85});
 		expect(read({...plain, glow: '30', iconSize: 120})).toEqual(plain);
 		expect(read({...plain, reduceMotion: 'true'}).reduceMotion).toBe(false);
@@ -369,6 +363,8 @@ describe('appearance', () => {
 
 	it('keeps only its own fields', () => {
 		expect(read({...plain, extra: 1})).toEqual(plain);
+		// a theme, as a build of fluid that never came out stored it
+		expect(read({...plain, theme: 'light'})).toEqual(plain);
 	});
 });
 
