@@ -85,6 +85,9 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	/** the first start: the onboarding runs, and the settings are a draft until it is done */
 	const [onboarding, setOnboarding] = useState(loaded.firstStart);
 	const draft = useRef(loaded.firstStart);
+	/** the settings as last changed, also before they are drawn: the onboarding may choose
+	 *  and finish at once */
+	const latest = useRef(loaded.settings);
 	const toastTimer = useRef(0);
 	const weather = useWeather(settings.weather);
 
@@ -99,6 +102,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	 *  again if the TV is switched off halfway. */
 	const updateSettings = useCallback(
 		(next: UserSettings) => {
+			latest.current = next;
 			setSettings(next);
 			if (!draft.current && !saveSettings(next)) showToast(t('settings.saveFailed'), 'error');
 		},
@@ -108,8 +112,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const finishOnboarding = useCallback(() => {
 		draft.current = false;
 		setOnboarding(false);
-		if (!saveSettings(settings)) showToast(t('settings.saveFailed'), 'error');
-	}, [settings, showToast]);
+		if (!saveSettings(latest.current)) showToast(t('settings.saveFailed'), 'error');
+	}, [showToast]);
 
 	// The look follows the settings before the next frame is drawn, the first one included.
 	useLayoutEffect(() => applyAppearance(settings.appearance), [settings.appearance]);
@@ -480,6 +484,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					background={tabById(TAB.background)}
 					onToggle={onToggle}
 					onReorder={onReorder}
+					appearance={settings.appearance}
+					onAppearance={onAppearance}
 					onFinish={finishOnboarding}
 					active
 				/>

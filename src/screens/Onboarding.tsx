@@ -1,11 +1,12 @@
 import {useCallback, useState} from 'preact/hooks';
 import {Grid} from '../components/Grid';
 import {LanguagePills} from '../components/LanguageChoice';
+import {ThemeCards} from '../components/ThemeCards';
 import {type SettingsTab, useGridTab} from '../hooks/useGridTab';
 import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {type MessageKey, t} from '../i18n';
-import {LANGUAGE_CHOICES, type LanguageChoice} from '../state/settings';
+import {type Appearance, LANGUAGE_CHOICES, type LanguageChoice, THEMES} from '../state/settings';
 import {LAYOUT} from '../theme/tokens';
 
 interface Props {
@@ -18,19 +19,23 @@ interface Props {
 	background: SettingsTab;
 	onToggle: (tabId: string, key: string, order: string[]) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
+	/** how fluid looks, and what changes it at once, as the Appearance tab does */
+	appearance: Appearance;
+	onAppearance: (appearance: Appearance) => void;
 	/** the last step is done: store the settings and show Home */
 	onFinish: () => void;
 	active: boolean;
 }
 
-const STEPS = ['language', 'apps', 'background'] as const;
+const STEPS = ['language', 'apps', 'background', 'style'] as const;
 type Step = (typeof STEPS)[number];
 
 /** The words of each step. */
 const TEXTS: Record<Step, {title: MessageKey; lead: MessageKey}> = {
 	language: {title: 'onboarding.language.title', lead: 'onboarding.language.lead'},
 	apps: {title: 'onboarding.apps.title', lead: 'onboarding.apps.lead'},
-	background: {title: 'onboarding.background.title', lead: 'onboarding.background.lead'}
+	background: {title: 'onboarding.background.title', lead: 'onboarding.background.lead'},
+	style: {title: 'onboarding.style.title', lead: 'onboarding.style.lead'}
 };
 
 /** Above the grid: the Apps step's re-order button, and Next (or Finish on the last step). */
@@ -39,12 +44,14 @@ type ButtonId = 'reorder' | 'next';
 /** Focus is on the buttons or in the grid. */
 type Zone = 'buttons' | 'grid';
 
-/** The first start: language, apps, background, one step at a time, as the onboarding
- *  mockups draw them. The language step offers the Language tab's choices: ← → choose,
- *  OK uses one and goes on. The Apps and Background steps are those tabs of Settings,
- *  with Next (Finish) above them: focus starts there, so OK goes on with what is chosen
+/** The first start: language, apps, background, style, one step at a time, as the
+ *  onboarding mockups draw them. The language step offers the Language tab's choices:
+ *  ← → choose, OK uses one and goes on. The Apps and Background steps are those tabs of
+ *  Settings, with Next above them: focus starts there, so OK goes on with what is chosen
  *  (all apps, the dark background), and ↓ leads into the grid, which works as in
- *  Settings. Back returns to the step before (in re-order mode it first undoes, as in
+ *  Settings. The style step shows a card per theme: ← → choose one, which shows at once,
+ *  OK finishes with it (the pointer: pointing frames a card, a click takes it and
+ *  finishes). Back returns to the step before (in re-order mode it first undoes, as in
  *  Settings). Every choice shows at once; App stores them all when the last step is
  *  done. */
 export function Onboarding({
@@ -55,6 +62,8 @@ export function Onboarding({
 	background,
 	onToggle,
 	onReorder,
+	appearance,
+	onAppearance,
 	onFinish,
 	active
 }: Props) {
@@ -62,6 +71,7 @@ export function Onboarding({
 	const [zone, setZone] = useState<Zone>('buttons');
 	const [button, setButton] = useState<ButtonId>('next');
 	const [pill, setPill] = useState(() => Math.max(0, LANGUAGE_CHOICES.indexOf(language)));
+	const [card, setCard] = useState(() => Math.max(0, THEMES.indexOf(appearance.theme)));
 	const name = STEPS[step];
 	const last = step === STEPS.length - 1;
 	const tab = name === 'apps' ? apps : name === 'background' ? background : undefined;
@@ -87,6 +97,18 @@ export function Onboarding({
 		goTo(step + 1);
 	};
 
+	/** Shows the theme of card `i` at once. */
+	const showTheme = (i: number) => {
+		setCard(i);
+		if (THEMES[i] !== appearance.theme) onAppearance({...appearance, theme: THEMES[i]});
+	};
+
+	/** Takes the theme of card `i`, and finishes. */
+	const chooseTheme = (i: number) => {
+		showTheme(i);
+		goTo(step + 1);
+	};
+
 	/** Enter or leave re-order mode, entering with the tile `lift` picked up (holding OK or
 	 *  the pointer's button on it); with nothing to re-order, focus stays on the button. */
 	const toggleReorder = (lift?: number) => {
@@ -100,12 +122,14 @@ export function Onboarding({
 
 	const onPress = () => {
 		if (name === 'language') chooseLanguage(pill);
+		else if (name === 'style') chooseTheme(card);
 		else if (zone === 'buttons') pressButton(focused);
 		else grid.activate(grid.index);
 	};
 
 	const onLongPress = () => {
 		if (name === 'language') chooseLanguage(pill);
+		else if (name === 'style') chooseTheme(card);
 		else if (zone === 'buttons') pressButton(focused);
 		else if (grid.canReorder) toggleReorder(grid.index);
 	};
@@ -128,6 +152,13 @@ export function Onboarding({
 				return true;
 			}
 
+			if (name === 'style') {
+				const lastCard = THEMES.length - 1;
+				if (key === 'left') showTheme(clamp(card - 1, 0, lastCard));
+				else if (key === 'right') showTheme(clamp(card + 1, 0, lastCard));
+				return true;
+			}
+
 			if (grid.held !== -1) {
 				grid.arrow(key);
 				return true;
@@ -144,30 +175,23 @@ export function Onboarding({
 			if (!grid.arrow(key)) setZone('buttons');
 			return true;
 		},
-		[step, name, zone, focused, grid]
+		[step, name, zone, focused, grid, card, appearance, onAppearance]
 	);
 
 	useKeys(handleKey, active);
 
-	const hint = t(
-		name === 'language'
-			? 'onboarding.hint.language'
-			: grid.held !== -1
-				? 'settings.hint.holding'
-				: grid.reordering
-					? 'settings.hint.reorder'
-					: zone === 'grid'
-						? name === 'apps'
-							? 'onboarding.hint.appsGrid'
-							: 'onboarding.hint.backgroundGrid'
-						: focused === 'reorder'
-							? 'onboarding.hint.reorderButton'
-							: last
-								? 'onboarding.hint.finish'
-								: grid.items.length === 0
-									? 'onboarding.hint.nextOnly'
-									: 'onboarding.hint.next'
-	);
+	/** the key hint: what OK does where focus is, and where ↓ leads */
+	const hintKey = (): MessageKey => {
+		if (name === 'language') return 'onboarding.hint.language';
+		if (name === 'style') return 'onboarding.hint.style';
+		if (grid.held !== -1) return 'settings.hint.holding';
+		if (grid.reordering) return 'settings.hint.reorder';
+		if (zone === 'grid') return name === 'apps' ? 'onboarding.hint.appsGrid' : 'onboarding.hint.backgroundGrid';
+		if (focused === 'reorder') return 'onboarding.hint.reorderButton';
+		if (grid.items.length === 0) return 'onboarding.hint.nextOnly';
+		return name === 'apps' ? 'onboarding.hint.next' : 'onboarding.hint.nextBackground';
+	};
+	const hint = t(hintKey());
 
 	const buttonLabel = (id: ButtonId) =>
 		id === 'next'
@@ -193,6 +217,11 @@ export function Onboarding({
 							onPoint={setPill}
 							onPick={chooseLanguage}
 						/>
+					</div>
+				)}
+				{name === 'style' && (
+					<div class="onboarding__choices onboarding__choices--style">
+						<ThemeCards chosen={appearance.theme} focus={card} onPoint={setCard} onPick={chooseTheme} />
 					</div>
 				)}
 				{tab && (

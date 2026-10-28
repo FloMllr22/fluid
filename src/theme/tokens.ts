@@ -223,7 +223,9 @@ export const FONT = {
 	onboardingStep: 26, // "Step 1 of 3"
 	onboardingWelcome: 96, // the first step's title
 	onboardingTitle: 80,
-	onboardingLead: 32
+	onboardingLead: 32,
+	themeCardClock: 32, // the time on a theme's card (onboarding)
+	themeCardLabel: 30 // its name below
 } as const;
 
 export const LAYOUT = {
@@ -297,6 +299,13 @@ export const LAYOUT = {
 	tileLabelGap: 14, // between a tile and its name
 	tileLabelHeight: 46, // its name: two lines of FONT.tileLabel at line height 1.2, in whole pixels
 	onboardingGridColumns: 9,
+	// the onboarding's style step: a card per theme, a small Home of 16:9
+	themeCardWidth: 480,
+	themeCardHeight: 270,
+	themeCardRadius: 30,
+	themeCardGap: 48,
+	themeCardApp: 40,
+	themeCardAppSelected: 76,
 	gridRowGap: 32, // vertical space between rows of a grid of tiles
 	gridBleed: 28, // room around a grid for its focused or lifted tile
 	liftOffset: -6 // a tile picked up in re-order mode rises by this much
@@ -307,6 +316,7 @@ export const MOTION = {
 	scrollMs: 260,
 	menuInMs: 160, // a menu opening
 	focusScale: 1.12,
+	cardFocusScale: 1.04, // a theme's card in the onboarding
 	liftScale: 1.2, // a tile picked up in re-order mode
 	wheelTurnMs: 500, // the wheel turning another app to the middle
 	wheelGrowMs: 400, // the selected app's icon growing; an app fading in or out
