@@ -1566,98 +1566,6 @@ body {
 	margin-right: 0;
 }
 
-/* ---------- theme cards ---------- */
-
-/* The onboarding's style step: each theme as a small Home, its name below; the focused
-   card framed and a little larger, the theme in use ticked. */
-.themes {
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-}
-.theme-card {
-	width: var(--layout-theme-card-width);
-	margin: 0 calc(var(--layout-theme-card-gap) / 2);
-	text-align: center;
-	text-shadow: none;
-}
-.theme-card__preview {
-	position: relative;
-	display: block;
-	height: var(--layout-theme-card-height);
-	border-radius: var(--layout-theme-card-radius);
-	overflow: hidden;
-	box-shadow: 0 0 0 1px var(--color-surface-edge);
-	transform: scale(1);
-	transition: transform var(--motion-focus-ms) ease-out;
-}
-.theme-card--focused .theme-card__preview {
-	box-shadow:
-		0 0 0 5px var(--color-focus-fill),
-		0 30px 60px var(--color-focus-shadow);
-	transform: scale(var(--motion-card-focus-scale));
-}
-.theme-card__clock {
-	position: absolute;
-	left: 26px;
-	top: 20px;
-	font-size: var(--font-theme-card-clock);
-	font-weight: 400;
-}
-.theme-card__apps {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	padding-top: 40px;
-}
-.theme-card__app {
-	width: var(--layout-theme-card-app);
-	height: var(--layout-theme-card-app);
-	margin: 0 6px;
-	border-radius: 10px;
-	opacity: 0.5;
-}
-.theme-card__app--selected {
-	width: var(--layout-theme-card-app-selected);
-	height: var(--layout-theme-card-app-selected);
-	border-radius: 18px;
-	opacity: 1;
-}
-.theme-card__label {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	margin-top: 28px;
-	font-size: var(--font-theme-card-label);
-	font-weight: 500;
-	color: var(--color-text-secondary);
-}
-.theme-card--focused .theme-card__label {
-	font-weight: 700;
-	color: var(--color-text-primary);
-}
-.theme-card__check {
-	width: 28px;
-	height: 28px;
-	margin-right: 12px;
-}
-.theme-card__check svg {
-	width: 100%;
-	height: 100%;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 3;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
 /* ---------- onboarding ---------- */
 
 /* As in the mockups, over the dimmed background: the name and the step at the top, title
@@ -1716,9 +1624,6 @@ body {
 }
 .onboarding__choices {
 	margin-top: 80px;
-}
-.onboarding__choices--style {
-	margin-top: 88px;
 }
 .onboarding__buttons {
 	display: flex;
