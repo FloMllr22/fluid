@@ -81,7 +81,7 @@ export function useGridTab(
 	onReorder: (tabId: string, keys: string[]) => void,
 	cols: number
 ): GridTab {
-	const [index, setIndex] = useState(0);
+	const [focused, setIndex] = useState(0);
 	const [reordering, setReorderingState] = useState(false);
 	const [held, setHeld] = useState<Held | null>(null);
 	const [fixed, setFixed] = useState<Fixed | null>(null);
@@ -94,6 +94,8 @@ export function useGridTab(
 			: canReorder
 				? choiceOrder(tab.items, tab.shown, fixedKeys)
 				: tab.items;
+	// kept on a tile when the grid gets shorter under it (an app uninstalled meanwhile)
+	const index = Math.min(focused, Math.max(0, items.length - 1));
 	const keysOf = (list: TileModel[]) => list.map((tile) => tile.key);
 
 	/** Move the held tile to `to`, updating the home screen as it goes. */
