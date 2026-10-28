@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'preact/hooks';
+import {AppearancePanel} from './components/AppearancePanel';
 import type {AppMenuAction} from './components/AppMenu';
 import {Background} from './components/Background';
 import {LanguagePanel} from './components/LanguageChoice';
@@ -10,7 +11,7 @@ import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
 import {sameApps, withNewApps} from './lib/apps';
-import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
+import {backgroundForTheme, backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
@@ -18,7 +19,13 @@ import {type AppEntry, type InputSource, type Place, PlatformError, platform} fr
 import {Home, type MovingApp} from './screens/Home';
 import {Onboarding} from './screens/Onboarding';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
-import {type LanguageChoice, type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
+import {
+	type Appearance,
+	type LanguageChoice,
+	type LoadedSettings,
+	saveSettings,
+	type Settings as UserSettings
+} from './state/settings';
 import {applyAppearance} from './theme/appearance';
 import {PHOTOS} from './theme/backgrounds';
 
@@ -327,7 +334,25 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		[settings, updateSettings]
 	);
 
+	/** A new theme takes the plain background of a dark theme along (see backgroundForTheme). */
+	const onAppearance = useCallback(
+		(appearance: Appearance) => {
+			const background =
+				appearance.theme === settings.appearance.theme
+					? settings.background
+					: backgroundForTheme(settings.background, appearance.theme);
+			updateSettings({...settings, appearance, background});
+		},
+		[settings, updateSettings]
+	);
+
 	const panels: SettingsPanel[] = [
+		{
+			id: 'appearance',
+			label: t('settings.appearance'),
+			hint: t('settings.hint.appearance'),
+			render: (nav) => <AppearancePanel appearance={settings.appearance} onChange={onAppearance} {...nav} />
+		},
 		{
 			id: 'weather',
 			label: t('settings.weather'),

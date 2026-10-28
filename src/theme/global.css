@@ -1346,6 +1346,62 @@ body {
 	background: var(--color-focus-fill);
 }
 
+/* ---------- appearance ---------- */
+
+/* A row's value on the right, between arrows while the row has focus; wide enough for the
+   longest name, so that the arrows stay put as it changes. */
+.value {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: var(--font-option-label);
+	color: var(--color-text-secondary);
+}
+.option--focused .value {
+	color: var(--color-focus-text);
+	font-weight: 600;
+}
+.value__label {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--layout-value-width);
+	white-space: nowrap;
+}
+.value__swatch {
+	flex: 0 0 auto;
+	width: var(--layout-value-swatch);
+	height: var(--layout-value-swatch);
+	margin-right: 14px;
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px var(--color-surface-edge);
+}
+.value__arrow {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--layout-value-arrow);
+	height: var(--layout-value-arrow);
+	opacity: 1;
+	transition: opacity var(--motion-focus-ms) ease-out;
+}
+.value__arrow--off {
+	opacity: 0;
+	pointer-events: none;
+}
+.value__arrow svg {
+	width: 28px;
+	height: 28px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2.4;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
 /* ---------- weather settings ---------- */
 
 /* rows like the options: the switch, the search field, the places found */

@@ -161,8 +161,10 @@ export const THEME_COLOR: Record<Theme, Partial<Record<ColorToken, string>>> = {
 		iconShadowFocused: 'rgba(22, 24, 29, 0.26)',
 		liftedShadow: 'rgba(22, 24, 29, 0.22)',
 		menuShadow: 'rgba(22, 24, 29, 0.18)',
-		focusShadow: 'rgba(22, 24, 29, 0.28)',
-		liftShadow: 'rgba(22, 24, 29, 0.35)',
+		// none under what has focus, and little under a lifted tile: a grid cuts them off at
+		// its edge, which would show on a light ground (the dark pill and frame stand out)
+		focusShadow: 'rgba(22, 24, 29, 0)',
+		liftShadow: 'rgba(22, 24, 29, 0.12)',
 		wheelShade: 'rgba(236, 238, 242, 0)',
 		wheelShadeEdge: 'rgba(236, 238, 242, 0)',
 		screenDim: 'rgba(236, 238, 242, 0.6)',
@@ -276,6 +278,9 @@ export const LAYOUT = {
 	settingsGridHeight: 738, // below the button: three rows of tiles, and the room around them
 	optionHeight: 100, // a row of the options, the weather and the places (at least)
 	optionRadius: 28,
+	valueWidth: 340, // a row's value (Appearance): room for the longest name and its colour
+	valueSwatch: 26, // the colour beside an accent's name
+	valueArrow: 44, // the arrows either side of it
 	fieldHeight: 60, // the place search field
 	placeHeight: 76, // a place found by the search
 	pillHeight: 80, // a language choice in Settings
