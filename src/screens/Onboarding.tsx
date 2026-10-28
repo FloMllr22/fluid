@@ -16,7 +16,7 @@ interface Props {
 	/** the Apps and Background tabs of Settings, and what changes them */
 	apps: SettingsTab;
 	background: SettingsTab;
-	onToggle: (tabId: string, key: string) => void;
+	onToggle: (tabId: string, key: string, order: string[]) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
 	/** the last step is done: store the settings and show Home */
 	onFinish: () => void;
@@ -87,9 +87,10 @@ export function Onboarding({
 		goTo(step + 1);
 	};
 
-	/** Enter or leave re-order mode; with nothing to re-order, focus stays on the button. */
-	const toggleReorder = () => {
-		if (grid.setReordering(!grid.reordering) === 0) setZone('buttons');
+	/** Enter or leave re-order mode, entering with the tile `lift` picked up (holding OK or
+	 *  the pointer's button on it); with nothing to re-order, focus stays on the button. */
+	const toggleReorder = (lift?: number) => {
+		if (grid.setReordering(!grid.reordering, lift) === 0) setZone('buttons');
 	};
 
 	const pressButton = (id: ButtonId) => {
@@ -106,7 +107,7 @@ export function Onboarding({
 	const onLongPress = () => {
 		if (name === 'language') chooseLanguage(pill);
 		else if (zone === 'buttons') pressButton(focused);
-		else if (grid.canReorder) toggleReorder();
+		else if (grid.canReorder) toggleReorder(grid.index);
 	};
 
 	useOkPress({onPress, onLongPress}, active);
@@ -237,6 +238,14 @@ export function Onboarding({
 									setZone('grid');
 									grid.activate(i);
 								}}
+								onHold={
+									grid.canReorder
+										? (i) => {
+												setZone('grid');
+												toggleReorder(i);
+											}
+										: undefined
+								}
 							/>
 						) : (
 							// loading, failed (the apps), or nothing there; Next works all the same

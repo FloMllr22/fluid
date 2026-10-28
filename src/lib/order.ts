@@ -12,9 +12,19 @@ export function moveItem<T>(list: T[], from: number, to: number): T[] {
 	return next;
 }
 
-/** Toggle an ID in an ordered list: remove if present, else append. */
-export function toggleId(ids: string[], id: string): string[] {
-	return ids.indexOf(id) === -1 ? ids.concat(id) : ids.filter((x) => x !== id);
+/** Toggle an ID in an ordered list: remove it if present, else add it where `order` (the
+ *  order the IDs are shown in to choose from) puts it among the others, or at the end. */
+export function toggleId(ids: string[], id: string, order: string[] = []): string[] {
+	if (ids.indexOf(id) !== -1) return ids.filter((x) => x !== id);
+	const at = order.indexOf(id);
+	if (at === -1) return ids.concat(id);
+	// right after the last of the others that comes before it
+	const before = order.slice(0, at);
+	let place = 0;
+	ids.forEach((x, i) => {
+		if (before.indexOf(x) !== -1) place = i + 1;
+	});
+	return ids.slice(0, place).concat(id, ids.slice(place));
 }
 
 /** `ids` with the favourites first; each group keeps its order. */

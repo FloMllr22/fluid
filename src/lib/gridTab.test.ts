@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {TileModel} from '../components/Tile';
-import {firstShownRow, gridStep, heldTarget, keepFocus, shownRows} from './gridTab';
+import {choiceOrder, firstShownRow, gridStep, heldTarget, keepFocus, shownRows} from './gridTab';
 
 const tiles = (...keys: string[]): TileModel[] => keys.map((key) => ({key, label: key}));
 
@@ -66,6 +66,30 @@ describe('keepFocus', () => {
 	it('goes to the first tile when its tile is not in the other list', () => {
 		expect(keepFocus(tiles('a', 'b', 'c'), tiles('a', 'c'), 1)).toBe(0);
 		expect(keepFocus(tiles(), tiles('a'), 0)).toBe(0);
+	});
+});
+
+describe('choiceOrder', () => {
+	const keys = (list: TileModel[]) => list.map((tile) => tile.key);
+	const all = tiles('a', 'b', 'c', 'd', 'e');
+
+	it("puts what is on Home first, in Home's order, then the rest in theirs", () => {
+		expect(keys(choiceOrder(all, tiles('d', 'a', 'c')))).toEqual(['d', 'a', 'c', 'b', 'e']);
+	});
+
+	it('keeps a fixed order, with tiles new to it last', () => {
+		expect(keys(choiceOrder(all.concat(tiles('f')), tiles('a'), ['c', 'a', 'e', 'b', 'd']))).toEqual([
+			'c',
+			'a',
+			'e',
+			'b',
+			'd',
+			'f'
+		]);
+	});
+
+	it('leaves out what is no longer there', () => {
+		expect(keys(choiceOrder(tiles('a', 'c'), tiles('b', 'c', 'a')))).toEqual(['c', 'a']);
 	});
 });
 

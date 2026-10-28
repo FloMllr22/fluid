@@ -15,6 +15,18 @@ export function gridStep(index: number, key: ArrowKey, count: number, cols: numb
 	return index + cols < count ? index + cols : index;
 }
 
+/** The tiles of a tab to choose from as its grid shows them: those on Home (`shown`) first,
+ *  in Home's order, then the rest in theirs, so that re-ordering starts from what the grid
+ *  shows. With `keys`, the order fixed while tiles are added and removed, so that none
+ *  moves under the focus; tiles not in it come last. */
+export function choiceOrder(items: TileModel[], shown: TileModel[], keys?: string[]): TileModel[] {
+	const first = keys || shown.map((tile) => tile.key);
+	const lead = first
+		.map((key) => items.find((tile) => tile.key === key))
+		.filter((tile): tile is TileModel => tile !== undefined);
+	return lead.concat(items.filter((tile) => first.indexOf(tile.key) === -1));
+}
+
 /** What a grid shows in up to `height` px, its `bleed` above and below included: as many
  *  whole rows as fit (at least one), each `step` high with the `gap` below it, and the
  *  height of just those rows with their bleed, so that no part of a further row shows. */

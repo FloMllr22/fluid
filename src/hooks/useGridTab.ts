@@ -1,6 +1,6 @@
 import {useState} from 'preact/hooks';
 import type {TileModel} from '../components/Tile';
-import {type ArrowKey, gridStep, heldTarget, keepFocus} from '../lib/gridTab';
+import {type ArrowKey, choiceOrder, gridStep, heldTarget, keepFocus} from '../lib/gridTab';
 import {moveItem} from '../lib/order';
 
 /** A tab of tiles to choose from (Apps, Sources, Background). */
@@ -28,9 +28,16 @@ interface Held {
 	original: string[];
 }
 
+/** The order of a tab's grid, fixed while tiles are added and removed. */
+interface Fixed {
+	tabId: string;
+	keys: string[];
+}
+
 /** A grid of tiles to choose from, as Settings and the onboarding show it. */
 export interface GridTab {
-	/** what the grid shows: everything, or while re-ordering only what is shown, in order */
+	/** what the grid shows: everything, what is on Home first and in its order (see
+	 *  choiceOrder), or while re-ordering only what is on Home */
 	items: TileModel[];
 	mode: 'select' | 'pick' | 'reorder';
 	/** the focused tile */
@@ -51,29 +58,42 @@ export interface GridTab {
 	/** Back: puts a picked-up tile back, otherwise leaves re-order mode. False when there
 	 *  was nothing to undo. */
 	back: () => boolean;
-	/** Enters or leaves re-order mode, keeping the focus on its tile; returns how many
+	/** Enters or leaves re-order mode, keeping the focus on its tile; entering with `lift`
+	 *  (a tile of the grid as it is) picks that tile up, if it is on Home. Returns how many
 	 *  tiles the grid then shows. */
-	setReordering: (next: boolean) => number;
+	setReordering: (next: boolean, lift?: number) => number;
 	/** Focus on the first tile, for another tab. */
 	reset: () => void;
 }
 
-/** The state and keys of one grid tab (none: an empty grid) of `cols` columns. OK adds or removes a tile
- *  (select), or picks one (a tab without a re-order button). In re-order mode the grid
- *  shows only what is shown on Home: OK picks a tile up, the arrows move it within its
- *  group (favourites stay in front), OK puts it down, Back puts it back. Changes go out
- *  as they happen, through `onToggle` and `onReorder`. */
+/** The state and keys of one grid tab (none: an empty grid) of `cols` columns. OK adds or
+ *  removes a tile (select), or picks one (a tab without a re-order button). A tab with
+ *  re-order mode shows what is on Home first, in Home's order, so that a tile keeps its
+ *  place when re-ordering starts; tiles added and removed stay where they are (the order
+ *  is fixed until the tab or the mode changes), and one added goes to Home where the grid
+ *  shows it (`onToggle` gets the grid's order). In re-order mode the grid shows only what
+ *  is on Home: OK picks a tile up, the arrows move it within its group (favourites stay
+ *  in front), OK puts it down, Back puts it back. Changes go out as they happen, through
+ *  `onToggle` and `onReorder`. */
 export function useGridTab(
 	tab: SettingsTab | undefined,
-	onToggle: (tabId: string, key: string) => void,
+	onToggle: (tabId: string, key: string, order: string[]) => void,
 	onReorder: (tabId: string, keys: string[]) => void,
 	cols: number
 ): GridTab {
 	const [index, setIndex] = useState(0);
 	const [reordering, setReorderingState] = useState(false);
 	const [held, setHeld] = useState<Held | null>(null);
+	const [fixed, setFixed] = useState<Fixed | null>(null);
 	const canReorder = tab !== undefined && tab.reorderLabel !== undefined;
-	const items = tab ? (reordering ? tab.shown : tab.items) : [];
+	const fixedKeys = fixed && tab && fixed.tabId === tab.id ? fixed.keys : undefined;
+	const items = !tab
+		? []
+		: reordering
+			? tab.shown
+			: canReorder
+				? choiceOrder(tab.items, tab.shown, fixedKeys)
+				: tab.items;
 	const keysOf = (list: TileModel[]) => list.map((tile) => tile.key);
 
 	/** Move the held tile to `to`, updating the home screen as it goes. */
@@ -101,7 +121,9 @@ export function useGridTab(
 	const activate = (i: number) => {
 		if (!tab || !items[i]) return;
 		if (!reordering) {
-			onToggle(tab.id, items[i].key);
+			const order = keysOf(items);
+			if (canReorder && !fixedKeys) setFixed({tabId: tab.id, keys: order});
+			onToggle(tab.id, items[i].key, order);
 			return;
 		}
 		if (held) {
@@ -134,16 +156,26 @@ export function useGridTab(
 		return false;
 	};
 
-	const setReordering = (next: boolean): number => {
+	const setReordering = (next: boolean, lift = -1): number => {
 		if (!tab || !canReorder || next === reordering) return items.length;
-		const target = next ? tab.shown : tab.items;
-		setIndex(keepFocus(items, target, index));
-		setHeld(null);
+		const target = next ? tab.shown : choiceOrder(tab.items, tab.shown);
+		const lifted = next && items[lift] ? keysOf(target).indexOf(items[lift].key) : -1;
+		if (lifted !== -1) {
+			setHeld({index: lifted, original: keysOf(tab.shown)});
+			setIndex(lifted);
+		} else {
+			setHeld(null);
+			setIndex(keepFocus(items, target, lift === -1 ? index : lift));
+		}
+		setFixed(null);
 		setReorderingState(next);
 		return target.length;
 	};
 
-	const reset = () => setIndex(0);
+	const reset = () => {
+		setIndex(0);
+		setFixed(null);
+	};
 
 	return {
 		items,

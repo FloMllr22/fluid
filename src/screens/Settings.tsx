@@ -42,7 +42,7 @@ interface Props {
 	options: OptionItem[];
 	active: boolean;
 	/** OK on an item: add or remove it, or on a tab for picking, pick it */
-	onToggle: (tabId: string, key: string) => void;
+	onToggle: (tabId: string, key: string, order: string[]) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
 	onOption: (optionId: string) => void;
 	onClose: () => void;
@@ -60,10 +60,11 @@ const COLS = LAYOUT.settingsGridColumns;
  *  ↑ ↓ choose a tab, → or OK go into its content, ← from its left edge comes back.
  *  Tabs: one grid tab for the apps and one for the sources, then Background, the panels,
  *  then Options if there are any.
- *  Grid tabs, select mode: everything available; OK adds/removes an item.
- *  Grid tabs, re-order mode (hold OK, or the button above the grid): only what's on the
- *  home screen, in order; OK picks an item up, arrows move it, OK puts it down. Hold OK
- *  or press Done to leave.
+ *  Grid tabs, select mode: everything available, what's on the home screen first and in
+ *  its order; OK adds/removes an item, which stays in place.
+ *  Grid tabs, re-order mode (hold OK or the pointer's button on an item, which is then
+ *  picked up, or the button above the grid): only what's on the home screen, in order;
+ *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave.
  *  Background tab: previews of every background; OK picks one, which shows at once.
  *  Panels: their own content, which takes the keys while focus is in it. */
 export function Settings({tabs, panels, options, active, onToggle, onReorder, onOption, onClose}: Props) {
@@ -119,8 +120,17 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 		grid.activate(grid.index);
 	};
 
+	/** Holding OK or the pointer's button on item `i`: re-order mode with it picked up (one
+	 *  not on the home screen cannot be moved, and is not), or back out of it. */
+	const hold = (i: number) => {
+		if (!grid.canReorder) return;
+		setZone(grid.setReordering(!grid.reordering, i) === 0 ? 'button' : 'content');
+	};
+
 	const onLongPress = () => {
-		if (tab) setMode(!grid.reordering);
+		if (!tab) return;
+		if (zone === 'content') hold(grid.index);
+		else setMode(!grid.reordering);
 	};
 
 	useOkPress({onPress, onLongPress}, active && !inPanel);
@@ -247,6 +257,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 							setZone('content');
 							grid.activate(i);
 						}}
+						onHold={grid.canReorder ? hold : undefined}
 					/>
 				)}
 				{tab && count === 0 && (

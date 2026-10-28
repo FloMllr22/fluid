@@ -251,19 +251,20 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 
 	const onSettings = useCallback(() => setScreen('settings'), []);
 
+	/** An app or source added goes to Home where the grid shows it (`order`). */
 	const onToggle = useCallback(
-		(tabId: string, key: string) => {
+		(tabId: string, key: string, order: string[]) => {
 			if (tabId === TAB.background) {
 				const picked = backgroundFromKey(key);
 				if (picked) updateSettings({...settings, background: picked});
 			} else if (tabId === TAB.apps) {
-				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key);
+				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key, order);
 				// a hidden app is no favourite any more
 				const favoriteIds = settings.favoriteIds.filter((id) => appIds.indexOf(id) !== -1);
 				updateSettings({...settings, appIds, favoriteIds});
 			} else {
 				const current = settings.sourceIds || inputs.map((s) => s.appId);
-				updateSettings({...settings, sourceIds: toggleId(current, key)});
+				updateSettings({...settings, sourceIds: toggleId(current, key, order)});
 			}
 		},
 		[settings, apps, inputs, updateSettings]

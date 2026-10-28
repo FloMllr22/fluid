@@ -37,6 +37,18 @@ describe('toggleId', () => {
 		expect(toggleId(['a', 'b', 'c'], 'b')).toEqual(['a', 'c']);
 	});
 
+	it('adds an ID where the order shown puts it', () => {
+		const order = ['a', 'b', 'c', 'd', 'e'];
+		expect(toggleId(['a', 'c', 'e'], 'b', order)).toEqual(['a', 'b', 'c', 'e']);
+		expect(toggleId(['a', 'c', 'e'], 'd', order)).toEqual(['a', 'c', 'd', 'e']);
+		expect(toggleId(['c', 'e'], 'a', order)).toEqual(['a', 'c', 'e']);
+		expect(toggleId(['a', 'c'], 'e', order)).toEqual(['a', 'c', 'e']);
+	});
+
+	it('appends an ID the order shown lacks', () => {
+		expect(toggleId(['a', 'c'], 'x', ['a', 'b', 'c'])).toEqual(['a', 'c', 'x']);
+	});
+
 	it('never mutates its input', () => {
 		const ids = ['a'];
 		toggleId(ids, 'b');

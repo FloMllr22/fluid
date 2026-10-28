@@ -15,6 +15,8 @@ interface Props {
 	selected: number;
 	onSelect: (index: number) => void;
 	onActivate: (index: number) => void;
+	/** the pointer's button held on a tile, like holding OK; without it, a click */
+	onHold?: (index: number) => void;
 	/** the most the visible part may take, with the room around it (gridBleed); it shows
 	 *  only whole rows, and is no higher than they are */
 	height: number;
@@ -37,6 +39,7 @@ export function Grid({
 	selected,
 	onSelect,
 	onActivate,
+	onHold,
 	height
 }: Props) {
 	const rows = Math.ceil(items.length / cols);
@@ -61,6 +64,7 @@ export function Grid({
 							dimmed={mode === 'select' && !checked}
 							onHover={() => onSelect(i)}
 							onActivate={() => onActivate(i)}
+							onLongPress={onHold && (() => onHold(i))}
 						/>
 					);
 				})}
