@@ -44,6 +44,60 @@ export function wheelPoint(offset: number, shape: WheelShape): {x: number; y: nu
 	return {x: shape.radius * (Math.cos(angle) - 1), y: shape.radius * Math.sin(angle)};
 }
 
+/** The wheel at its usual size, as the tokens have it. */
+export interface WheelBase {
+	shape: WheelShape;
+	icon: number;
+	iconRadius: number;
+	rowHeight: number;
+	gap: number;
+	gapRest: number;
+	safeX: number;
+	screenHeight: number;
+}
+
+/** The wheel as drawn for an icon size: its shape, the sizes of a row, and the middle of
+ *  the selected app's icon. */
+export interface WheelLayout {
+	shape: WheelShape;
+	/** an icon's size, and its corners' radius */
+	icon: number;
+	iconRadius: number;
+	/** a row's height, which is that of the selected app's pill */
+	rowHeight: number;
+	/** between icon and name, selected and not */
+	gap: number;
+	gapRest: number;
+	centreX: number;
+	centreY: number;
+}
+
+/** The wheel with its icons at `scale` of their usual size. Neighbours and the room around
+ *  the icon grow with it; the names keep their size. As many apps show either side as keep
+ *  the outermost icon as far in as at the usual size, and the wheel sits so far right that
+ *  this icon is on the safe area. */
+export function wheelLayout(scale: number, base: WheelBase): WheelLayout {
+	const size = (n: number) => Math.round(n * scale);
+	const icon = size(base.icon);
+	const step = base.shape.step * scale;
+	const gap = base.shape.gap * scale;
+	const limit = wheelPoint(base.shape.reach, base.shape).y + base.icon / 2;
+	const edge = (places: number) => base.shape.radius * Math.sin(((gap + places * step) * Math.PI) / 180) + icon / 2;
+	let reach = 1;
+	while (edge(reach + 1) <= limit + 0.5) reach++;
+	const shape: WheelShape = {radius: base.shape.radius, step, gap, reach};
+	return {
+		shape,
+		icon,
+		iconRadius: size(base.iconRadius),
+		rowHeight: size(base.rowHeight),
+		gap: size(base.gap),
+		gapRest: size(base.gapRest),
+		centreX: Math.round(base.safeX + icon / 2 - wheelPoint(reach, shape).x),
+		centreY: base.screenHeight / 2
+	};
+}
+
 /** How opaque the app `offset` places from the selected one is: the selected one fully,
  *  the others fainter the further out they are, by `step` per place from `rest`; those
  *  beyond `reach` not at all. */

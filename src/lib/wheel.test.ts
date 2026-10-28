@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {type WheelShape, wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from './wheel';
+import {type WheelBase, type WheelShape, wheelLayout, wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from './wheel';
 
 const shape: WheelShape = {radius: 1000, step: 5, gap: 2, reach: 3};
 
@@ -80,5 +80,53 @@ describe('wheelOpacity', () => {
 		expect(wheelOpacity(1, 5, 0.9, 0.06)).toBe(0.84);
 		expect(wheelOpacity(-5, 5, 0.9, 0.06)).toBe(0.6);
 		expect(wheelOpacity(6, 5, 0.9, 0.06)).toBe(0);
+	});
+});
+
+describe('wheelLayout', () => {
+	// the wheel as the tokens have it
+	const base: WheelBase = {
+		shape: {radius: 1100, step: 4.66, gap: 2, reach: 5},
+		icon: 76,
+		iconRadius: 21,
+		rowHeight: 96,
+		gap: 40,
+		gapRest: 26,
+		safeX: 96,
+		screenHeight: 1080
+	};
+	/** how far from the middle the outermost icon reaches */
+	const outermost = (layout: ReturnType<typeof wheelLayout>) =>
+		wheelPoint(layout.shape.reach, layout.shape).y + layout.icon / 2;
+
+	it('is the wheel as it is at the usual size', () => {
+		const layout = wheelLayout(1, base);
+		expect(layout.shape).toEqual(base.shape);
+		expect(layout).toMatchObject({icon: 76, iconRadius: 21, rowHeight: 96, gap: 40, gapRest: 26, centreY: 540});
+		// the outermost icons on the safe area
+		expect(layout.centreX + layout.icon / -2 + wheelPoint(5, base.shape).x).toBeCloseTo(96, 0);
+	});
+
+	it('grows the icons, their neighbours and the room around them, but shows fewer', () => {
+		const large = wheelLayout(1.15, base);
+		expect(large).toMatchObject({icon: 87, rowHeight: 110, gap: 46, gapRest: 30});
+		expect(large.shape.step).toBeCloseTo(4.66 * 1.15);
+		expect(large.shape.reach).toBe(4);
+	});
+
+	it('shrinks them, and shows more', () => {
+		const small = wheelLayout(0.85, base);
+		expect(small).toMatchObject({icon: 65, rowHeight: 82, gap: 34, gapRest: 22});
+		expect(small.shape.reach).toBe(6);
+	});
+
+	it('keeps the outermost icon as far in as at the usual size, on the safe area', () => {
+		const limit = outermost(wheelLayout(1, base));
+		for (const scale of [0.85, 1, 1.15]) {
+			const layout = wheelLayout(scale, base);
+			expect(outermost(layout), String(scale)).toBeLessThanOrEqual(limit + 0.5);
+			const left = layout.centreX - layout.icon / 2 + wheelPoint(layout.shape.reach, layout.shape).x;
+			expect(left, String(scale)).toBeCloseTo(96, 0);
+		}
 	});
 });

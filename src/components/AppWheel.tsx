@@ -1,7 +1,8 @@
 import type {Ref} from 'preact';
 import {useRef} from 'preact/hooks';
 import {usePointerHold} from '../hooks/usePointerHold';
-import {wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from '../lib/wheel';
+import {type WheelLayout, wheelLayout, wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from '../lib/wheel';
+import type {IconSize} from '../state/settings';
 import {LAYOUT, MOTION, WHEEL} from '../theme/tokens';
 import {AppIcon} from './AppIcon';
 import {ChevronMark, StarMark} from './Glyph';
@@ -22,6 +23,8 @@ interface Props {
 	focused: boolean;
 	/** the app in the middle */
 	selected: number;
+	/** its shape and sizes, for the icon size chosen (see layoutFor) */
+	layout: WheelLayout;
 	/** move mode: the selected app is lifted, with arrows where it can go */
 	moving?: MoveArrows;
 	/** the others step back: an app is being moved, or has its menu open */
@@ -36,30 +39,45 @@ interface Props {
 	navRef?: Ref<HTMLElement>;
 }
 
-/** The middle of the selected app's icon: halfway down the screen, and so far right that
- *  the icons furthest out sit on the safe area. */
-const CENTRE_X = Math.round(LAYOUT.safeX + LAYOUT.appIcon / 2 - wheelPoint(WHEEL.reach, WHEEL).x);
-const CENTRE_Y = LAYOUT.screenHeight / 2;
-/** from the middle of an app's icon to the top left of its row */
-const ROW_LEFT = -(LAYOUT.wheelPad + LAYOUT.appIcon / 2);
-const ROW_TOP = -LAYOUT.wheelRowHeight / 2;
+/** The layouts for each icon size, worked out once. */
+const LAYOUTS: Partial<Record<IconSize, WheelLayout>> = {};
+
+/** The wheel's layout for an icon size, in % of the usual size. */
+export function layoutFor(iconSize: IconSize): WheelLayout {
+	const known = LAYOUTS[iconSize];
+	if (known) return known;
+	const layout = wheelLayout(iconSize / 100, {
+		shape: WHEEL,
+		icon: LAYOUT.appIcon,
+		iconRadius: LAYOUT.appIconRadius,
+		rowHeight: LAYOUT.wheelRowHeight,
+		gap: LAYOUT.wheelGap,
+		gapRest: LAYOUT.wheelGapRest,
+		safeX: LAYOUT.safeX,
+		screenHeight: LAYOUT.screenHeight
+	});
+	LAYOUTS[iconSize] = layout;
+	return layout;
+}
+
+/** From the middle of an app's icon to the top left of its row. */
+const rowLeft = (layout: WheelLayout) => -(LAYOUT.wheelPad + layout.icon / 2);
 
 /** The top of the selected app's row: its menu opens beside it. */
-export const WHEEL_ROW_TOP = CENTRE_Y + ROW_TOP;
-
-/** The middle of the selected app's icon: the glow behind it is centred there. */
-export const WHEEL_CENTRE = {x: CENTRE_X, y: CENTRE_Y};
+export function wheelRowTop(layout: WheelLayout): number {
+	return layout.centreY - layout.rowHeight / 2;
+}
 
 /** Where the menu of the app `key` opens: right of the pill it has in the middle. A row is
  *  laid out as when selected, so its width is that of the pill wherever the app is. */
-export function wheelMenuLeft(nav: HTMLElement | null, key: string): number {
+export function wheelMenuLeft(nav: HTMLElement | null, key: string, layout: WheelLayout): number {
 	const rows = nav ? nav.children : [];
-	let width = LAYOUT.wheelPad + LAYOUT.appIcon;
+	let width = LAYOUT.wheelPad + layout.icon;
 	for (let i = 0; i < rows.length; i++) {
 		const row = rows[i];
 		if (row instanceof HTMLElement && row.getAttribute('data-key') === key) width = row.offsetWidth;
 	}
-	return CENTRE_X + ROW_LEFT + width + LAYOUT.menuGap;
+	return layout.centreX + rowLeft(layout) + width + LAYOUT.menuGap;
 }
 
 /** What the wheel keeps between renders: its turn, where each app was, and the apps that
@@ -81,6 +99,7 @@ export function AppWheel({
 	emptyText,
 	focused,
 	selected,
+	layout,
 	moving,
 	dimmed,
 	onActivate,
@@ -89,6 +108,14 @@ export function AppWheel({
 	navRef
 }: Props) {
 	const memory = useRef<Memory>({turn: selected, placed: new Map(), entering: [], ghosts: []}).current;
+	// the sizes of a row for the icon size, over those of the tokens
+	const sizes = {
+		'--layout-app-icon': `${layout.icon}px`,
+		'--layout-app-icon-radius': `${layout.iconRadius}px`,
+		'--layout-wheel-row-height': `${layout.rowHeight}px`,
+		'--layout-wheel-gap': `${layout.gap}px`,
+		'--layout-wheel-gap-rest': `${layout.gapRest}px`
+	};
 	if (items.length === 0)
 		return (
 			<nav class="wheel" ref={navRef}>
@@ -116,14 +143,15 @@ export function AppWheel({
 	memory.placed = new Map(items.map((item, i): [string, {offset: number; lap: number}] => [item.key, slots[i]]));
 
 	return (
-		<nav class={dimmed ? 'wheel wheel--still' : 'wheel'} ref={navRef}>
+		<nav class={dimmed ? 'wheel wheel--still' : 'wheel'} style={sizes} ref={navRef}>
 			{items.map((item, i) => {
 				const {offset, lap} = slots[i];
-				const opacity = wheelOpacity(offset, WHEEL.reach, MOTION.wheelRestOpacity, MOTION.wheelOpacityStep);
+				const opacity = wheelOpacity(offset, layout.shape.reach, MOTION.wheelRestOpacity, MOTION.wheelOpacityStep);
 				return (
 					<WheelRow
 						key={`${item.key}:${lap}`}
 						model={item}
+						layout={layout}
 						offset={offset}
 						opacity={dimmed && offset !== 0 ? Math.min(opacity, MOTION.dimmedOpacity) : opacity}
 						focused={focused && offset === 0}
@@ -136,7 +164,7 @@ export function AppWheel({
 				);
 			})}
 			{memory.ghosts.map((ghost) => (
-				<WheelRow key={ghost.key} model={ghost.model} offset={ghost.offset} opacity={0} ghost />
+				<WheelRow key={ghost.key} model={ghost.model} layout={layout} offset={ghost.offset} opacity={0} ghost />
 			))}
 		</nav>
 	);
@@ -144,6 +172,7 @@ export function AppWheel({
 
 interface RowProps {
 	model: TileModel;
+	layout: WheelLayout;
 	/** places from the selected app; 0 is the selected app */
 	offset: number;
 	opacity: number;
@@ -164,6 +193,7 @@ interface RowProps {
  *  only transforms and opacity animate. Beneath the pointer a fainter pill shows. */
 function WheelRow({
 	model,
+	layout,
 	offset,
 	opacity,
 	focused,
@@ -175,15 +205,15 @@ function WheelRow({
 	onMove
 }: RowProps) {
 	const pointer = usePointerHold(onActivate, onLongPress);
-	const point = wheelPoint(offset, WHEEL);
-	const left = Math.round(CENTRE_X + ROW_LEFT + point.x);
-	const top = Math.round(CENTRE_Y + ROW_TOP + point.y);
+	const point = wheelPoint(offset, layout.shape);
+	const left = Math.round(layout.centreX + rowLeft(layout) + point.x);
+	const top = Math.round(wheelRowTop(layout) + point.y);
 	const classes = [
 		'wheel__row',
 		offset === 0 && 'wheel__row--selected',
 		focused && 'wheel__row--focused',
 		arrows && 'wheel__row--lifted',
-		Math.abs(offset) > WHEEL.reach && 'wheel__row--away',
+		Math.abs(offset) > layout.shape.reach && 'wheel__row--away',
 		entering && 'wheel__row--entering',
 		ghost && 'wheel__row--ghost'
 	]

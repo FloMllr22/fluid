@@ -3,7 +3,7 @@ import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {type MessageKey, t} from '../i18n';
 import {valueKey} from '../lib/values';
-import {ACCENTS, type Appearance, GLOW_LEVELS, THEMES} from '../state/settings';
+import {ACCENTS, type Appearance, GLOW_LEVELS, ICON_SIZES, THEMES} from '../state/settings';
 import {accentColor} from '../theme/appearance';
 import {COLOR} from '../theme/tokens';
 import {ChevronMark} from './Glyph';
@@ -41,7 +41,7 @@ interface Row {
 const APP_SWATCH = `linear-gradient(135deg, ${COLOR.previewAppBefore}, ${COLOR.previewApp}, ${COLOR.previewAppAfter})`;
 
 /** The Appearance tab, as the Settings mockup draws it: a row each for the theme, the
- *  accent, the glow behind the app and reduced motion. ↑ ↓ move between the rows; ← → step through a row's values
+ *  accent, the glow behind the app, the icon size and reduced motion. ↑ ↓ move between the rows; ← → step through a row's values
  *  (shown with arrows while it has focus), and ← on its first value goes back to the
  *  tabs; OK goes on to the next value, round to the first, or turns the switch. Every
  *  change shows at once. */
@@ -74,6 +74,14 @@ export function AppearancePanel({appearance, onChange, active, onExit, onClose, 
 			values: GLOW_LEVELS.map((level) => (level === 0 ? t('appearance.off') : t('appearance.percent', {value: level}))),
 			index: GLOW_LEVELS.indexOf(appearance.glow),
 			set: (i) => change({glow: GLOW_LEVELS[i]})
+		},
+		{
+			id: 'iconSize',
+			label: t('appearance.iconSize'),
+			description: t('appearance.iconSizeDescription'),
+			values: ICON_SIZES.map((size) => t('appearance.percent', {value: size})),
+			index: ICON_SIZES.indexOf(appearance.iconSize),
+			set: (i) => change({iconSize: ICON_SIZES[i]})
 		},
 		{
 			id: 'reduceMotion',

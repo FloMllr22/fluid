@@ -126,6 +126,8 @@
 	"appearance.glowDescription": "A soft light in the colour of the selected app, behind the wheel.",
 	"appearance.off": "Off",
 	"appearance.percent": "{value}%",
+	"appearance.iconSize": "Icon size",
+	"appearance.iconSizeDescription": "The icons on the home screen’s wheel.",
 	"appearance.reduceMotion": "Reduce motion",
 	"appearance.reduceMotionDescription": "No transitions: the wheel jumps, and moving backgrounds stand still.",
 	"theme.black": "OLED black",

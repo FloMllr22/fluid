@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'preact/hooks';
 import {AppMenu, type AppMenuAction} from '../components/AppMenu';
-import {AppWheel, type MoveArrows, WHEEL_CENTRE, WHEEL_ROW_TOP, wheelMenuLeft} from '../components/AppWheel';
+import {AppWheel, layoutFor, type MoveArrows, wheelMenuLeft, wheelRowTop} from '../components/AppWheel';
 import {Bar} from '../components/Bar';
 import {Glow} from '../components/Glow';
 import {Greeting} from '../components/Greeting';
@@ -185,6 +185,7 @@ export function Home({
 	// The accent "app" and the glow follow the app in the middle, once the wheel stands
 	// still; the accent only here (Settings keep the fallback, Ice blue).
 	const {theme, accent, glow} = appearance;
+	const layout = layoutFor(appearance.iconSize);
 	const follows = accent === 'app' || glow > 0;
 	const settledKey = useSettled(apps[app] ? apps[app].key : undefined, TIMING.appColorSettleMs);
 	const appColor = useAppColor(follows ? apps.find((item) => item.key === settledKey) : undefined);
@@ -202,8 +203,8 @@ export function Home({
 				<Glow
 					color={glowColor(appColor, accentColor(accent, theme), theme)}
 					strength={glow / 100}
-					x={WHEEL_CENTRE.x}
-					y={WHEEL_CENTRE.y}
+					x={layout.centreX}
+					y={layout.centreY}
 				/>
 			)}
 			<AppWheel
@@ -211,6 +212,7 @@ export function Home({
 				emptyText={appsEmptyText}
 				focused={zone === 'apps' || moving !== undefined || menu !== undefined}
 				selected={app}
+				layout={layout}
 				moving={moving?.arrows}
 				dimmed={moving !== undefined || menu !== undefined}
 				onActivate={(i) => {
@@ -250,8 +252,8 @@ export function Home({
 			{menu && !hidden && apps[app] && (
 				<AppMenu
 					app={menu.app}
-					rowTop={WHEEL_ROW_TOP}
-					left={wheelMenuLeft(wheel.current, menu.app.key)}
+					row={{top: wheelRowTop(layout), height: layout.rowHeight}}
+					left={wheelMenuLeft(wheel.current, menu.app.key, layout)}
 					onChoose={menu.onChoose}
 					onClose={menu.onClose}
 				/>

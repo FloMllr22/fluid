@@ -126,6 +126,8 @@
 	"appearance.glowDescription": "Ein weicher Schein in der Farbe der gewählten App, hinter dem Rad.",
 	"appearance.off": "Aus",
 	"appearance.percent": "{value} %",
+	"appearance.iconSize": "Icon-Größe",
+	"appearance.iconSizeDescription": "Die Icons auf dem Rad des Home-Screens.",
 	"appearance.reduceMotion": "Bewegung reduzieren",
 	"appearance.reduceMotionDescription": "Ohne Übergänge: Das Rad springt, bewegte Hintergründe stehen still.",
 	"theme.black": "OLED-Schwarz",

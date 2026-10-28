@@ -12,8 +12,8 @@ export type AppMenuAction = 'favorite' | 'move' | 'hide' | 'cancel';
 
 interface Props {
 	app: TileModel;
-	/** where the app's row is on the screen: the menu opens beside it */
-	rowTop: number;
+	/** where the app's row is on the screen, and its height: the menu opens beside it */
+	row: {top: number; height: number};
 	/** where the menu starts, right of the app's row */
 	left: number;
 	onChoose: (action: AppMenuAction) => void;
@@ -24,7 +24,7 @@ interface Props {
  *  move it along the list, hide it, or cancel. ↑ ↓ choose, OK confirms, ← or Back close;
  *  the pointer chooses by pointing and clicking, and closes it by clicking elsewhere.
  *  Opened by holding OK, whose release it ignores. */
-export function AppMenu({app, rowTop, left, onChoose, onClose}: Props) {
+export function AppMenu({app, row, left, onChoose, onClose}: Props) {
 	const actions: {id: AppMenuAction; label: string; glyph: GlyphName}[] = [
 		{id: 'favorite', label: t(app.favorite ? 'menu.unfavorite' : 'menu.favorite'), glyph: 'star'},
 		{id: 'move', label: t('menu.move'), glyph: 'move'},
@@ -52,8 +52,8 @@ export function AppMenu({app, rowTop, left, onChoose, onClose}: Props) {
 	useKeys(handleKey);
 
 	const top = popoverTop(
-		rowTop,
-		LAYOUT.wheelRowHeight,
+		row.top,
+		row.height,
 		menuHeight(actions.length),
 		LAYOUT.safeY,
 		LAYOUT.screenHeight - LAYOUT.safeY
