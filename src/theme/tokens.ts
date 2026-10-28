@@ -198,6 +198,7 @@ export const LAYOUT = {
 	tileGap: 28,
 	tileRadius: 24,
 	tileLabelGap: 14, // between a tile and its name
+	tileLabelHeight: 46, // its name: two lines of FONT.tileLabel at line height 1.2, in whole pixels
 	onboardingGridColumns: 9,
 	gridRowGap: 32, // vertical space between rows of a grid of tiles
 	gridBleed: 28, // room around a grid for its focused or lifted tile

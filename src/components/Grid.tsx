@@ -1,5 +1,5 @@
-import {firstShownRow} from '../lib/gridTab';
-import {FONT, LAYOUT} from '../theme/tokens';
+import {firstShownRow, shownRows} from '../lib/gridTab';
+import {LAYOUT} from '../theme/tokens';
 import {Tile, type TileModel} from './Tile';
 
 interface Props {
@@ -15,12 +15,13 @@ interface Props {
 	selected: number;
 	onSelect: (index: number) => void;
 	onActivate: (index: number) => void;
-	/** of the visible part with the room around it (gridBleed); it shows whole rows */
+	/** the most the visible part may take, with the room around it (gridBleed); it shows
+	 *  only whole rows, and is no higher than they are */
 	height: number;
 }
 
 /** a tile's name: two lines and the space above them (see .tile__label) */
-const LABEL_HEIGHT = Math.round(FONT.tileLabel * 2.4) + LAYOUT.tileLabelGap;
+const LABEL_HEIGHT = LAYOUT.tileLabelHeight + LAYOUT.tileLabelGap;
 const GRID_ROW_GAP = LAYOUT.gridRowGap;
 const ROW_STEP = LAYOUT.tileSize + LABEL_HEIGHT + GRID_ROW_GAP;
 
@@ -39,11 +40,11 @@ export function Grid({
 	height
 }: Props) {
 	const rows = Math.ceil(items.length / cols);
-	const visible = Math.max(1, Math.floor((height - 2 * LAYOUT.gridBleed + GRID_ROW_GAP) / ROW_STEP));
-	const offset = firstShownRow(Math.floor(selected / cols), rows, visible) * ROW_STEP;
+	const shown = shownRows(height, ROW_STEP, GRID_ROW_GAP, LAYOUT.gridBleed);
+	const offset = firstShownRow(Math.floor(selected / cols), rows, shown.rows) * ROW_STEP;
 
 	return (
-		<div class="grid__viewport" style={{height: `${height}px`}}>
+		<div class="grid__viewport" style={{height: `${shown.height}px`}}>
 			<div
 				class="grid__track"
 				style={{width: `${cols * (LAYOUT.tileSize + LAYOUT.tileGap)}px`, transform: `translateY(${-offset}px)`}}

@@ -15,6 +15,14 @@ export function gridStep(index: number, key: ArrowKey, count: number, cols: numb
 	return index + cols < count ? index + cols : index;
 }
 
+/** What a grid shows in up to `height` px, its `bleed` above and below included: as many
+ *  whole rows as fit (at least one), each `step` high with the `gap` below it, and the
+ *  height of just those rows with their bleed, so that no part of a further row shows. */
+export function shownRows(height: number, step: number, gap: number, bleed: number): {rows: number; height: number} {
+	const rows = Math.max(1, Math.floor((height - 2 * bleed + gap) / step));
+	return {rows, height: Math.min(height, rows * step - gap + 2 * bleed)};
+}
+
 /** The first of `visible` whole rows a grid of `rows` shows, with `row` in focus: the
  *  focused row in the middle where it can be, the grid's first or last rows at its ends. */
 export function firstShownRow(row: number, rows: number, visible: number): number {

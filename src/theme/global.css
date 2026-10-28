@@ -988,7 +988,7 @@ body {
 .tile__label {
 	/* up to two lines, using the gutter either side, so long names fit */
 	width: calc(var(--layout-tile-size) + var(--layout-tile-gap));
-	height: calc(var(--font-tile-label) * 2.4);
+	height: var(--layout-tile-label-height);
 	margin: var(--layout-tile-label-gap) 0 0 calc(var(--layout-tile-gap) / -2);
 	line-height: 1.2;
 	font-size: var(--font-tile-label);

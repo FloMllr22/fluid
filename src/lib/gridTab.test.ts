@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import type {TileModel} from '../components/Tile';
-import {firstShownRow, gridStep, heldTarget, keepFocus} from './gridTab';
+import {firstShownRow, gridStep, heldTarget, keepFocus, shownRows} from './gridTab';
 
 const tiles = (...keys: string[]): TileModel[] => keys.map((key) => ({key, label: key}));
 
@@ -66,6 +66,22 @@ describe('keepFocus', () => {
 	it('goes to the first tile when its tile is not in the other list', () => {
 		expect(keepFocus(tiles('a', 'b', 'c'), tiles('a', 'c'), 1)).toBe(0);
 		expect(keepFocus(tiles(), tiles('a'), 0)).toBe(0);
+	});
+});
+
+describe('shownRows', () => {
+	// rows 236 px apart (a tile, its name and a gap of 32 below), 28 px of bleed above and below
+	it('shows the whole rows that fit, no higher than they are', () => {
+		// Settings: 738 px held three rows and the top 2 px of the fourth, which starts at 736
+		expect(shownRows(738, 236, 32, 28)).toEqual({rows: 3, height: 732});
+		// without the button above: more room, still three whole rows
+		expect(shownRows(818, 236, 32, 28)).toEqual({rows: 3, height: 732});
+		// the onboarding: two rows, and 4 px less than it may take
+		expect(shownRows(500, 236, 32, 28)).toEqual({rows: 2, height: 496});
+	});
+
+	it('shows one row however little room there is', () => {
+		expect(shownRows(100, 236, 32, 28)).toEqual({rows: 1, height: 100});
 	});
 });
 
