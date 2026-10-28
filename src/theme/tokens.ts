@@ -1,7 +1,11 @@
 // Design tokens: the single source of truth for colour, spacing, type and motion.
 // `applyTokens()` exposes them as CSS custom properties so the stylesheet and the
-// components read the same values.
+// components read the same values; a theme (THEME_COLOR) then sets its own colours over
+// them (see appearance.ts).
 
+import type {Accent, Theme} from '../state/settings';
+
+/** The colours of the dark theme, and those that are the same in every theme. */
 export const COLOR = {
 	bg: '#000000', // also the "OLED black" background
 	bgGradientInner: '#1e1e1e', // the "dark" background
@@ -10,6 +14,9 @@ export const COLOR = {
 	bgBlueInner: '#24324a', // the "calm blue" background
 	bgBlueMid: '#18202c',
 	bgBlueOuter: '#0a0e15',
+	bgLightInner: '#f7f8fa', // the "light" background, the light theme's only one
+	bgLightMid: '#eceef2',
+	bgLightOuter: '#e3e6ea',
 	// "dusk": an evening sky over the sea, from the design mockup. Sky from the top down to
 	// the bright horizon, the sea below it; a warm glow and a pink bloom on the horizon.
 	duskSkyTop: '#091735',
@@ -63,7 +70,13 @@ export const COLOR = {
 	// and photo, measured; the brightest spot is the middle of calm blue (#999999 needed)
 	textMuted: '#9AA0AA',
 	textShadow: 'rgba(0, 0, 0, 0.45)', // soft shade under the text on Home
-	accent: '#8FD0FF', // the ring around the focused app's icon
+	onColor: '#FFFFFF', // a letter or glyph on an app's own colour, in every theme
+	// the ring around the focused app's icon, a switch that is on, a button that is active:
+	// the accent chosen (ACCENT_COLOR, set by appearance.ts); Ice blue in the dark themes
+	accent: '#8FD0FF',
+	// where an accent must keep its contrast (4.5:1): the lightest surface of the theme (a
+	// row in Settings over the dusk's bright horizon)
+	accentGround: '#404457',
 	// the buttons at the top right of Home, and the menus: dark glass (without blur, which
 	// Chromium 53 lacks and older TVs cannot afford, so a little darker than the mockup)
 	glass: 'rgba(10, 14, 32, 0.6)',
@@ -100,8 +113,84 @@ export const COLOR = {
 	fieldBgFocused: 'rgba(7, 8, 11, 0.08)',
 	dot: 'rgba(255, 255, 255, 0.25)', // an onboarding step still to come
 	dotDone: 'rgba(255, 255, 255, 0.5)', // an onboarding step done
-	danger: '#e0564f'
+	danger: '#e0564f',
+	// the onboarding's previews of the themes: three apps, the middle one selected
+	previewApp: '#E2553B',
+	previewAppBefore: '#3D6BE0',
+	previewAppAfter: '#F0B429'
 } as const;
+
+export type ColorToken = keyof typeof COLOR;
+
+/** Each theme's colours where they differ from COLOR (the dark theme). OLED black has
+ *  neutral black glass and veils instead of the dark theme's blue-black. Light turns
+ *  everything round: dark text on light surfaces, a dark pill for focus; it has only its
+ *  own light background, since no other keeps dark text readable. Every text keeps WCAG
+ *  AA on its theme's backgrounds (tokens.test.ts). */
+export const THEME_COLOR: Record<Theme, Partial<Record<ColorToken, string>>> = {
+	dark: {},
+	black: {
+		glass: 'rgba(0, 0, 0, 0.7)',
+		glassMenu: 'rgba(0, 0, 0, 0.94)',
+		wheelShade: 'rgba(0, 0, 0, 0.5)',
+		wheelShadeEdge: 'rgba(0, 0, 0, 0)',
+		screenDim: 'rgba(0, 0, 0, 0.8)',
+		tileDim: 'rgba(0, 0, 0, 0.6)'
+	},
+	light: {
+		bg: '#eceef2',
+		textPrimary: '#16181D',
+		textSoft: 'rgba(22, 24, 29, 0.85)',
+		textSecondary: '#3A3F47',
+		textMuted: '#555B65',
+		textShadow: 'rgba(255, 255, 255, 0)',
+		accent: '#0A5C94',
+		accentGround: '#d6d9dd', // darker than any row: the accent keeps its contrast with room
+		glass: 'rgba(255, 255, 255, 0.7)',
+		glassMenu: 'rgba(250, 251, 252, 0.97)',
+		glassBorder: 'rgba(22, 24, 29, 0.14)',
+		highlight: 'rgba(22, 24, 29, 0.08)',
+		highlightHover: 'rgba(22, 24, 29, 0.05)',
+		highlightLifted: 'rgba(22, 24, 29, 0.14)',
+		glyphWell: 'rgba(22, 24, 29, 0.08)',
+		glyphWellFocus: 'rgba(255, 255, 255, 0.14)',
+		focusFill: '#16181D',
+		focusText: '#F4F5F7',
+		focusTextSoft: 'rgba(244, 245, 247, 0.75)',
+		iconShadow: 'rgba(22, 24, 29, 0.16)',
+		iconShadowFocused: 'rgba(22, 24, 29, 0.26)',
+		liftedShadow: 'rgba(22, 24, 29, 0.22)',
+		menuShadow: 'rgba(22, 24, 29, 0.18)',
+		focusShadow: 'rgba(22, 24, 29, 0.28)',
+		liftShadow: 'rgba(22, 24, 29, 0.35)',
+		wheelShade: 'rgba(236, 238, 242, 0)',
+		wheelShadeEdge: 'rgba(236, 238, 242, 0)',
+		screenDim: 'rgba(236, 238, 242, 0.6)',
+		surface: 'rgba(22, 24, 29, 0.06)',
+		surfaceEdge: 'rgba(22, 24, 29, 0.1)',
+		tileDim: 'rgba(236, 238, 242, 0.65)',
+		tabOpen: 'rgba(22, 24, 29, 0.08)',
+		switchTrack: 'rgba(22, 24, 29, 0.16)',
+		switchKnob: '#6B7078',
+		switchTrackFocused: 'rgba(255, 255, 255, 0.2)',
+		switchKnobFocused: '#C9CDD3',
+		fieldBg: 'rgba(255, 255, 255, 0.75)',
+		fieldBgFocused: 'rgba(255, 255, 255, 0.12)',
+		dot: 'rgba(22, 24, 29, 0.2)',
+		dotDone: 'rgba(22, 24, 29, 0.45)',
+		danger: '#B42318'
+	}
+};
+
+/** fluid's own accents, the "app" one aside (appearance.ts derives it from the app): a
+ *  light shade for the dark themes, a dark one for the light theme. */
+export const ACCENT_COLOR: Record<Exclude<Accent, 'app'>, {dark: string; light: string}> = {
+	ice: {dark: '#8FD0FF', light: '#0A5C94'},
+	mint: {dark: '#7FE0B5', light: '#0A6442'},
+	coral: {dark: '#FF9C85', light: '#A3361A'},
+	lavender: {dark: '#C4B0FF', light: '#5B3FC4'},
+	gold: {dark: '#F5C86A', light: '#7A5000'}
+};
 
 export const FONT = {
 	family: 'Manrope, "LG Smart UI", "Helvetica Neue", Arial, sans-serif',
@@ -268,6 +357,7 @@ export function applyTokens(root: HTMLElement = document.documentElement): void 
 	}
 }
 
-function kebab(s: string): string {
+/** A token's name as in its CSS custom property: "textPrimary" → "text-primary". */
+export function kebab(s: string): string {
 	return s.replace(/([A-Z])/g, '-$1').toLowerCase();
 }

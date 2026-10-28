@@ -20,6 +20,9 @@ export interface SettingsTab {
 	pinned?: number;
 	/** says why `items` is empty: still loading, failed, or nothing there */
 	emptyText: string;
+	/** said above the grid on a tab without a re-order button: why there is so little to
+	 *  choose from (the light theme's one background) */
+	note?: string;
 }
 
 /** A tile picked up in re-order mode, and the order to restore on Back. */

@@ -400,6 +400,13 @@ body {
 	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
+/* on the app's own colour: light in every theme */
+.app-icon--color .app-icon__glyph {
+	stroke: var(--color-on-color);
+}
+.app-icon--color .app-icon__monogram {
+	color: var(--color-on-color);
+}
 
 /* ---------- app wheel ---------- */
 
@@ -984,6 +991,12 @@ body {
 	letter-spacing: -0.02em;
 	color: var(--color-text-primary);
 }
+.tile__box--color .tile__glyph {
+	stroke: var(--color-on-color);
+}
+.tile__box--color .tile__monogram {
+	color: var(--color-on-color);
+}
 
 .tile__label {
 	/* up to two lines, using the gutter either side, so long names fit */
@@ -1199,6 +1212,14 @@ body {
 	flex-direction: row;
 	justify-content: flex-end;
 	height: var(--layout-settings-toolbar);
+}
+/* in place of the toolbar: why a tab has so little to choose from */
+.settings__note {
+	height: var(--layout-settings-toolbar);
+	margin: 0;
+	font-size: var(--font-option-description);
+	line-height: 1.4;
+	color: var(--color-text-secondary);
 }
 .settings__empty {
 	margin: 0;
@@ -1614,8 +1635,17 @@ body {
 
 /* ---------- reduced motion ---------- */
 
-/* Where the TV asks for less motion, everything changes at once. (Chromium 53 does not
-   know this query and ignores it.) */
+/* Where the user (Settings → Appearance) or the TV asks for less motion, everything
+   changes at once, and the moving dusk stands still. (Chromium 53 does not know the media
+   query and ignores it; webOS seems never to set it, hence the setting.) */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+	/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
+	transition-duration: 0ms !important;
+	/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own animation */
+	animation-duration: 0ms !important;
+}
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,

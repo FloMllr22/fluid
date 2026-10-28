@@ -195,6 +195,7 @@ export const COLOR_BACKGROUNDS: Record<BackgroundColor, string> = {
 	dark: glow(COLOR.bgGradientInner, COLOR.bgGradientMid, COLOR.bgGradientOuter),
 	black: COLOR.bg,
 	blue: glow(COLOR.bgBlueInner, COLOR.bgBlueMid, COLOR.bgBlueOuter),
+	light: glow(COLOR.bgLightInner, COLOR.bgLightMid, COLOR.bgLightOuter),
 	dusk,
 	duskMoving: dusk
 };

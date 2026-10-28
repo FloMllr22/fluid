@@ -7,7 +7,8 @@ import {applyTokens} from './theme/tokens';
 import './theme/global.css';
 
 applyTokens();
-// The settings first, so that the first frame is already in the chosen language.
+// The settings first, so that the first frame is already in the chosen language (and look,
+// which App applies as it is first drawn).
 const loaded = loadSettings();
 setLocale(localeFor(loaded.settings.language, platform.getLocale()));
 const root = document.getElementById('root');

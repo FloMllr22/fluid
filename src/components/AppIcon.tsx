@@ -6,7 +6,7 @@ import type {TileModel} from './Tile';
 export function AppIcon({model}: {model: TileModel}) {
 	const fill = model.color && !model.imageUrl ? model.color : undefined;
 	return (
-		<span class="app-icon" style={fill ? {background: fill} : undefined}>
+		<span class={fill ? 'app-icon app-icon--color' : 'app-icon'} style={fill ? {background: fill} : undefined}>
 			{model.imageUrl ? (
 				<img class="app-icon__image" src={model.imageUrl} alt="" />
 			) : model.glyph ? (

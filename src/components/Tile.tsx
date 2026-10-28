@@ -40,7 +40,10 @@ export function Tile({model, focused, lifted, checked, dimmed, onHover, onActiva
 	const fill = model.swatch || (model.color && !model.imageUrl ? model.color : undefined);
 	return (
 		<div class={classes} onMouseEnter={onHover} {...pointer}>
-			<div class="tile__box" style={fill ? {background: fill} : undefined}>
+			<div
+				class={model.color && !model.imageUrl ? 'tile__box tile__box--color' : 'tile__box'}
+				style={fill ? {background: fill} : undefined}
+			>
 				{model.imageUrl ? (
 					<img class="tile__image" src={model.imageUrl} alt="" />
 				) : model.glyph ? (

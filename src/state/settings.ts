@@ -8,9 +8,10 @@ import {LANGUAGES, type Language} from '../i18n';
 import type {Place} from '../platform';
 
 /** The colours fluid offers as a background; dark is the gradient fluid always had,
- *  duskMoving the dusk with its lights slowly moving. A colour added later needs no new
- *  version: an older fluid reads it as the default. */
-export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving'] as const;
+ *  duskMoving the dusk with its lights slowly moving, light the light theme's only one (it
+ *  is never stored, see shownBackground). A colour added later needs no new version: an
+ *  older fluid reads it as the default. */
+export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving', 'light'] as const;
 export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
 
 /** The themes, as offered: the colours of text, surfaces, menus and focus. */

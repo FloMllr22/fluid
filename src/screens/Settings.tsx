@@ -204,6 +204,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 		.filter(Boolean)
 		.join(' ');
 	const toolbar = tab !== undefined && grid.canReorder;
+	const note = tab && !toolbar ? tab.note : undefined;
 
 	return (
 		<div class="screen settings">
@@ -240,6 +241,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 						</div>
 					</div>
 				)}
+				{note && <p class="settings__note">{note}</p>}
 				{tab && count > 0 && (
 					<Grid
 						items={grid.items}
@@ -249,7 +251,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 						liftedIndex={grid.held}
 						focused={zone === 'content'}
 						selected={grid.index}
-						height={toolbar ? LAYOUT.settingsGridHeight : LAYOUT.settingsGridHeight + LAYOUT.settingsToolbar}
+						height={toolbar || note ? LAYOUT.settingsGridHeight : LAYOUT.settingsGridHeight + LAYOUT.settingsToolbar}
 						onSelect={(i) => {
 							if (grid.point(i)) setZone('content');
 						}}

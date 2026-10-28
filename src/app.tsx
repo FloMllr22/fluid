@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'preact/hooks';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'preact/hooks';
 import type {AppMenuAction} from './components/AppMenu';
 import {Background} from './components/Background';
 import {LanguagePanel} from './components/LanguageChoice';
@@ -19,6 +19,7 @@ import {Home, type MovingApp} from './screens/Home';
 import {Onboarding} from './screens/Onboarding';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
 import {type LanguageChoice, type LoadedSettings, saveSettings, type Settings as UserSettings} from './state/settings';
+import {applyAppearance} from './theme/appearance';
 import {PHOTOS} from './theme/backgrounds';
 
 type Screen = 'home' | 'settings';
@@ -102,6 +103,9 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		setOnboarding(false);
 		if (!saveSettings(settings)) showToast(t('settings.saveFailed'), 'error');
 	}, [settings, showToast]);
+
+	// The look follows the settings before the next frame is drawn, the first one included.
+	useLayoutEffect(() => applyAppearance(settings.appearance), [settings.appearance]);
 
 	// Settings from an older fluid are stored in the current form at once. Settings that
 	// could not be read are reported, then replaced by the defaults fluid starts with, so
@@ -205,10 +209,15 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	// Live TV is named in the user's language, again when it changes
 	const homeSources = useMemo(() => shownInputs.map(inputTile), [shownInputs, settings.language]);
 
-	// the stored background as it can be drawn: a photo this fluid lacks falls back
-	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
+	const theme = settings.appearance.theme;
+	// the stored background as it can be drawn: a photo this fluid lacks falls back, the
+	// light theme has its own
+	const background = useMemo(
+		() => shownBackground(settings.background, PHOTO_IDS, theme),
+		[settings.background, theme]
+	);
 	// named in the user's language, again when it changes
-	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), [settings.language]);
+	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS, theme), [settings.language, theme]);
 
 	const tabs: SettingsTab[] = useMemo(
 		() => [
@@ -234,7 +243,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				label: t('settings.background'),
 				items: backgroundChoices,
 				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(background)),
-				emptyText: t('rows.empty') // never: the colours are always there
+				emptyText: t('rows.empty'), // never: the colours are always there
+				note: theme === 'light' ? t('settings.background.lightOnly') : undefined
 			}
 		],
 		[
@@ -247,7 +257,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			favoriteCount,
 			backgroundChoices,
 			background,
-			settings.language
+			settings.language,
+			theme
 		]
 	);
 
@@ -275,8 +286,10 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const onToggle = useCallback(
 		(tabId: string, key: string, order: string[]) => {
 			if (tabId === TAB.background) {
+				// the light theme's one background is never stored: the stored one waits for a
+				// dark theme
 				const picked = backgroundFromKey(key);
-				if (picked) updateSettings({...settings, background: picked});
+				if (picked && theme !== 'light') updateSettings({...settings, background: picked});
 			} else if (tabId === TAB.apps) {
 				const appIds = toggleId(settings.appIds || apps.map((a) => a.id), key, order);
 				// a hidden app is no favourite any more
@@ -287,7 +300,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				updateSettings({...settings, sourceIds: toggleId(current, key, order)});
 			}
 		},
-		[settings, apps, inputs, updateSettings]
+		[settings, apps, inputs, theme, updateSettings]
 	);
 
 	const onBackgroundError = useCallback(() => showToast(t('background.loadFailed'), 'error'), [showToast]);
