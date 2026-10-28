@@ -17,10 +17,15 @@ greeting with the date, the time and (if you like) the weather.
 - **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or alive with
   drifting clouds, shooting stars and light on the sea), one of three photos, or a
   slideshow of them
+- **Appearance**: three themes (OLED black, Dark, Light), an accent colour of its own or
+  taken from the app in the middle of the wheel, an optional glow in that app's colour
+  behind the wheel, three icon sizes, and a switch to reduce motion. The Light theme has
+  its own light background only, so that dark text stays readable; the background you
+  picked comes back with a dark theme
 - **Weather** (optional, off until you turn it on): the sky and temperature at a place you
   search for, from [Open-Meteo](https://open-meteo.com), in °C or °F as your TV's region uses
-- **First start**: a short setup in three steps (language, apps, background); all of it can be
-  changed later in Settings
+- **First start**: a short setup in four steps (language, apps, background, style); all of it
+  can be changed later in Settings
 - Speaks English and German: the TV's language, or the one you pick; follows the TV's 12/24-hour
   clock setting
 - Works with the remote's arrow keys and with the Magic Remote pointer
@@ -42,8 +47,9 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Where | Key | Does |
 |---|---|---|
 | First start, language | ← →, OK | Pick a language and go on |
-| First start, apps and background | OK | Go on with what is chosen (focus starts on **Next** / **Finish**) |
+| First start, apps and background | OK | Go on with what is chosen (focus starts on **Next**) |
 | First start, apps and background | ↓, then as in Settings | Choose apps (and re-order them) or a background |
+| First start, style | ← →, OK | Pick a theme (it shows at once) and finish |
 | First start | Back | Return to the step before |
 | Home | ↑ ↓ | Turn the wheel to the next app (after the last comes the first again) |
 | Home | → | To Sources, LG and Settings at the top right (← → along them, ← or ↓ back to the apps) |
@@ -58,6 +64,7 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
 | Re-order mode | Back | Cancel the move or leave re-order mode |
 | Settings, Background tab | OK | Use that background (it changes at once) |
+| Settings, Appearance tab | ↑ ↓, ← → | Choose a row, change its value (it changes at once); OK goes on to the next value or turns the switch; ← on the first value back to the tabs |
 | Settings, Weather tab | OK | Turn the weather on or off, open the keyboard to search for a place, or use the place found |
 | Typing a place | OK | Search at once (the search also starts when you pause typing) |
 | Typing a place | Back, ↑ ↓ | Leave the field |
@@ -207,6 +214,15 @@ pull requests.
   it to `LANGUAGES` and `PLURAL_RULES` in `src/i18n/index.ts`; the tests check that every
   key and placeholder is there.
 - **Debugging.** A rooted TV exposes the web inspector on port 9998.
+- **Performance.** In the web inspector's console, `fluidPerf.report()` tells how long
+  fluid took to its first frame and to show the apps, and how quickly key presses showed;
+  `fluidPerf.frames(10)` counts the frames of the next ten seconds while you use fluid. The
+  numbers stay in memory and are never sent. `npm run build` also tells the bundle's size
+  gzipped.
+- **Themes.** A theme is a set of colour tokens (`THEME_COLOR` in `src/theme/tokens.ts`)
+  written over the others on `:root`; a test checks WCAG AA contrast for every theme's text
+  and accents. Animations use only `transform` and `opacity`, and *Reduce motion* turns
+  them all off.
 
 ### Project layout
 
@@ -216,16 +232,20 @@ src/
                Homebrew shell, Open-Meteo) and mock/ (neutral sample data for the
                desktop browser)
   config/      constants (app ID, key codes, timings)
-  theme/       design tokens (colours, type, layout, motion) and the stylesheet
+  theme/       design tokens (colours, type, layout, motion), themes and accents, the
+               stylesheet
   i18n/        texts (locales/en.json, de.json), plural rules, dates via Intl with a fallback
   state/       settings: one versioned schema with migrations; the weather cache
-  lib/         clock, ordering, Home and grid navigation, tile adapters, weather
+  lib/         clock, ordering, Home and grid navigation, the wheel's geometry, tile
+               adapters, weather, colours and contrast, performance budgets
   hooks/       remote keys, OK press/hold, pointer hold, clock tick, time format, weather,
-               place search, grid tabs (Settings and the first start)
-  components/  AppList, Bar, Menu, AppMenu, Greeting, WeatherNow, Grid, Tile, AppIcon,
-               OptionList, WeatherPanel, LanguageChoice, Glyph, Time, Toast
+               place search, grid tabs (Settings and the first start), an app's colour
+  components/  AppWheel, Bar, Menu, AppMenu, Greeting, WeatherNow, Grid, Tile, AppIcon,
+               Glow, OptionList, WeatherPanel, LanguageChoice, AppearancePanel,
+               ThemeCards, Glyph, Time, Toast
   screens/     Home, Settings, Onboarding (first start)
   app.tsx      state, data loading and wiring
+  perf.ts      the performance measurements (fluidPerf)
 scripts/       package, deploy, bundle check, Homebrew manifest
 public/        appinfo.json, app icon, licence texts
 .github/       CI on push and pull request; release on tag
