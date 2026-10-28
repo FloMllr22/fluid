@@ -455,6 +455,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				sourcesEmptyText={t('inputs.noneSelected')}
 				weather={weather}
 				unit={UNIT}
+				appearance={settings.appearance}
 				active={screen === 'home' && !menuApp && !onboarding}
 				hidden={screen !== 'home' || onboarding}
 				onOpen={onOpen}

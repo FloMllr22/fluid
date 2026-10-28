@@ -1,18 +1,24 @@
 import {useCallback, useEffect, useRef, useState} from 'preact/hooks';
 import {AppMenu, type AppMenuAction} from '../components/AppMenu';
-import {AppWheel, type MoveArrows, WHEEL_ROW_TOP, wheelMenuLeft} from '../components/AppWheel';
+import {AppWheel, type MoveArrows, WHEEL_CENTRE, WHEEL_ROW_TOP, wheelMenuLeft} from '../components/AppWheel';
 import {Bar} from '../components/Bar';
+import {Glow} from '../components/Glow';
 import {Greeting} from '../components/Greeting';
 import type {TileModel} from '../components/Tile';
 import {WeatherNow} from '../components/WeatherNow';
+import {TIMING} from '../config/constants';
+import {useAppColor} from '../hooks/useAppColor';
 import {useClock} from '../hooks/useClock';
 import {type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
+import {useSettled} from '../hooks/useSettled';
 import {useTimeFormat} from '../hooks/useTimeFormat';
 import {t} from '../i18n';
 import {focusIndex, followItem, type RowFocus} from '../lib/focus';
 import {BAR_ITEMS, type HomeFocus, homeStep, homeZone} from '../lib/home';
 import type {TemperatureUnit, WeatherView} from '../lib/weather';
+import type {Appearance} from '../state/settings';
+import {accentColor, appAccent, glowColor} from '../theme/appearance';
 
 /** The app being moved along the wheel, and which ways it can go. */
 export interface MovingApp {
@@ -36,6 +42,8 @@ interface Props {
 	/** the weather at the foot; nothing while it is off */
 	weather: WeatherView;
 	unit: TemperatureUnit;
+	/** how fluid looks: the accent and the glow may follow the app in the middle */
+	appearance: Appearance;
 	active: boolean;
 	/** another screen is in front: Home stays mounted, keeping its focus, but is not drawn */
 	hidden?: boolean;
@@ -71,6 +79,7 @@ export function Home({
 	sourcesEmptyText,
 	weather,
 	unit,
+	appearance,
 	active,
 	hidden,
 	onOpen,
@@ -173,6 +182,14 @@ export function Home({
 	const note = moving ? t('move.hint') : menu ? t('menu.hint') : zone === 'sources' ? t('sources.hint') : undefined;
 	const classes = ['screen', 'home', hidden && 'screen--hidden', moving && 'home--moving'].filter(Boolean).join(' ');
 
+	// The accent "app" and the glow follow the app in the middle, once the wheel stands
+	// still; the accent only here (Settings keep the fallback, Ice blue).
+	const {theme, accent, glow} = appearance;
+	const follows = accent === 'app' || glow > 0;
+	const settledKey = useSettled(apps[app] ? apps[app].key : undefined, TIMING.appColorSettleMs);
+	const appColor = useAppColor(follows ? apps.find((item) => item.key === settledKey) : undefined);
+	const style = accent === 'app' ? {'--color-accent': appAccent(appColor, theme)} : undefined;
+
 	// The pointer does not select by pointing, which would turn the wheel beneath it: a
 	// click turns the wheel to the app, and a click on the app in the middle opens it. In
 	// move mode it neither moves focus nor opens anything: it clicks the arrows, or the
@@ -180,7 +197,15 @@ export function Home({
 	// menu opens: the menu, and move mode, act on the focused app. While a menu is open, a
 	// click anywhere else closes it.
 	return (
-		<div class={classes}>
+		<div class={classes} style={style}>
+			{glow > 0 && apps.length > 0 && (
+				<Glow
+					color={glowColor(appColor, accentColor(accent, theme), theme)}
+					strength={glow / 100}
+					x={WHEEL_CENTRE.x}
+					y={WHEEL_CENTRE.y}
+				/>
+			)}
 			<AppWheel
 				items={apps}
 				emptyText={appsEmptyText}

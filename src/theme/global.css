@@ -353,6 +353,28 @@ body {
 	z-index: 4;
 }
 
+/* ---------- glow ---------- */
+
+/* Behind the wheel (and its shade), in the colour of the app in the middle: two layers
+   that fade over each other as the colour changes. The box is placed by its middle. */
+.glow {
+	position: absolute;
+	left: calc(var(--layout-glow-width) / -2);
+	top: calc(var(--layout-glow-height) / -2);
+	width: var(--layout-glow-width);
+	height: var(--layout-glow-height);
+	pointer-events: none;
+}
+.glow__layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	transition: opacity var(--motion-glow-fade-ms) ease-in-out;
+	will-change: opacity;
+}
+
 /* ---------- app icon ---------- */
 
 .app-icon {

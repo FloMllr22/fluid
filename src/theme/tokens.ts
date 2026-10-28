@@ -244,6 +244,9 @@ export const LAYOUT = {
 	wheelArrowSize: 44, // the arrows of the app being moved, beside its name
 	wheelShadeWidth: 820,
 	wheelNoteWidth: 520, // why there are no apps, in place of the wheel
+	// the glow behind the app in the middle of the wheel, centred on its icon
+	glowWidth: 1400,
+	glowHeight: 1100,
 	appIcon: 76,
 	appIconRadius: 21,
 	mainLeft: 700, // the greeting, right of the wheel
@@ -317,6 +320,7 @@ export const MOTION = {
 	backdropOpacity: 0.25, // the bar and the weather while an app is moved
 	barFocusScale: 1.06,
 	photoFadeMs: 1500, // a new background photo fading in over the last one
+	glowFadeMs: 600, // the glow behind the wheel taking the next app's colour
 	// the moving dusk: its lights, gleams and stars go there and back, each in its own time;
 	// the clouds and crests drift on by a screen's width, a shooting star crosses once a
 	// round. The times do not divide each other, so that the scene rarely looks the same

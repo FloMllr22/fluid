@@ -47,6 +47,9 @@ const ROW_TOP = -LAYOUT.wheelRowHeight / 2;
 /** The top of the selected app's row: its menu opens beside it. */
 export const WHEEL_ROW_TOP = CENTRE_Y + ROW_TOP;
 
+/** The middle of the selected app's icon: the glow behind it is centred there. */
+export const WHEEL_CENTRE = {x: CENTRE_X, y: CENTRE_Y};
+
 /** Where the menu of the app `key` opens: right of the pill it has in the middle. A row is
  *  laid out as when selected, so its width is that of the pill wherever the app is. */
 export function wheelMenuLeft(nav: HTMLElement | null, key: string): number {

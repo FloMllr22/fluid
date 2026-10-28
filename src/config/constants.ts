@@ -21,6 +21,7 @@ export const TIMING = {
 	toastMs: 2200,
 	clockTickMs: 1000,
 	longPressMs: 600, // OK held this long enters/leaves re-order mode
+	appColorSettleMs: 150, // the wheel stands still this long before its colours follow the app
 	slideshowMs: 5 * 60 * 1000, // the background slideshow shows the next photo
 	weatherRefreshMs: 30 * 60 * 1000, // the weather is read again (Open-Meteo updates it every 15 minutes)
 	weatherRetryMs: 5 * 60 * 1000, // after reading the weather failed
