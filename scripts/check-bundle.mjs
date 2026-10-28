@@ -8,12 +8,19 @@
 //  - Stylesheets must not use CSS features Chromium 53 lacks and that have no fallback
 //    (FORBIDDEN_CSS below).
 //
+// It also tells the scripts' size gzipped, against the guide of PLAN.md (150 KB): above it
+// a warning, not a failure, since the plan calls it a guide.
+//
 //   node scripts/check-bundle.mjs [dist-dir]
 import {readdirSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {gzipSync} from 'node:zlib';
 import {parse} from 'acorn';
 
 const ES_VERSION = 2016;
+
+/** The guide for the scripts, gzipped (PLAN.md, section 6). */
+const SCRIPT_GZIP_KB = 150;
 
 /** [pattern, what it is] — matched against minified CSS. */
 const FORBIDDEN_CSS = [
@@ -65,3 +72,12 @@ if (problems.length) {
 	process.exit(1);
 }
 console.log(`Bundle check passed: ${scripts.concat(styles).join(', ')} run on Chromium 53.`);
+
+const gzipKb = (file) => gzipSync(readFileSync(join(assetsDir, file))).length / 1024;
+const scriptKb = scripts.reduce((sum, file) => sum + gzipKb(file), 0);
+const styleKb = styles.reduce((sum, file) => sum + gzipKb(file), 0);
+console.log(
+	`Gzipped: scripts ${scriptKb.toFixed(1)} KB (guide ${SCRIPT_GZIP_KB} KB), styles ${styleKb.toFixed(1)} KB.`
+);
+if (scriptKb > SCRIPT_GZIP_KB)
+	console.warn(`Warning: the scripts are larger than the guide of ${SCRIPT_GZIP_KB} KB gzipped.`);

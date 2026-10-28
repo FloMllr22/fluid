@@ -15,6 +15,7 @@ import {backgroundForTheme, backgroundFromKey, backgroundKey, shownBackground} f
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
+import {markFrame} from './perf';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type MovingApp} from './screens/Home';
 import {Onboarding} from './screens/Onboarding';
@@ -153,6 +154,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					if (shown && sameApps(shown, list.apps)) return;
 					shown = list.apps;
 					setAppsState({status: 'ready', apps: list.apps});
+					markFrame('appsShown');
 					// a move under way was of the list as it was: it is dropped, not stored
 					setMoving(null);
 					if (list.failedIcons > 0) showToast(tn('apps.iconsFailed', list.failedIcons), 'error');
