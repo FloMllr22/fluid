@@ -9,7 +9,7 @@ import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
-import {sameApps} from './lib/apps';
+import {sameApps, withNewApps} from './lib/apps';
 import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
 import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
@@ -152,6 +152,16 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		load();
 		return platform.onForeground(load);
 	}, [showToast]);
+
+	// An app installed since the list was last read joins Home (see withNewApps).
+	useEffect(() => {
+		if (appsState.status !== 'ready') return;
+		const next = withNewApps(
+			settings,
+			appsState.apps.map((a) => a.id)
+		);
+		if (next !== settings) updateSettings(next);
+	}, [appsState]);
 
 	// Refresh inputs whenever fluid comes back to the foreground (labels or connections may
 	// have changed).

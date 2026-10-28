@@ -60,6 +60,7 @@ describe('loadSettings', () => {
 	it('reads back what was saved', () => {
 		const settings = {
 			appIds: ['b', 'a'],
+			knownAppIds: ['a', 'b', 'c'],
 			sourceIds: ['com.webos.app.hdmi2'],
 			favoriteIds: ['a'],
 			background: {kind: 'photo', id: 'lake'} as Background,
@@ -71,11 +72,20 @@ describe('loadSettings', () => {
 	});
 
 	it('replaces each field of the wrong type with its default', () => {
-		useStorage(stored(SETTINGS_VERSION, {appIds: 'x', sourceIds: ['ok', 5], favoriteIds: null, background: 'dark'}));
+		useStorage(
+			stored(SETTINGS_VERSION, {
+				appIds: 'x',
+				knownAppIds: ['a', 1],
+				sourceIds: ['ok', 5],
+				favoriteIds: null,
+				background: 'dark'
+			})
+		);
 		expect(loadSettings().settings).toEqual(defaultSettings());
-		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], sourceIds: {}}));
+		useStorage(stored(SETTINGS_VERSION, {appIds: ['a'], knownAppIds: {}, sourceIds: {}}));
 		expect(loadSettings().settings).toEqual({
 			appIds: ['a'],
+			knownAppIds: null,
 			sourceIds: null,
 			favoriteIds: [],
 			background: dark,
@@ -114,6 +124,7 @@ describe('loadSettings', () => {
 		expect(loadSettings()).toEqual({
 			settings: {
 				appIds: ['a'],
+				knownAppIds: null,
 				sourceIds: null,
 				favoriteIds: ['a'],
 				background: {kind: 'slideshow'},
@@ -141,7 +152,15 @@ describe('migration from fluid 0.1', () => {
 	it('keeps the chosen apps and sources, and drops the Homebrew option', () => {
 		useStorage(legacy);
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'},
+			settings: {
+				appIds: ['b', 'a'],
+				knownAppIds: null,
+				sourceIds: null,
+				favoriteIds: [],
+				background: dark,
+				weather: off,
+				language: 'tv'
+			},
 			unreadable: false,
 			migrated: true,
 			firstStart: false
@@ -154,7 +173,15 @@ describe('migration from fluid 0.1', () => {
 		expect(data[LEGACY_KEY]).toBeUndefined();
 		expect(JSON.parse(data[SETTINGS_KEY])).toEqual({
 			version: SETTINGS_VERSION,
-			settings: {appIds: ['b', 'a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'}
+			settings: {
+				appIds: ['b', 'a'],
+				knownAppIds: null,
+				sourceIds: null,
+				favoriteIds: [],
+				background: dark,
+				weather: off,
+				language: 'tv'
+			}
 		});
 		expect(loadSettings().migrated).toBe(false);
 	});
@@ -169,7 +196,15 @@ describe('migration from version 1', () => {
 	it('keeps the choices and starts without favourites', () => {
 		useStorage(stored(1, {appIds: ['a'], sourceIds: null}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: null, favoriteIds: [], background: dark, weather: off, language: 'tv'},
+			settings: {
+				appIds: ['a'],
+				knownAppIds: null,
+				sourceIds: null,
+				favoriteIds: [],
+				background: dark,
+				weather: off,
+				language: 'tv'
+			},
 			unreadable: false,
 			migrated: true,
 			firstStart: false
@@ -183,6 +218,7 @@ describe('migration from version 2', () => {
 		expect(loadSettings()).toEqual({
 			settings: {
 				appIds: ['a', 'b'],
+				knownAppIds: null,
 				sourceIds: null,
 				favoriteIds: ['b'],
 				background: dark,
@@ -201,7 +237,15 @@ describe('migration from version 3', () => {
 		const photo: Background = {kind: 'photo', id: 'lake'};
 		useStorage(stored(3, {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: ['a'], sourceIds: ['x'], favoriteIds: ['a'], background: photo, weather: off, language: 'tv'},
+			settings: {
+				appIds: ['a'],
+				knownAppIds: null,
+				sourceIds: ['x'],
+				favoriteIds: ['a'],
+				background: photo,
+				weather: off,
+				language: 'tv'
+			},
 			unreadable: false,
 			migrated: true,
 			firstStart: false
@@ -214,7 +258,35 @@ describe('migration from version 4', () => {
 		const weather = {enabled: true, place: berlin};
 		useStorage(stored(4, {appIds: null, sourceIds: null, favoriteIds: [], background: dark, weather}));
 		expect(loadSettings()).toEqual({
-			settings: {appIds: null, sourceIds: null, favoriteIds: [], background: dark, weather, language: 'tv'},
+			settings: {
+				appIds: null,
+				knownAppIds: null,
+				sourceIds: null,
+				favoriteIds: [],
+				background: dark,
+				weather,
+				language: 'tv'
+			},
+			unreadable: false,
+			migrated: true,
+			firstStart: false
+		});
+	});
+});
+
+describe('migration from version 5', () => {
+	it('keeps every choice, and learns which apps there are at the next reading', () => {
+		const settings = {
+			appIds: ['b', 'a'],
+			sourceIds: null,
+			favoriteIds: ['a'],
+			background: dark,
+			weather: off,
+			language: 'de'
+		};
+		useStorage(stored(5, settings));
+		expect(loadSettings()).toEqual({
+			settings: {...settings, knownAppIds: null},
 			unreadable: false,
 			migrated: true,
 			firstStart: false

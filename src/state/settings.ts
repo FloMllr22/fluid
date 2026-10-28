@@ -35,6 +35,9 @@ export interface WeatherSettings {
 export interface Settings {
 	/** ordered app IDs for the Apps row; null → every app, in the order of LG's launcher */
 	appIds: string[] | null;
+	/** the apps there when the list was last read; one not among them is new, and joins the
+	 *  Apps row. null → not read yet (a first start, or settings of fluid before version 6) */
+	knownAppIds: string[] | null;
 	/** ordered input appIds (com.webos.app.hdmiN) for the Sources row; null → all inputs */
 	sourceIds: string[] | null;
 	/** apps marked as favourites; they lead the Apps row */
@@ -44,7 +47,7 @@ export interface Settings {
 	language: LanguageChoice;
 }
 
-export const SETTINGS_VERSION = 5;
+export const SETTINGS_VERSION = 6;
 
 /** Holds {version, settings}. */
 export const SETTINGS_KEY = 'fluid-settings';
@@ -65,7 +68,9 @@ export const MIGRATIONS: Record<number, (data: Data) => Data> = {
 	// 4: the weather, off until the user turns it on
 	4: (data) => ({...data, weather: defaultWeather()}),
 	// 5: a language of fluid's own; until then it always spoke the TV's
-	5: (data) => ({...data, language: 'tv'})
+	5: (data) => ({...data, language: 'tv'}),
+	// 6: new apps join the Apps row; which apps there are is learnt at the next reading
+	6: (data) => ({...data, knownAppIds: null})
 };
 
 export function defaultBackground(): Background {
@@ -79,6 +84,7 @@ export function defaultWeather(): WeatherSettings {
 export function defaultSettings(): Settings {
 	return {
 		appIds: null,
+		knownAppIds: null,
 		sourceIds: null,
 		favoriteIds: [],
 		background: defaultBackground(),
@@ -147,6 +153,7 @@ export function saveSettings(settings: Settings): boolean {
 function sanitize(data: Data): Settings {
 	return {
 		appIds: idList(data.appIds),
+		knownAppIds: idList(data.knownAppIds),
 		sourceIds: idList(data.sourceIds),
 		favoriteIds: idList(data.favoriteIds) || [],
 		background: backgroundOf(data.background) || defaultBackground(),
