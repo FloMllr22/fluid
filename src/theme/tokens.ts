@@ -33,6 +33,16 @@ export const COLOR = {
 	duskGleamEdge: 'rgba(255, 190, 150, 0)',
 	duskStar: 'rgba(255, 244, 232, 0.9)',
 	duskStarEdge: 'rgba(255, 244, 232, 0)',
+	// its clouds: the high ones mauve, the low ones over the horizon dark against the bright
+	// sky, both lit from below; and the crests on the sea
+	duskCloud: 'rgba(150, 118, 186, 0.45)',
+	duskCloudEdge: 'rgba(150, 118, 186, 0)',
+	duskCloudFar: 'rgba(70, 52, 110, 0.55)',
+	duskCloudFarEdge: 'rgba(70, 52, 110, 0)',
+	duskCloudLit: 'rgba(255, 176, 150, 0.45)',
+	duskCloudLitEdge: 'rgba(255, 176, 150, 0)',
+	duskWave: 'rgba(190, 170, 230, 0.28)',
+	duskWaveEdge: 'rgba(190, 170, 230, 0)',
 	// A soft shade behind the app wheel on Home, from the left edge to clear of the names, so
 	// that they read without a shadow of their own. With it the names that are not selected
 	// keep WCAG AA for their large text on every colour (on dusk at least 3.8:1, where a name
@@ -212,15 +222,21 @@ export const MOTION = {
 	backdropOpacity: 0.25, // the bar and the weather while an app is moved
 	barFocusScale: 1.06,
 	photoFadeMs: 1500, // a new background photo fading in over the last one
-	// the moving dusk: each of its layers goes there and back in its own time; the times
-	// do not divide each other, so that the scene rarely looks the same again
-	duskGlowMs: 23000,
-	duskBloomMs: 29000,
-	duskBandMs: 17000,
-	duskSeaMs: 7000,
-	duskSeaAltMs: 11000,
-	duskStarsMs: 6000,
-	duskStarsAltMs: 8500
+	// the moving dusk: its lights, gleams and stars go there and back, each in its own time;
+	// the clouds and crests drift on by a screen's width, a shooting star crosses once a
+	// round. The times do not divide each other, so that the scene rarely looks the same
+	duskGlowMs: 13000,
+	duskBloomMs: 17000,
+	duskBandMs: 11000,
+	duskSeaMs: 1900,
+	duskSeaAltMs: 2700,
+	duskStarsMs: 2300,
+	duskStarsAltMs: 3100,
+	duskCloudsMs: 38000, // 50 px a second
+	duskCloudsFarMs: 83000, // 23 px a second
+	duskWavesMs: 47000, // 41 px a second
+	duskMeteorMs: 9000,
+	duskMeteorAltMs: 14000
 } as const;
 
 /** The app wheel's shape: a circle whose right-most point, in the middle of the screen,

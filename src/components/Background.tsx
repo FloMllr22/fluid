@@ -21,8 +21,8 @@ interface Layer {
 
 /** The layer behind every screen: a colour, or a photo that fades in over the last one,
  *  darkened so that text on it stays readable. A photo is shown once it has loaded, so
- *  it never fades in half drawn. The moving dusk has its lights, stars and gleams on layers
- *  of their own, which move while fluid is in front. */
+ *  it never fades in half drawn. The moving dusk has its clouds, lights, stars and gleams
+ *  on layers of their own, which move while fluid is in front. */
 export function Background({background, photos, onError}: Props) {
 	const slide = useSlideshow(
 		photos.map((p) => p.id),

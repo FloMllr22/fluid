@@ -14,8 +14,9 @@ greeting with the date, the time and (if you like) the weather.
 - **Sources**: a menu of Live TV and the HDMI inputs, with the names set in the TV's input
   settings
 - **LG** and **Settings**: LG's own home screen, and fluid's settings
-- **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or with its
-  lights slowly drifting), one of three photos, or a slideshow of them
+- **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or alive with
+  drifting clouds, shooting stars and light on the sea), one of three photos, or a
+  slideshow of them
 - **Weather** (optional, off until you turn it on): the sky and temperature at a place you
   search for, from [Open-Meteo](https://open-meteo.com), in °C or °F as your TV's region uses
 - **First start**: a short setup in three steps (language, apps, background); all of it can be

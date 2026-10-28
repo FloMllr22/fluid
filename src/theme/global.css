@@ -121,17 +121,52 @@ body {
 		opacity: 1;
 	}
 }
-/* The layers of the moving dusk (placed by DUSK_LAYERS): each goes there and back in its
-   own time, only by transform and opacity, so the TV's graphics chip moves them without
-   drawing anything anew. Soft light alone hardly shows moving, so the scene also breathes
-   (the bloom fades far down) and has edges that show it: the band on the horizon, the
-   gleams on the sea and the stars. All keep clear of the names on the wheel (their
-   contrast is that of the still dusk). They stop while fluid is not in front. */
+/* The layers of the moving dusk (placed by DUSK_LAYERS), moved only by transform and
+   opacity, so the TV's graphics chip moves them without drawing anything anew. Soft light
+   going there and back is hardly seen to move, so what carries the motion goes on at an
+   even pace: the clouds and the crests on the sea drift across the screen, shooting stars
+   cross the sky; the lights breathe, the gleams and stars flicker. They stop while fluid
+   is not in front. */
 .background__light {
 	position: absolute;
 	animation-timing-function: ease-in-out;
 	animation-iteration-count: infinite;
 	animation-direction: alternate;
+}
+.background__light--clouds,
+.background__light--clouds-far,
+.background__light--waves,
+.background__light--meteor,
+.background__light--meteor-alt {
+	animation-timing-function: linear;
+	animation-direction: normal;
+}
+.background__light--clouds,
+.background__light--clouds-far,
+.background__light--waves {
+	animation-name: dusk-drift;
+}
+.background__light--clouds {
+	animation-duration: var(--motion-dusk-clouds-ms);
+}
+.background__light--clouds-far {
+	animation-duration: var(--motion-dusk-clouds-far-ms);
+}
+.background__light--waves {
+	animation-duration: var(--motion-dusk-waves-ms);
+}
+/* unseen but while crossing, and where motion is reduced */
+.background__light--meteor,
+.background__light--meteor-alt {
+	opacity: 0;
+}
+.background__light--meteor {
+	animation-name: dusk-meteor;
+	animation-duration: var(--motion-dusk-meteor-ms);
+}
+.background__light--meteor-alt {
+	animation-name: dusk-meteor-alt;
+	animation-duration: var(--motion-dusk-meteor-alt-ms);
 }
 .background__light--glow {
 	animation-name: dusk-glow;
@@ -200,22 +235,64 @@ body {
 /* the two sets of gleams drift against each other and flicker in turn */
 @keyframes dusk-sea {
 	from {
-		opacity: 0.15;
-		transform: translate(-30px, 0);
+		opacity: 0.1;
+		transform: translate(-40px, 0);
 	}
 	to {
-		opacity: 0.9;
-		transform: translate(30px, 0);
+		opacity: 1;
+		transform: translate(40px, 0);
 	}
 }
 @keyframes dusk-sea-alt {
 	from {
-		opacity: 0.9;
-		transform: translate(25px, 0);
+		opacity: 1;
+		transform: translate(35px, 0);
 	}
 	to {
-		opacity: 0.15;
-		transform: translate(-25px, 0);
+		opacity: 0.1;
+		transform: translate(-35px, 0);
+	}
+}
+/* The clouds and the crests drift left by the screen's width (1920 px), half their layer,
+   which shows the same twice: the end looks like the start. */
+@keyframes dusk-drift {
+	to {
+		transform: translateX(-1920px);
+	}
+}
+/* A shooting star flares up, crosses the upper sky down to the left in under a second and
+   fades; for the rest of its round it waits unseen, so that the two come at different
+   times. Turned to its path, it moves along its own length. */
+@keyframes dusk-meteor {
+	0%,
+	40% {
+		opacity: 0;
+		transform: rotate(155deg) translateX(0);
+	}
+	42%,
+	45% {
+		opacity: 1;
+	}
+	48%,
+	100% {
+		opacity: 0;
+		transform: rotate(155deg) translateX(650px);
+	}
+}
+@keyframes dusk-meteor-alt {
+	0%,
+	60% {
+		opacity: 0;
+		transform: rotate(145deg) translateX(0);
+	}
+	61.5%,
+	63% {
+		opacity: 1;
+	}
+	65%,
+	100% {
+		opacity: 0;
+		transform: rotate(145deg) translateX(460px);
 	}
 }
 /* the two sets of stars twinkle in turn */
