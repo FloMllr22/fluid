@@ -15,8 +15,7 @@ greeting with the date, the time and (if you like) the weather.
   settings
 - **LG** and **Settings**: LG's own home screen, and fluid's settings
 - **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or alive with
-  drifting clouds, shooting stars and light on the sea), one of three photos, or a
-  slideshow of them
+  drifting clouds, shooting stars and light on the sea)
 - **Appearance**: an accent colour of its own or taken from the app in the middle of the
   wheel, an optional glow in that app's colour behind the wheel, three icon sizes, and a
   switch to reduce motion

@@ -14,21 +14,6 @@ is **not** covered by that licence.
 
 All three licence texts are included in the installed app under `licenses/`.
 
-## Background photos
-
-The photos fluid offers as backgrounds come from [Unsplash](https://unsplash.com) and are
-under the [Unsplash License](https://unsplash.com/license): they may be used, copied,
-modified and distributed for free, without asking and without attribution, but not sold
-without significant modification or compiled into a similar or competing service. fluid
-names the photographers anyway. For the app, each photo was cropped to 16:9, scaled to
-1920×1080 and saved again as JPEG without its metadata, with a 288×288 thumbnail.
-
-| Files in `src/assets/backgrounds/` | Photo | Photographer | Source |
-|---|---|---|---|
-| `fuji.jpg`, `fuji.thumb.jpg` | Mount Fuji at night above a lake, Fujinomiya, Japan | Clay Banks (@claybanks) | [unsplash.com](https://unsplash.com/de/fotos/foto-von-berg-u27Rrbs9Dwc) |
-| `beach.jpg`, `beach.thumb.jpg` | Waves on a beach at sunset | Eugene Kim (@evgenii__kim) | [unsplash.com](https://unsplash.com/ko/사진/일몰-동안-해안에-부딪히는-바다-파도-mQ1-HR_XdIg) |
-| `sunset.jpg`, `sunset.thumb.jpg` | Waves splashing on sand at sunset | Quino Al (@quinoal) | [unsplash.com](https://unsplash.com/de/fotos/wellen-von-gewassern-die-auf-sand-spritzen-mBQIfKlvowM) |
-
 ## Weather and place data
 
 With the weather turned on (it is off until the user turns it on), fluid shows data it

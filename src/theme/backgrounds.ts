@@ -1,5 +1,5 @@
 // The backgrounds fluid offers: the colours, drawn from the tokens, and the photos that
-// come with it.
+// come with it (none at the moment).
 
 import {type Light, lightLayer, type Photo, photosFrom} from '../lib/backgrounds';
 import type {BackgroundColor} from '../state/settings';
@@ -200,8 +200,10 @@ export const COLOR_BACKGROUNDS: Record<BackgroundColor, string> = {
 };
 
 /** Every photo in src/assets/backgrounds/, found when building: `<id>.jpg` (1920×1080)
- *  and `<id>.thumb.jpg` (288×288). A new photo needs no code, only its name in each
- *  locale file (`background.photo.<id>`) and its source in THIRD_PARTY_NOTICES.md. */
+ *  and `<id>.thumb.jpg` (288×288). None ships at the moment, so Settings offers only the
+ *  colours; a photo stored before falls back to the default (see shownBackground). A new
+ *  photo needs no code, only its name in each locale file (`background.photo.<id>`) and
+ *  its source in THIRD_PARTY_NOTICES.md. */
 export const PHOTOS: Photo[] = photosFrom(
 	import.meta.glob<string>(['../assets/backgrounds/*.jpg', '!../assets/backgrounds/*.thumb.jpg'], {
 		eager: true,
