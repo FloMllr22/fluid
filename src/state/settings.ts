@@ -13,6 +13,33 @@ import type {Place} from '../platform';
 export const BACKGROUND_COLORS = ['dark', 'black', 'blue', 'dusk', 'duskMoving'] as const;
 export type BackgroundColor = (typeof BACKGROUND_COLORS)[number];
 
+/** The themes, as offered: the colours of text, surfaces, menus and focus. */
+export const THEMES = ['black', 'dark', 'light'] as const;
+export type Theme = (typeof THEMES)[number];
+
+/** The accent colours, as offered: the one of the app in the middle of the wheel, or one
+ *  of fluid's own. A colour added later needs no new version (read as the default). */
+export const ACCENTS = ['app', 'ice', 'mint', 'coral', 'lavender', 'gold'] as const;
+export type Accent = (typeof ACCENTS)[number];
+
+/** How strongly the app in the middle of the wheel glows behind it, in %; 0 is off. */
+export const GLOW_LEVELS = [0, 15, 30, 50] as const;
+export type GlowLevel = (typeof GLOW_LEVELS)[number];
+
+/** The size of the icons on the wheel, in % of the usual size. */
+export const ICON_SIZES = [85, 100, 115] as const;
+export type IconSize = (typeof ICON_SIZES)[number];
+
+/** How fluid looks. */
+export interface Appearance {
+	theme: Theme;
+	accent: Accent;
+	glow: GlowLevel;
+	iconSize: IconSize;
+	/** no transitions, and nothing that moves on its own (as the TV may ask for, too) */
+	reduceMotion: boolean;
+}
+
 /** What is behind the screens: a colour, one of the photos that come with fluid (by its
  *  ID), or a slideshow of all of them. A photo that a later fluid no longer ships is
  *  stored as it is; whoever draws the background falls back to the default. */
@@ -45,9 +72,10 @@ export interface Settings {
 	background: Background;
 	weather: WeatherSettings;
 	language: LanguageChoice;
+	appearance: Appearance;
 }
 
-export const SETTINGS_VERSION = 6;
+export const SETTINGS_VERSION = 7;
 
 /** Holds {version, settings}. */
 export const SETTINGS_KEY = 'fluid-settings';
@@ -70,7 +98,9 @@ export const MIGRATIONS: Record<number, (data: Data) => Data> = {
 	// 5: a language of fluid's own; until then it always spoke the TV's
 	5: (data) => ({...data, language: 'tv'}),
 	// 6: new apps join the Apps row; which apps there are is learnt at the next reading
-	6: (data) => ({...data, knownAppIds: null})
+	6: (data) => ({...data, knownAppIds: null}),
+	// 7: a choice of how fluid looks; it looks as it did until then
+	7: (data) => ({...data, appearance: defaultAppearance()})
 };
 
 export function defaultBackground(): Background {
@@ -81,6 +111,10 @@ export function defaultWeather(): WeatherSettings {
 	return {enabled: false, place: null};
 }
 
+export function defaultAppearance(): Appearance {
+	return {theme: 'dark', accent: 'ice', glow: 0, iconSize: 100, reduceMotion: false};
+}
+
 export function defaultSettings(): Settings {
 	return {
 		appIds: null,
@@ -89,7 +123,8 @@ export function defaultSettings(): Settings {
 		favoriteIds: [],
 		background: defaultBackground(),
 		weather: defaultWeather(),
-		language: 'tv'
+		language: 'tv',
+		appearance: defaultAppearance()
 	};
 }
 
@@ -158,7 +193,24 @@ function sanitize(data: Data): Settings {
 		favoriteIds: idList(data.favoriteIds) || [],
 		background: backgroundOf(data.background) || defaultBackground(),
 		weather: weatherOf(data.weather),
-		language: languageOf(data.language)
+		language: languageOf(data.language),
+		appearance: appearanceOf(data.appearance)
+	};
+}
+
+/** A copy of the stored appearance; each field falls back on its own, also a value a later
+ *  fluid added. */
+function appearanceOf(value: unknown): Appearance {
+	const fallback = defaultAppearance();
+	if (!isObject(value)) return fallback;
+	const oneOf = <T>(list: readonly T[], stored: unknown, otherwise: T): T =>
+		list.indexOf(stored as T) !== -1 ? (stored as T) : otherwise;
+	return {
+		theme: oneOf(THEMES, value.theme, fallback.theme),
+		accent: oneOf(ACCENTS, value.accent, fallback.accent),
+		glow: oneOf(GLOW_LEVELS, value.glow, fallback.glow),
+		iconSize: oneOf(ICON_SIZES, value.iconSize, fallback.iconSize),
+		reduceMotion: value.reduceMotion === true
 	};
 }
 
