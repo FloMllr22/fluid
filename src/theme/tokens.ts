@@ -108,6 +108,8 @@ export const COLOR = {
 	dot: 'rgba(255, 255, 255, 0.25)', // an onboarding step still to come
 	dotDone: 'rgba(255, 255, 255, 0.5)', // an onboarding step done
 	danger: '#e0564f',
+	dangerText: '#FF8A7A', // what cannot be undone, on dark glass
+	dangerTextFocused: '#B3261E', // the same on what has focus, a light pill
 	// three apps' colours: the swatch of the accent "From the app" in Settings
 	previewApp: '#E2553B',
 	previewAppBefore: '#3D6BE0',

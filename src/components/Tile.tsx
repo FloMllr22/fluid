@@ -15,6 +15,8 @@ export interface TileModel {
 	swatch?: string;
 	/** a favourite app: shown with a star */
 	favorite?: boolean;
+	/** an app the TV lets be uninstalled */
+	removable?: boolean;
 }
 
 interface Props {

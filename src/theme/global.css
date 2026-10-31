@@ -797,9 +797,15 @@ body {
 .menu__item:last-child {
 	margin-bottom: 0;
 }
+.menu__item--danger {
+	color: var(--color-danger-text);
+}
 .menu__item--focused {
 	background: var(--color-focus-fill);
 	color: var(--color-focus-text);
+}
+.menu__item--danger.menu__item--focused {
+	color: var(--color-danger-text-focused);
 }
 .menu__well {
 	flex: 0 0 auto;

@@ -9,6 +9,7 @@ export type GlyphName =
 	| 'star'
 	| 'move'
 	| 'hide'
+	| 'uninstall'
 	| 'close'
 	| 'tv'
 	| 'input'
@@ -46,6 +47,8 @@ const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 	hide: () => (
 		<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 4l16 16" />
 	),
+	// a bin: uninstall an app
+	uninstall: () => <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
 	close: () => <path d="M6 6l12 12M18 6 6 18" />,
 	// a screen with an antenna: Live TV, aerial, satellite
 	tv: () => (

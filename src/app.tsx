@@ -89,6 +89,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const [onboarding, setOnboarding] = useState(loaded.firstStart);
 	const draft = useRef(loaded.firstStart);
 	const toastTimer = useRef(0);
+	/** reads the app list again */
+	const reloadApps = useRef<() => void>(() => undefined);
 	const weather = useWeather(settings.weather);
 
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
@@ -177,6 +179,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				}
 			);
 		};
+		reloadApps.current = load;
 		load();
 		return platform.onForeground(load);
 	}, [showToast]);
@@ -403,6 +406,16 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			updateSettings({...settings, appIds: next.order, favoriteIds: next.favoriteIds});
 		} else if (action === 'move') {
 			setMoving({id: menuApp.id, order});
+		} else if (action === 'uninstall') {
+			const name = menuApp.title;
+			showToast(t('apps.uninstalling', {name}));
+			platform.uninstallApp(menuApp.id).then(
+				() => {
+					showToast(t('apps.uninstalled', {name}));
+					reloadApps.current();
+				},
+				(error: unknown) => showToast(failure(t('apps.uninstallFailed', {name}), error), 'error')
+			);
 		} else {
 			updateSettings({
 				...settings,

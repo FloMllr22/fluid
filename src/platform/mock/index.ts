@@ -63,6 +63,7 @@ function homeKeyFromUrl(): HomeKeyState {
 }
 
 export function createMockPlatform(): Platform {
+	const uninstalled: string[] = [];
 	let homeKey = homeKeyFromUrl();
 	let isInput = false;
 	const homeKeyNow = (): Promise<HomeKey> => Promise.resolve({state: homeKey, isInput});
@@ -75,11 +76,20 @@ export function createMockPlatform(): Platform {
 		listApps: () => {
 			const code = errorFromUrl('apps-error');
 			if (code) return Promise.reject(new PlatformError(code, `[mock] app list failed: ${code}`));
-			return Promise.resolve({apps: appsFromUrl(), failedIcons: 0});
+			const apps = appsFromUrl().filter((app) => uninstalled.indexOf(app.id) === -1);
+			return Promise.resolve({apps, failedIcons: 0});
 		},
 		listInputs: () => Promise.resolve(MOCK_INPUTS.slice()),
 		launch: (appId) => {
 			console.info(`[mock] would launch ${appId}`);
+			return Promise.resolve();
+		},
+		// ?uninstall-error=1 makes it fail, to see how fluid explains it
+		uninstallApp: (appId) => {
+			if (urlParam('uninstall-error') !== null) {
+				return Promise.reject(new PlatformError('rejected', `[mock] could not uninstall ${appId}`));
+			}
+			uninstalled.push(appId);
 			return Promise.resolve();
 		},
 		launchLgHome: () => {

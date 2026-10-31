@@ -2,7 +2,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {APP_ID} from '../../config/constants';
 import {PlatformError} from '../errors';
 import {batchIcons, ICON_BATCH_BYTES, listApps} from './apps';
-import {LUNA} from './constants';
+import {HOMEBREW_APP, LUNA} from './constants';
 import {lunaCall} from './luna';
 
 vi.mock('./luna', () => ({lunaCall: vi.fn()}));
@@ -11,6 +11,7 @@ interface LaunchPoint {
 	id: string;
 	title: string;
 	largeIcon?: string;
+	removable?: boolean;
 }
 
 /** What the fake TV answers. */
@@ -111,11 +112,21 @@ describe('listApps', () => {
 		];
 		await expect(listApps()).resolves.toEqual({
 			apps: [
-				{id: 'com.example.b', title: 'Bravo', iconUrl: undefined},
-				{id: 'com.example.a', title: 'Alpha', iconUrl: undefined}
+				{id: 'com.example.b', title: 'Bravo', iconUrl: undefined, removable: false},
+				{id: 'com.example.a', title: 'Alpha', iconUrl: undefined, removable: false}
 			],
 			failedIcons: 0
 		});
+	});
+
+	it('offers to remove what the TV lets be removed, but never the Homebrew Channel', async () => {
+		tv.launchPoints = [
+			{id: 'com.example.a', title: 'Alpha', removable: true},
+			{id: 'com.example.b', title: 'Bravo', removable: false},
+			{id: HOMEBREW_APP, title: 'Homebrew Channel', removable: true}
+		];
+		const {apps} = await listApps();
+		expect(apps.map((app) => app.removable)).toEqual([true, false, false]);
 	});
 
 	it('says so when the Homebrew Channel is not installed', async () => {

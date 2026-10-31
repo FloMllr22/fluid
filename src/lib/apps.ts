@@ -10,7 +10,11 @@ export function sameApps(a: AppEntry[], b: AppEntry[]): boolean {
 		a.length === b.length &&
 		a.every(
 			(app, i) =>
-				app.id === b[i].id && app.title === b[i].title && app.iconUrl === b[i].iconUrl && app.color === b[i].color
+				app.id === b[i].id &&
+				app.title === b[i].title &&
+				app.iconUrl === b[i].iconUrl &&
+				app.color === b[i].color &&
+				app.removable === b[i].removable
 		)
 	);
 }

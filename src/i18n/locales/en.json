@@ -40,6 +40,9 @@
 	"apps.iconsFailed_one": "{count} app icon could not be loaded",
 	"apps.iconsFailed_other": "{count} app icons could not be loaded",
 	"apps.hidden": "{name} is hidden. Show it again in Settings.",
+	"apps.uninstalling": "Uninstalling {name} …",
+	"apps.uninstalled": "{name} is uninstalled.",
+	"apps.uninstallFailed": "{name} could not be uninstalled.",
 
 	"inputs.liveTv": "Live TV",
 	"inputs.noneSelected": "No sources selected",
@@ -54,6 +57,8 @@
 	"menu.unfavorite": "Remove from favourites",
 	"menu.move": "Move",
 	"menu.hide": "Hide",
+	"menu.uninstall": "Uninstall",
+	"menu.uninstallConfirm": "Really delete",
 	"menu.cancel": "Cancel",
 	"menu.hint": "↑ ↓ choose · OK confirms · Back closes",
 

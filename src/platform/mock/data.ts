@@ -13,7 +13,7 @@ export const MOCK_APPS: AppEntry[] = [
 	{id: 'com.example.photos', title: 'Photos', color: '#C2417A'},
 	{id: 'com.example.library', title: 'Library', color: '#7048E8'},
 	{id: 'com.example.news', title: 'News', color: '#4B5563'}
-];
+].map((app) => ({...app, removable: true}));
 
 /** Inputs as the TV reports them; the icon names pick fluid's own glyphs. */
 export const MOCK_INPUTS: InputSource[] = [

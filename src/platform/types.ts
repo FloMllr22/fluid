@@ -10,6 +10,8 @@ export interface AppEntry {
 	iconUrl?: string;
 	/** background of the letter tile */
 	color?: string;
+	/** the TV lets it be uninstalled */
+	removable?: boolean;
 }
 
 export interface AppList {
@@ -91,6 +93,9 @@ export interface Platform {
 	listInputs(): Promise<InputSource[]>;
 	/** Opens an app, or switches to an input */
 	launch(appId: string): Promise<void>;
+	/** Uninstalls an app, and resolves once it is gone from the TV. Rejects with `timeout` when
+	 *  it is still there after a while, or `rejected`. */
+	uninstallApp(appId: string): Promise<void>;
 	/** Opens LG's own home screen */
 	launchLgHome(): Promise<void>;
 	/** What the Home key opens. Asking also tells the TV that fluid is up (see setHomeKey). Rejects

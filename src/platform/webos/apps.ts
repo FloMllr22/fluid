@@ -9,17 +9,22 @@ import {PlatformError} from '../errors';
 import type {AppList} from '../types';
 import {HOMEBREW_APP, LUNA} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
-import {isSafePath, readFileSizes, readIcons, readLaunchPoints} from './shell';
+import {isSafePath, readFileSizes, readIcons, readLaunchPoints, removeApp} from './shell';
 
 interface LaunchPoint {
 	id: string;
 	title: string;
 	largeIcon?: string;
 	icon?: string;
+	removable?: boolean;
 }
 
 /** Apps LG lists but that make no sense on a launcher (ourselves, promos). */
 const HIDDEN_IDS = [APP_ID, 'google.assistant.promo', 'com.webos.app.discovery'];
+
+/** How long an app may take to be gone once its removal has started, and how often to look. */
+const UNINSTALL_WAIT_MS = 30000;
+const UNINSTALL_LOOK_MS = 1000;
 
 /** Icons by file path: a data URI, or "" for a file that is missing, empty or too large,
  *  so it is not asked for again. */
@@ -41,11 +46,35 @@ export function listApps(): Promise<AppList> {
 		.then((points) =>
 			loadIcons(points).then(
 				({icons, failed}): AppList => ({
-					apps: points.map((p) => ({id: p.id, title: p.title, iconUrl: icons[p.id]})),
+					// fluid cannot do without the Homebrew Channel, so it does not offer to remove it
+					apps: points.map((p) => ({
+						id: p.id,
+						title: p.title,
+						iconUrl: icons[p.id],
+						removable: p.removable === true && p.id !== HOMEBREW_APP
+					})),
 					failedIcons: failed
 				})
 			)
 		);
+}
+
+export function uninstallApp(appId: string): Promise<void> {
+	return removeApp(appId).then((out) => {
+		if (!/"returnValue"\s*:\s*true/.test(out)) throw new PlatformError('rejected', `Removing ${appId}: ${out}`);
+		return appGone(appId, Date.now() + UNINSTALL_WAIT_MS);
+	});
+}
+
+/** Resolves once the TV no longer lists the app. */
+function appGone(appId: string, until: number): Promise<void> {
+	return readLaunchPoints().then((out) => {
+		if (parseLaunchPoints(out).every((p) => p.id !== appId)) return undefined;
+		if (Date.now() >= until) throw new PlatformError('timeout', `${appId} is still there`);
+		return new Promise<void>((resolve, reject) => {
+			setTimeout(() => appGone(appId, until).then(resolve, reject), UNINSTALL_LOOK_MS);
+		});
+	});
 }
 
 function parseLaunchPoints(out: string): LaunchPoint[] {

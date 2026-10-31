@@ -40,6 +40,9 @@
 	"apps.iconsFailed_one": "{count} App-Icon konnte nicht geladen werden",
 	"apps.iconsFailed_other": "{count} App-Icons konnten nicht geladen werden",
 	"apps.hidden": "{name} ist ausgeblendet. In den Einstellungen wieder einblenden.",
+	"apps.uninstalling": "{name} wird deinstalliert …",
+	"apps.uninstalled": "{name} ist deinstalliert.",
+	"apps.uninstallFailed": "{name} konnte nicht deinstalliert werden.",
 
 	"inputs.liveTv": "Live TV",
 	"inputs.noneSelected": "Keine Quellen ausgewählt",
@@ -54,6 +57,8 @@
 	"menu.unfavorite": "Aus Favoriten entfernen",
 	"menu.move": "Verschieben",
 	"menu.hide": "Ausblenden",
+	"menu.uninstall": "Deinstallieren",
+	"menu.uninstallConfirm": "Wirklich löschen",
 	"menu.cancel": "Abbrechen",
 	"menu.hint": "↑ ↓ wählen · OK bestätigen · Zurück schließt",
 

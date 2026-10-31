@@ -40,6 +40,7 @@ export function inputGlyph(icon: string): GlyphName {
 export function appTile(app: AppEntry, favorite = false): TileModel {
 	const tile: TileModel = {key: app.id, label: app.title, imageUrl: app.iconUrl, color: app.color};
 	if (favorite) tile.favorite = true;
+	if (app.removable) tile.removable = true;
 	return tile;
 }
 

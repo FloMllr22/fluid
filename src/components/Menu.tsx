@@ -5,6 +5,8 @@ export interface MenuEntry {
 	key: string;
 	label: string;
 	glyph: GlyphName;
+	/** it cannot be undone: shown in a warning colour */
+	danger?: boolean;
 }
 
 interface Props {
@@ -33,7 +35,7 @@ export function Menu({entries, focus, emptyText, className, top, left, onPoint, 
 				entries.map((entry, i) => (
 					<div
 						key={entry.key}
-						class={`menu__item${i === focus ? ' menu__item--focused' : ''}`}
+						class={`menu__item${entry.danger ? ' menu__item--danger' : ''}${i === focus ? ' menu__item--focused' : ''}`}
 						onMouseEnter={() => onPoint(i)}
 						onClick={() => onPick(i)}
 					>

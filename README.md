@@ -53,7 +53,7 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Home | → | To Sources, LG and Settings at the top right (← → along them, ← or ↓ back to the apps) |
 | Home | OK | Open the app, open the Sources menu, LG's home screen or Settings |
 | Sources menu | ↑ ↓, OK | Switch to that input (Back closes the menu) |
-| Home | Hold OK on an app | Its menu beside it: add to or remove from favourites, move, hide |
+| Home | Hold OK on an app | Its menu beside it: add to or remove from favourites, move, hide, uninstall (asks once more) |
 | Moving an app (Home) | ↑ ↓, then OK | Move it along the list, keep its new place |
 | Moving an app (Home) | Back | Put it back where it was |
 | Settings | ↑ ↓, then → | Choose a tab on the left, then go into it (← comes back) |

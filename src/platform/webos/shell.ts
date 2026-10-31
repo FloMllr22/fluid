@@ -68,6 +68,21 @@ export function readIcons(paths: string[]): Promise<string> {
 	return exec(iconsScript(paths), 15000);
 }
 
+/** App IDs as webOS has them. Anything else is refused rather than passed to a root shell. */
+const SAFE_APP_ID = /^[A-Za-z0-9][A-Za-z0-9._+-]*$/;
+
+/** The script behind removeApp. It works for apps from LG's store and for those installed
+ *  through the Homebrew Channel alike. Throws on an unsafe ID. */
+export function removeAppScript(appId: string): string {
+	if (!SAFE_APP_ID.test(appId)) throw new Error(`Refusing unsafe app ID: ${appId}`);
+	return `luna-send -n 1 luna://com.webos.appInstallService/remove '{"id":"${appId}","subscribe":false}'`;
+}
+
+/** Command 4: starts uninstalling an app. It takes its time after the answer. */
+export function removeApp(appId: string): Promise<string> {
+	return exec(removeAppScript(appId), 8000);
+}
+
 /** What fluid may ask of its script for the Home key (public/home-hook.sh, shipped next to
  *  index.html). */
 export type HomeHookCommand = 'status' | 'enable' | 'disable' | 'input yes' | 'input no' | 'open-lg' | 'ack';
@@ -77,12 +92,12 @@ export function homeHookScript(command: HomeHookCommand): string {
 	return `sh ${quotePath(`/media/developer/apps/usr/palm/applications/${APP_ID}/home-hook.sh`)} ${command}`;
 }
 
-/** Command 4: fluid's script for the Home key. Turning it on waits to see that it works. */
+/** Command 5: fluid's script for the Home key. Turning it on waits to see that it works. */
 export function homeHook(command: HomeHookCommand): Promise<string> {
 	return exec(homeHookScript(command), command === 'enable' || command === 'disable' ? 25000 : 8000);
 }
 
-/** Command 5: tells the script for the Home key that fluid is up. Exits with 0 also while
+/** Command 6: tells the script for the Home key that fluid is up. Exits with 0 also while
  *  that script is not in use, as the Homebrew Channel fails any command that does not. */
 export function markFluidAlive(): Promise<string> {
 	return exec('[ ! -d /run/fluid-home ] || touch /run/fluid-home/alive', 5000);

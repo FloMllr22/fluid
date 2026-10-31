@@ -39,12 +39,17 @@ describe('colours', () => {
 		expect(contrast(stack(COLOR.focusFill, COLOR.focusTextSoft), fill)).toBeGreaterThanOrEqual(4.5);
 	});
 
+	it('warn on what has focus too', () => {
+		expect(contrast(parseColor(COLOR.dangerTextFocused), parseColor(COLOR.focusFill))).toBeGreaterThanOrEqual(4.5);
+	});
+
 	it('read in the menus and toasts, errors included', () => {
 		for (const ground of GROUNDS) {
 			const menu = stack(ground, COLOR.glassMenu);
 			expect(ratio(COLOR.textPrimary, menu)).toBeGreaterThanOrEqual(4.5);
 			expect(ratio(COLOR.textSecondary, menu)).toBeGreaterThanOrEqual(4.5);
 			expect(ratio(COLOR.danger, menu), `danger on ${ground}`).toBeGreaterThanOrEqual(4.5);
+			expect(ratio(COLOR.dangerText, menu), `warning on ${ground}`).toBeGreaterThanOrEqual(4.5);
 		}
 	});
 
