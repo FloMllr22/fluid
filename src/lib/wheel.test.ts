@@ -1,7 +1,72 @@
 import {describe, expect, it} from 'vitest';
-import {type WheelBase, type WheelShape, wheelLayout, wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from './wheel';
+import {
+	type WheelBase,
+	type WheelShape,
+	type WheelSlot,
+	wheelChange,
+	wheelDrawn,
+	wheelLayout,
+	wheelOpacity,
+	wheelPoint,
+	wheelSeen,
+	wheelSlot,
+	wheelTurn
+} from './wheel';
 
 const shape: WheelShape = {radius: 1000, step: 5, gap: 2, reach: 3};
+
+describe('wheelSeen and wheelDrawn', () => {
+	it('sees the apps within reach, and draws one more on either side', () => {
+		expect([3, -3].map((offset) => wheelSeen(offset, 3))).toEqual([true, true]);
+		expect([4, -4].map((offset) => wheelSeen(offset, 3))).toEqual([false, false]);
+		expect([4, -4].map((offset) => wheelDrawn(offset, 3))).toEqual([true, true]);
+		expect([5, -5].map((offset) => wheelDrawn(offset, 3))).toEqual([false, false]);
+	});
+});
+
+describe('wheelChange', () => {
+	const reach = 3;
+	/** The apps a, b, c … when the wheel goes from one turn to another. */
+	const change = (count: number, from: number, to: number) => {
+		const keys = Array.from({length: count}, (_, i) => String.fromCharCode(97 + i));
+		const placed = new Map<string, WheelSlot>(keys.map((key, i) => [key, wheelSlot(i, count, from)]));
+		const slots = keys.map((_, i) => wheelSlot(i, count, to));
+		return wheelChange(keys, slots, placed, to - from, reach);
+	};
+
+	it('needs nothing while rows just slide along a long list, however far apps come round', () => {
+		expect(change(30, 0, 1)).toEqual({entering: [], ghosts: []});
+		expect(change(30, 14, 15)).toEqual({entering: [], ghosts: []});
+	});
+
+	it('has an app that comes round in sight fade in at its new place and its old row fade out', () => {
+		// five apps: a turn moves the app at the far end (offset -2) round to the other end (2)
+		const {entering, ghosts} = change(5, 0, 1);
+		expect(entering).toEqual(['d']);
+		expect(ghosts).toEqual([{index: 3, lap: -1, offset: -3}]);
+	});
+
+	it('fades an app in, and another out, when a click turns the wheel past the rows waiting', () => {
+		const {entering, ghosts} = change(30, 0, 3);
+		// the apps that end up seen below, from places without a row
+		expect(entering).toEqual(['f', 'g']);
+		// the apps seen above that have to go without a row to slide to
+		expect(ghosts).toEqual([
+			{index: 27, lap: -1, offset: -6},
+			{index: 28, lap: -1, offset: -5}
+		]);
+	});
+
+	it('needs nothing the first time, with no app placed yet', () => {
+		const slots = [wheelSlot(0, 3, 0), wheelSlot(1, 3, 0), wheelSlot(2, 3, 0)];
+		expect(wheelChange(['a', 'b', 'c'], slots, new Map(), 0, reach)).toEqual({entering: [], ghosts: []});
+	});
+
+	it('has no new row fade in for an app that reaches the place where rows wait, unseen', () => {
+		const placed = new Map<string, WheelSlot>([['a', {offset: 9, lap: 0}]]);
+		expect(wheelChange(['a'], [{offset: 4, lap: 0}], placed, 5, reach)).toEqual({entering: [], ghosts: []});
+	});
+});
 
 describe('wheelTurn', () => {
 	it('turns the shortest way to the selected app', () => {

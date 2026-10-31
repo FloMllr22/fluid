@@ -34,6 +34,52 @@ export function wheelSlot(index: number, count: number, turn: number): {offset: 
 	return {offset, lap: Math.round((turn + offset - index) / count)};
 }
 
+/** An app's place on the wheel, see wheelSlot. */
+export interface WheelSlot {
+	offset: number;
+	lap: number;
+}
+
+/** Whether the app `offset` places from the selected one is seen. */
+export const wheelSeen = (offset: number, reach: number) => Math.abs(offset) <= reach;
+
+/** Whether the app has a row: those seen, and on either side one more that waits unseen to
+ *  slide in. The others cost nothing, however long the list. */
+export const wheelDrawn = (offset: number, reach: number) => Math.abs(offset) <= reach + 1;
+
+/** A row left over: the old row of the app at `index`, going on to `offset` and fading out. */
+export interface WheelGhost {
+	index: number;
+	lap: number;
+	offset: number;
+}
+
+/** What changes on the wheel beyond rows moving along it, when it has turned by `turned` and
+ *  the apps `keys` are at `slots` (`placed` is where each was). An app that comes into sight
+ *  without a row sliding in (it came round from the other end, or a click turned the wheel by
+ *  several places) gets a new row that fades in: `entering`. A row in sight that has to go
+ *  without sliding out goes on and fades out: `ghosts`. Out of sight neither is needed. */
+export function wheelChange(
+	keys: string[],
+	slots: WheelSlot[],
+	placed: Map<string, WheelSlot>,
+	turned: number,
+	reach: number
+): {entering: string[]; ghosts: WheelGhost[]} {
+	const entering: string[] = [];
+	const ghosts: WheelGhost[] = [];
+	keys.forEach((key, index) => {
+		const was = placed.get(key);
+		if (!was) return;
+		const {offset, lap} = slots[index];
+		const sameRow = was.lap === lap && wheelDrawn(was.offset, reach);
+		if (sameRow && wheelDrawn(offset, reach)) return;
+		if (!sameRow && wheelSeen(offset, reach)) entering.push(key);
+		if (wheelSeen(was.offset, reach)) ghosts.push({index, lap: was.lap, offset: was.offset - turned});
+	});
+	return {entering, ghosts};
+}
+
 /** Where the app `offset` places from the selected one sits, measured from the selected
  *  one (right and down positive): the circle curves away to the left. Beyond `reach` the
  *  apps wait one place further out, off the screen. */

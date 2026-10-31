@@ -1,7 +1,17 @@
 import type {Ref} from 'preact';
 import {useRef} from 'preact/hooks';
 import {usePointerHold} from '../hooks/usePointerHold';
-import {type WheelLayout, wheelLayout, wheelOpacity, wheelPoint, wheelSlot, wheelTurn} from '../lib/wheel';
+import {
+	type WheelLayout,
+	type WheelSlot,
+	wheelChange,
+	wheelDrawn,
+	wheelLayout,
+	wheelOpacity,
+	wheelPoint,
+	wheelSlot,
+	wheelTurn
+} from '../lib/wheel';
 import type {IconSize} from '../state/settings';
 import {LAYOUT, MOTION, WHEEL} from '../theme/tokens';
 import {AppIcon} from './AppIcon';
@@ -80,12 +90,12 @@ export function wheelMenuLeft(nav: HTMLElement | null, key: string, layout: Whee
 	return layout.centreX + rowLeft(layout) + width + LAYOUT.menuGap;
 }
 
-/** What the wheel keeps between renders: its turn, where each app was, and the apps that
- *  last came round from one end to the other. Such an app gets a new row, which fades in at
- *  its new place, while its old row goes on and fades out (a ghost). */
+/** What the wheel keeps between renders: its turn, where each app was, and what last changed
+ *  beyond rows sliding along it (see wheelChange): the apps with a new row that fades in, and
+ *  the old rows that go on and fade out (ghosts). */
 interface Memory {
 	turn: number;
-	placed: Map<string, {offset: number; lap: number}>;
+	placed: Map<string, WheelSlot>;
 	entering: string[];
 	ghosts: {key: string; model: TileModel; offset: number}[];
 }
@@ -125,28 +135,37 @@ export function AppWheel({
 
 	const turn = wheelTurn(memory.turn, items.length, selected);
 	const slots = items.map((_, i) => wheelSlot(i, items.length, turn));
-	const entering: string[] = [];
-	const ghosts: Memory['ghosts'] = [];
-	items.forEach((item, i) => {
-		const was = memory.placed.get(item.key);
-		if (!was || was.lap === slots[i].lap) return;
-		entering.push(item.key);
-		// the old row goes on as the wheel turned, and fades out
-		ghosts.push({key: `${item.key}:${was.lap}`, model: item, offset: was.offset - (turn - memory.turn)});
-	});
-	// kept until the wheel turns again, as Home draws anew every second
-	if (entering.length > 0 || turn !== memory.turn) {
+	const {reach} = layout.shape;
+	const {entering, ghosts} = wheelChange(
+		items.map((item) => item.key),
+		slots,
+		memory.placed,
+		turn - memory.turn,
+		reach
+	);
+	// kept until the wheel turns again, as Home may draw anew meanwhile
+	if (entering.length > 0 || ghosts.length > 0 || turn !== memory.turn) {
 		memory.entering = entering;
-		memory.ghosts = ghosts;
+		memory.ghosts = ghosts.map(({index, lap, offset}) => ({
+			key: `${items[index].key}:${lap}`,
+			model: items[index],
+			offset
+		}));
 	}
 	memory.turn = turn;
-	memory.placed = new Map(items.map((item, i): [string, {offset: number; lap: number}] => [item.key, slots[i]]));
+	memory.placed = new Map(items.map((item, i): [string, WheelSlot] => [item.key, slots[i]]));
+	// an app that came back meanwhile has its row again, and no ghost beside it
+	const rowKeys = items
+		.map((item, i) => `${item.key}:${slots[i].lap}`)
+		.filter((_, i) => wheelDrawn(slots[i].offset, reach));
+	const leftOver = memory.ghosts.filter((ghost) => rowKeys.indexOf(ghost.key) === -1);
 
 	return (
 		<nav class={dimmed ? 'wheel wheel--still' : 'wheel'} style={sizes} ref={navRef}>
 			{items.map((item, i) => {
 				const {offset, lap} = slots[i];
-				const opacity = wheelOpacity(offset, layout.shape.reach, MOTION.wheelRestOpacity, MOTION.wheelOpacityStep);
+				if (!wheelDrawn(offset, reach)) return null;
+				const opacity = wheelOpacity(offset, reach, MOTION.wheelRestOpacity, MOTION.wheelOpacityStep);
 				return (
 					<WheelRow
 						key={`${item.key}:${lap}`}
@@ -163,7 +182,7 @@ export function AppWheel({
 					/>
 				);
 			})}
-			{memory.ghosts.map((ghost) => (
+			{leftOver.map((ghost) => (
 				<WheelRow key={ghost.key} model={ghost.model} layout={layout} offset={ghost.offset} opacity={0} ghost />
 			))}
 		</nav>
