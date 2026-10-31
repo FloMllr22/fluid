@@ -6,8 +6,10 @@ import {LanguagePanel} from './components/LanguageChoice';
 import type {OptionItem} from './components/OptionList';
 import type {TileModel} from './components/Tile';
 import {Toast, type ToastMessage} from './components/Toast';
+import {TvPanel} from './components/TvPanel';
 import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
+import {useHomeKey} from './hooks/useHomeKey';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
 import {sameApps, withNewApps} from './lib/apps';
@@ -95,6 +97,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		toastTimer.current = window.setTimeout(() => setToast(null), TIMING.toastMs);
 	}, []);
 
+	const homeKey = useHomeKey(showToast);
+
 	/** Keeps and stores new settings; says so when the TV's storage refuses them. During
 	 *  the onboarding they are only kept: nothing is stored before it is done, so it comes
 	 *  again if the TV is switched off halfway. */
@@ -131,6 +135,17 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		platform.hidePointer();
 		return platform.onForeground(() => platform.hidePointer());
 	}, []);
+
+	// The Home key means Home, also from within fluid: whatever is open there closes.
+	useEffect(
+		() =>
+			platform.onHomeKey(() => {
+				setScreen('home');
+				setMenuAppId(null);
+				setMoving(null);
+			}),
+		[]
+	);
 
 	// Load apps at start, and read them again whenever fluid comes back to the front: apps
 	// may have been installed or uninstalled meanwhile (in LG's store, on LG Home, in the
@@ -276,11 +291,13 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 
 	const onOpen = useCallback((item: TileModel) => open(item.key, item.label), [showToast]);
 
+	/** While the Home key opens fluid, LG Home is not running and takes some seconds to start. */
 	const onLgHome = useCallback(() => {
+		if (homeKey.known?.state === 'on') showToast(t('home.lgHomeOpening'));
 		platform
 			.launchLgHome()
 			.catch((error: unknown) => showToast(failure(t('launch.failed', {name: t('home.lgHome')}), error), 'error'));
-	}, [showToast]);
+	}, [showToast, homeKey.known]);
 
 	const onSettings = useCallback(() => setScreen('settings'), []);
 
@@ -338,6 +355,12 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			label: t('settings.appearance'),
 			hint: t('settings.hint.appearance'),
 			render: (nav) => <AppearancePanel appearance={settings.appearance} onChange={onAppearance} {...nav} />
+		},
+		{
+			id: 'tv',
+			label: t('settings.tv'),
+			hint: t('settings.hint.tv'),
+			render: (nav) => <TvPanel homeKey={homeKey} {...nav} />
 		},
 		{
 			id: 'weather',

@@ -4,6 +4,8 @@
 export interface WebOSSystemObject {
 	/** the TV's UI language, e.g. "de-DE" */
 	locale?: string;
+	/** what the app was last launched with, as JSON */
+	launchParams?: string;
 	setCursorHidden?(hidden: boolean): void;
 }
 

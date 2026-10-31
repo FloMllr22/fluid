@@ -14,6 +14,8 @@ greeting with the date, the time and (if you like) the weather.
 - **Sources**: a menu of Live TV and the HDMI inputs, with the names set in the TV's input
   settings
 - **LG** and **Settings**: LG's own home screen, and fluid's settings
+- **Home key** (optional, off until you turn it on): the remote's Home key opens fluid instead of
+  LG Home, and the TV can start with fluid (see [The Home key](#the-home-key))
 - **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or alive with
   drifting clouds, shooting stars and light on the sea)
 - **Appearance**: an accent colour of its own or taken from the app in the middle of the
@@ -65,6 +67,8 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Typing a place | OK | Search at once (the search also starts when you pause typing) |
 | Typing a place | Back, ↑ ↓ | Leave the field |
 | Settings, Language tab | ← →, OK | Use that language (it changes at once) |
+| Settings, TV tab | ↑ ↓, OK | Choose a row, turn it on or off |
+| Anywhere in fluid | Home, once it opens fluid | Back to Home, whatever is open |
 | Settings | Back | Return home |
 
 The Magic Remote pointer is hidden when fluid opens; shake the remote to bring it back.
@@ -83,9 +87,45 @@ Apps you hid stay hidden. If the Homebrew Channel is missing or has lost root (a
 the list says so; Sources and LG Home keep working, and fluid tries again when you come back
 to it.
 
-fluid does not take over the HOME button yet. You can map a remote button to it with
-[LG Input Hook](https://github.com/Simon34545/lginputhook) (app ID
-`io.github.flomllr22.fluid`).
+## The Home key
+
+Off until you turn it on, in Settings → TV:
+
+- **Home key opens fluid**: the remote's Home key opens fluid instead of LG Home, from any app or
+  input, without LG Home showing first. LG Home stays one press away on the **LG** button; it
+  takes a few seconds to come up, as it no longer waits in the background.
+- **TV starts with fluid** (only with the first): fluid joins the TV's list of inputs. The TV
+  starts with what was on last: with fluid, unless an HDMI input was on last.
+
+**What it changes.** No file of the firmware and no setting of the TV. A bind mount in RAM puts a
+small script over LG Home's program, so that the TV's app manager runs that script as Home; a file
+in `/var/lib/webosbrew/init.d` puts it there again at every start, about 40 seconds after the TV
+is on (until then LG Home answers the key). Without that file, or without root after a firmware
+update, the TV is as it was.
+
+**If fluid does not start.** Should fluid not come up when the key is pressed, LG Home opens
+instead. After three times in a row the Home key goes back to LG Home for good and fluid is taken
+off the inputs; fluid tells you so when it next runs.
+
+**To undo it**, turn it off in Settings → TV. From a computer, with `ssh root@<tv-ip>`:
+
+```sh
+sh /var/lib/webosbrew/fluid-home/home-hook.sh disable
+```
+
+Should that not work, delete the file in `init.d` and restart the TV:
+
+```sh
+rm -f /var/lib/webosbrew/init.d/60-fluid-home
+reboot
+```
+
+Uninstalling fluid takes it all back as well, by itself. What happened is in
+`/var/lib/webosbrew/fluid-home/home-hook.log`.
+
+So far this is tested on webOS 6.5 only. Before it turns on, fluid checks that the TV really runs
+its script in place of LG Home, and otherwise leaves everything as it was and says that it is not
+possible on this TV. That will be so on newer TVs, where LG Home is no program of its own.
 
 ## Privacy
 
@@ -163,6 +203,8 @@ Log in to the TV with `ssh root@<tv-ip>` and run:
 ```sh
 luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.flomllr22.fluid"}'
 ```
+
+This also deletes fluid's settings, and gives the Home key back to LG Home.
 
 ## Development
 

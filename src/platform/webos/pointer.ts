@@ -42,6 +42,26 @@ export function onForeground(callback: () => void): () => void {
 	};
 }
 
+/** Whether the last launch came from the Home key, see public/home-hook.sh. */
+function launchedByHomeKey(): boolean {
+	const sys = systemObject();
+	try {
+		return JSON.parse(sys?.launchParams || '{}').homeKey === true;
+	} catch {
+		return false; // not from there, then
+	}
+}
+
+/** Calls back when the Home key relaunches the running app, also when it is in front already.
+ *  Each press comes in a relaunch of its own. Returns a function that stops it. */
+export function onHomeKey(callback: () => void): () => void {
+	const onRelaunch = () => {
+		if (launchedByHomeKey()) callback();
+	};
+	document.addEventListener('webOSRelaunch', onRelaunch);
+	return () => document.removeEventListener('webOSRelaunch', onRelaunch);
+}
+
 /** Calls back whenever fluid leaves the foreground: the page is hidden behind another app
  *  or input, or the screen goes off. Returns a function that stops it. */
 export function onBackground(callback: () => void): () => void {

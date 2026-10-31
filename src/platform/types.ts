@@ -61,6 +61,20 @@ export interface Weather {
 	isDay: boolean;
 }
 
+/** What the Home key opens. `on`: fluid. `off`: LG Home. `gave-up`: LG Home again, since fluid
+ *  did not come up several times, which the user has not been told yet. `unsupported`: LG Home,
+ *  and on this TV it cannot be otherwise. */
+export const HOME_KEY_STATES = ['on', 'off', 'gave-up', 'unsupported'] as const;
+
+export type HomeKeyState = (typeof HOME_KEY_STATES)[number];
+
+export interface HomeKey {
+	state: HomeKeyState;
+	/** fluid is an input of the TV, next to HDMI: the TV then starts with fluid, unless an HDMI
+	 *  input was on last. */
+	isInput: boolean;
+}
+
 /** Shorter queries find nothing, so they are not sent. */
 export const PLACE_QUERY_MIN_LENGTH = 2;
 
@@ -79,6 +93,20 @@ export interface Platform {
 	launch(appId: string): Promise<void>;
 	/** Opens LG's own home screen */
 	launchLgHome(): Promise<void>;
+	/** What the Home key opens. Asking also tells the TV that fluid is up (see setHomeKey). Rejects
+	 *  with `no-homebrew` or `no-root` when that is why it cannot be told. */
+	getHomeKey(): Promise<HomeKey>;
+	/** Makes the Home key open fluid, or LG Home again, also after the next start of the TV.
+	 *  Resolves with how that turned out. Should fluid then not come up when the key is pressed,
+	 *  LG Home opens instead, and after several times the key stays with LG Home. */
+	setHomeKey(open: boolean): Promise<HomeKey>;
+	/** Whether fluid is an input of the TV, see HomeKey. */
+	setIsInput(isInput: boolean): Promise<HomeKey>;
+	/** The user has been told that the Home key went back to LG Home (`gave-up`). */
+	acknowledgeHomeKey(): Promise<void>;
+	/** Calls back when the Home key is pressed while it opens fluid, whichever app was in front.
+	 *  Returns a function that stops it. */
+	onHomeKey(callback: () => void): () => void;
 	/** The TV's UI language as a locale such as "de-DE". Synchronous, so the first frame is
 	 *  already in the right language. */
 	getLocale(): string;

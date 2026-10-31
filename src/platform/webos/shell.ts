@@ -3,6 +3,7 @@
 // `exec` is private to this module, each command is fixed, and every parameter is
 // validated here before it becomes part of a command.
 
+import {APP_ID} from '../../config/constants';
 import {LUNA} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
 
@@ -65,4 +66,24 @@ export function iconsScript(paths: string[]): string {
  *  caller keeps the output below the Homebrew Channel's limit (see apps.ts). */
 export function readIcons(paths: string[]): Promise<string> {
 	return exec(iconsScript(paths), 15000);
+}
+
+/** What fluid may ask of its script for the Home key (public/home-hook.sh, shipped next to
+ *  index.html). */
+export type HomeHookCommand = 'status' | 'enable' | 'disable' | 'input yes' | 'input no' | 'open-lg' | 'ack';
+
+/** The script behind homeHook. */
+export function homeHookScript(command: HomeHookCommand): string {
+	return `sh ${quotePath(`/media/developer/apps/usr/palm/applications/${APP_ID}/home-hook.sh`)} ${command}`;
+}
+
+/** Command 4: fluid's script for the Home key. Turning it on waits to see that it works. */
+export function homeHook(command: HomeHookCommand): Promise<string> {
+	return exec(homeHookScript(command), command === 'enable' || command === 'disable' ? 25000 : 8000);
+}
+
+/** Command 5: tells the script for the Home key that fluid is up. Exits with 0 also while
+ *  that script is not in use, as the Homebrew Channel fails any command that does not. */
+export function markFluidAlive(): Promise<string> {
+	return exec('[ ! -d /run/fluid-home ] || touch /run/fluid-home/alive', 5000);
 }

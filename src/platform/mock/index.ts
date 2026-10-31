@@ -6,6 +6,9 @@ import {PLATFORM_ERROR_CODES, PlatformError, type PlatformErrorCode} from '../er
 import {
 	type AppEntry,
 	DEFAULT_TIME_FORMAT,
+	HOME_KEY_STATES,
+	type HomeKey,
+	type HomeKeyState,
 	PLACE_QUERY_MIN_LENGTH,
 	PLACE_SEARCH_LIMIT,
 	type Platform,
@@ -53,7 +56,20 @@ function weatherFromUrl(): Weather {
 	};
 }
 
+/** ?home-key=<state> (on, gave-up, unsupported) starts with the Home key so; ?home-key=failed
+ *  makes changing it fail, to see how fluid explains it. */
+function homeKeyFromUrl(): HomeKeyState {
+	return HOME_KEY_STATES.find((state) => state === urlParam('home-key')) || 'off';
+}
+
 export function createMockPlatform(): Platform {
+	let homeKey = homeKeyFromUrl();
+	let isInput = false;
+	const homeKeyNow = (): Promise<HomeKey> => Promise.resolve({state: homeKey, isInput});
+	const failing = () =>
+		urlParam('home-key') === 'failed'
+			? Promise.reject(new PlatformError('rejected', '[mock] could not change the Home key'))
+			: undefined;
 	return {
 		kind: 'mock',
 		listApps: () => {
@@ -70,6 +86,24 @@ export function createMockPlatform(): Platform {
 			console.info('[mock] would open LG Home');
 			return Promise.resolve();
 		},
+		getHomeKey: homeKeyNow,
+		setHomeKey: (open) => {
+			if (homeKey !== 'unsupported' && !failing()) {
+				homeKey = open ? 'on' : 'off';
+				isInput = open;
+			}
+			return failing() || homeKeyNow();
+		},
+		setIsInput: (next) => {
+			if (!failing()) isInput = next;
+			return failing() || homeKeyNow();
+		},
+		acknowledgeHomeKey: () => {
+			homeKey = 'off';
+			return Promise.resolve();
+		},
+		// a browser has no Home key
+		onHomeKey: () => () => {},
 		// the browser's language; ?lang=de (or en-US …) picks another
 		getLocale: () => urlParam('lang') || (typeof navigator === 'undefined' ? '' : navigator.language) || 'en',
 		getTimeFormat: () => Promise.resolve(DEFAULT_TIME_FORMAT),

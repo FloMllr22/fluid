@@ -1,5 +1,13 @@
 import {describe, expect, it} from 'vitest';
-import {iconsScript, isSafePath, shellQuote, sizesScript} from './shell';
+import {homeHookScript, iconsScript, isSafePath, shellQuote, sizesScript} from './shell';
+
+describe('homeHookScript', () => {
+	it("runs the script in fluid's own folder, with a command from the list", () => {
+		expect(homeHookScript('status')).toBe(
+			"sh '/media/developer/apps/usr/palm/applications/io.github.flomllr22.fluid/home-hook.sh' status"
+		);
+	});
+});
 
 describe('shellQuote', () => {
 	it('wraps a plain value in single quotes', () => {

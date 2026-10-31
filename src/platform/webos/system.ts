@@ -3,6 +3,7 @@
 import {DEFAULT_TIME_FORMAT, type TimeFormat} from '../types';
 import {LUNA, SYSTEM_APP} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
+import {homeHook} from './shell';
 import {systemObject} from './system-object';
 
 interface PreferencesResponse extends LunaResponse {
@@ -14,9 +15,13 @@ export function launch(appId: string): Promise<void> {
 	return lunaCall(LUNA.launch, {id: appId, params: {}}).then(() => undefined);
 }
 
-/** Bring up LG's own home screen. */
+/** Bring up LG's own home screen. While the Home key opens fluid, LG Home's program is covered, so
+ *  this is for the script of the Home key. Should it not answer, it is asked of the TV directly. */
 export function launchLgHome(): Promise<void> {
-	return launch(SYSTEM_APP.lgHome);
+	return homeHook('open-lg').then(
+		() => undefined,
+		() => launch(SYSTEM_APP.lgHome)
+	);
 }
 
 /** Whether an app with this ID exists on the TV (permitted from a web app, unlike listing).

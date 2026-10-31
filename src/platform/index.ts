@@ -13,6 +13,8 @@ export {
 	type AppEntry,
 	type AppList,
 	DEFAULT_TIME_FORMAT,
+	type HomeKey,
+	type HomeKeyState,
 	type InputSource,
 	LIVE_TV_ID,
 	PLACE_QUERY_MIN_LENGTH,
