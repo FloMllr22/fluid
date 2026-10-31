@@ -8,7 +8,6 @@ import type {TileModel} from '../components/Tile';
 import {WeatherNow} from '../components/WeatherNow';
 import {TIMING} from '../config/constants';
 import {useAppColor} from '../hooks/useAppColor';
-import {useClock} from '../hooks/useClock';
 import {type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {useSettled} from '../hooks/useSettled';
@@ -91,7 +90,6 @@ export function Home({
 	onMove,
 	onMoveEnd
 }: Props) {
-	const now = useClock();
 	const timeFormat = useTimeFormat();
 	/** where focus is; the app is kept apart, by key (appFocus) */
 	const [focus, setFocus] = useState<HomeFocus>({zone: 'apps', app: 0, bar: 0, source: 0});
@@ -229,7 +227,7 @@ export function Home({
 				onMove={onMove}
 				navRef={wheel}
 			/>
-			<Greeting now={now} format={timeFormat} moving={movingApp?.label} note={note} />
+			<Greeting format={timeFormat} moving={movingApp?.label} note={note} />
 			<WeatherNow view={weather} unit={unit} where="home" />
 			{zone === 'sources' && <div class="catcher" onClick={closeSources} />}
 			<Bar
