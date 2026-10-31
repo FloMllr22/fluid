@@ -3,17 +3,16 @@
 //
 //   fluidPerf.report()     the first frame, the apps on screen, and how quickly key presses
 //                          showed (the last 200)
-//   fluidPerf.frames(10)   the frames of the next 10 s while fluid is used: fps, dropped
-//                          frames, the longest one
 //
-// Nothing is sent anywhere: the numbers stay in memory until read. Watching costs one
-// frame callback per key press; frames are only counted while frames() runs.
+// Nothing is sent anywhere: the numbers stay in memory until read. Watching costs one frame
+// callback per key press. The frames themselves are read from outside the page, as counting
+// them here would change what is counted: `npm run measure` (scripts/measure-tv.mjs).
 
-import {BUDGET, type FrameStats, frameStats, type KeyStats, keyStats} from './lib/perf';
+import {BUDGET, type KeyStats, keyStats} from './lib/perf';
 
 declare global {
 	interface Window {
-		fluidPerf?: {report: () => Report; frames: (seconds?: number) => Promise<FrameStats>};
+		fluidPerf?: {report: () => Report};
 	}
 }
 
@@ -43,7 +42,7 @@ export function markFrame(name: 'firstFrame' | 'appsShown'): void {
 /** Starts watching the key presses, and offers fluidPerf in the console. */
 export function startPerf(): void {
 	window.addEventListener('keydown', onKey, true);
-	window.fluidPerf = {report, frames};
+	window.fluidPerf = {report};
 }
 
 /** From the key press to the frame that shows its effect: the frame callback comes before
@@ -69,24 +68,4 @@ function report(): Report {
 	};
 	console.log('fluid performance', JSON.stringify(result, null, 2));
 	return result;
-}
-
-function frames(seconds = 10): Promise<FrameStats> {
-	return new Promise((resolve) => {
-		const deltas: number[] = [];
-		let last = 0;
-		let end = 0;
-		const tick = (time: number) => {
-			if (end === 0) end = time + seconds * 1000;
-			else deltas.push(time - last);
-			last = time;
-			if (time < end) requestAnimationFrame(tick);
-			else {
-				const stats = frameStats(deltas);
-				console.log('fluid frames', JSON.stringify(stats, null, 2));
-				resolve(stats);
-			}
-		};
-		requestAnimationFrame(tick);
-	});
 }

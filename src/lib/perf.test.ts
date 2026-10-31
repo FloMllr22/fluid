@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {BUDGET, frameStats, keyStats, percentile} from './perf';
+import {BUDGET, keyStats, percentile} from './perf';
 
 describe('percentile', () => {
 	it('finds the value below which a share of them lie', () => {
@@ -25,20 +25,5 @@ describe('keyStats', () => {
 
 	it('is not within the budget without measurements', () => {
 		expect(keyStats([]).withinBudget).toBe(false);
-	});
-});
-
-describe('frameStats', () => {
-	const frame = 1000 / 60;
-
-	it('counts frames per second and the dropped ones', () => {
-		const smooth = Array.from({length: 120}, () => frame);
-		expect(frameStats(smooth)).toMatchObject({frames: 120, fps: 60, dropped: 0, withinBudget: true});
-		const janky = smooth.slice(0, 100).concat([frame * 3, frame * 2, frame * 4]);
-		expect(frameStats(janky)).toMatchObject({dropped: 3, longestMs: 66.7, withinBudget: false});
-	});
-
-	it('is empty without frames', () => {
-		expect(frameStats([])).toMatchObject({frames: 0, fps: 0, withinBudget: false});
 	});
 });

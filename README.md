@@ -211,10 +211,11 @@ pull requests.
   key and placeholder is there.
 - **Debugging.** A rooted TV exposes the web inspector on port 9998.
 - **Performance.** In the web inspector's console, `fluidPerf.report()` tells how long
-  fluid took to its first frame and to show the apps, and how quickly key presses showed;
-  `fluidPerf.frames(10)` counts the frames of the next ten seconds while you use fluid. The
-  numbers stay in memory and are never sent. `npm run build` also tells the bundle's size
-  gzipped.
+  fluid took to its first frame and to show the apps, and how quickly key presses showed.
+  The numbers stay in memory and are never sent. `npm run measure` turns the wheel on the
+  TV in each of a few looks and sums up key presses, the frames drawn, the work per key press
+  and the layers; it also shows how fast the TV draws at all, as one showing 50 Hz never
+  reaches 60 fps. `npm run build` also tells the bundle's size gzipped.
 - **Colours and motion.** A test checks WCAG AA contrast for the texts and accents on the
   plain backgrounds. Animations use only `transform` and `opacity`, and *Reduce motion*
   turns them all off.
