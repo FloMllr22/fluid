@@ -476,7 +476,7 @@ body {
 	transition:
 		transform var(--motion-wheel-turn-ms) cubic-bezier(0.3, 0.8, 0.3, 1),
 		opacity var(--motion-wheel-grow-ms) ease-out,
-		visibility var(--motion-wheel-grow-ms);
+		visibility 0s;
 }
 /* over a photo the names keep the halo all text has there */
 .app--photo .wheel__row {
@@ -485,20 +485,12 @@ body {
 .wheel__row--selected {
 	z-index: 2;
 }
-/* beyond the apps shown, or left behind by an app that came round to the other end:
-   hidden once faded out */
+/* beyond the apps shown, or left behind: hidden once faded out, by a delay. Animating visibility
+   would run on the main thread, and with it every other transition on the wheel in each frame. */
 .wheel__row--away,
 .wheel__row--ghost {
 	visibility: hidden;
-}
-/* an app that came round to the other end fades in there */
-.wheel__row--entering {
-	animation: wheel-in var(--motion-wheel-grow-ms) ease-out;
-}
-@keyframes wheel-in {
-	from {
-		opacity: 0;
-	}
+	transition-delay: 0s, 0s, var(--motion-wheel-grow-ms);
 }
 
 /* above the pills, which belong to the name */
@@ -544,6 +536,20 @@ body {
 .wheel__row--selected .wheel__name {
 	font-weight: 700;
 	transform: translateX(0) scale(1);
+}
+/* a new row fades in at its place: its parts, since the row has its own opacity (set by
+   AppWheel) and a fade with both its ends stated stays off the main thread */
+.wheel__row--entering .wheel__icon,
+.wheel__row--entering .wheel__name {
+	animation: wheel-in var(--motion-wheel-grow-ms) ease-out;
+}
+@keyframes wheel-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 /* Behind the name, from the row's left edge: the light pill of the focused app, sized for
@@ -1700,6 +1706,8 @@ body {
 .reduce-motion *::after {
 	/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
 	transition-duration: 0ms !important;
+	/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
+	transition-delay: 0ms !important;
 	/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own animation */
 	animation-duration: 0ms !important;
 }
@@ -1709,6 +1717,8 @@ body {
 	*::after {
 		/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
 		transition-duration: 0ms !important;
+		/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own transition */
+		transition-delay: 0ms !important;
 		/* biome-ignore lint/complexity/noImportantStyles: must win over every element's own animation */
 		animation-duration: 0ms !important;
 	}
