@@ -1,5 +1,6 @@
 import preact from '@preact/preset-vite';
 import {defineConfig, type Plugin} from 'vite';
+import {inlineTokens} from './src/theme/tokens';
 
 // The oldest supported engine is Chromium 53 (webOS 4.x).
 // Two things matter there:
@@ -24,9 +25,20 @@ function classicScriptTag(): Plugin {
 	};
 }
 
+/** Writes the design tokens into the stylesheet, see inlineTokens. */
+function writeTokensIntoStylesheet(): Plugin {
+	return {
+		name: 'write-tokens-into-stylesheet',
+		enforce: 'pre',
+		transform(code, id) {
+			return id.split('?')[0].endsWith('/theme/global.css') ? {code: inlineTokens(code), map: null} : undefined;
+		}
+	};
+}
+
 export default defineConfig({
 	base: './', // the app is loaded from a local file path on the TV
-	plugins: [preact(), classicScriptTag()],
+	plugins: [writeTokensIntoStylesheet(), preact(), classicScriptTag()],
 	build: {
 		target: BROWSER_TARGET,
 		outDir: 'dist',

@@ -3,7 +3,7 @@
 
 import {describe, expect, it} from 'vitest';
 import {contrast, luminance, parseColor, type Rgb, stack} from '../lib/color';
-import {ACCENT_COLOR, COLOR} from './tokens';
+import {ACCENT_COLOR, applyTokens, COLOR, inlineTokens, LAYOUT, MOTION} from './tokens';
 
 /** The plain colours behind the screens at their lightest: the dark, black and blue
  *  gradients, the bright horizon of the dusk. */
@@ -62,5 +62,42 @@ describe('colours', () => {
 		const ground = luminance(parseColor(COLOR.accentGround));
 		for (const background of GROUNDS)
 			expect(luminance(stack(background, COLOR.screenDim, COLOR.surface)), background).toBeLessThanOrEqual(ground);
+	});
+});
+
+describe('inlineTokens', () => {
+	it('writes in the value of a token, with its unit', () => {
+		expect(inlineTokens('a{color:var(--color-focus-fill);left:var(--layout-safe-x)}')).toBe(
+			`a{color:${COLOR.focusFill};left:${LAYOUT.safeX}px}`
+		);
+		expect(inlineTokens('a{transition-duration:var(--motion-focus-ms)}')).toBe(
+			`a{transition-duration:${MOTION.focusMs}ms}`
+		);
+	});
+
+	it('leaves a scale without a unit', () => {
+		expect(inlineTokens('a{--x:var(--motion-focus-scale)}')).toBe(`a{--x:${MOTION.focusScale}}`);
+	});
+
+	it('keeps what changes while fluid runs a variable', () => {
+		const css = 'a{color:var(--color-accent);width:var(--layout-app-icon)}';
+		expect(inlineTokens(css)).toBe(css);
+	});
+
+	it('stops at a name that is no token', () => {
+		expect(() => inlineTokens('a{color:var(--color-nothing)}')).toThrow('--color-nothing');
+	});
+});
+
+describe('applyTokens', () => {
+	it('writes onto :root only what changes while fluid runs', () => {
+		const written: Record<string, string> = {};
+		const root = {
+			style: {setProperty: (name: string, value: string) => (written[name] = value)}
+		} as unknown as HTMLElement;
+		applyTokens(root);
+		expect(written['--color-accent']).toBe(COLOR.accent);
+		expect(written['--layout-app-icon']).toBe(`${LAYOUT.appIcon}px`);
+		expect(Object.keys(written)).toHaveLength(6);
 	});
 });

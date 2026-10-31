@@ -218,7 +218,9 @@ pull requests.
   reaches 60 fps. `npm run build` also tells the bundle's size gzipped.
 - **Colours and motion.** A test checks WCAG AA contrast for the texts and accents on the
   plain backgrounds. Animations use only `transform` and `opacity`, and *Reduce motion*
-  turns them all off.
+  turns them all off. The stylesheet names the design tokens as custom properties; the build
+  writes their values into it, as using variables is costly on a TV, and keeps only those
+  that change while fluid runs (`inlineTokens`).
 
 ### Project layout
 

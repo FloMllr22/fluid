@@ -1,6 +1,6 @@
-// Design tokens: the single source of truth for colour, spacing, type and motion.
-// `applyTokens()` exposes them as CSS custom properties so the stylesheet and the
-// components read the same values.
+// Design tokens: the single source of truth for colour, spacing, type and motion. The
+// stylesheet names them as CSS custom properties; the build writes their values into it
+// (inlineTokens), but for those that change while fluid runs (applyTokens).
 
 import type {Accent} from '../state/settings';
 
@@ -277,23 +277,56 @@ export const WHEEL = {
 	reach: 5 // apps shown either side of it: the outermost run out to the screen's top and foot
 } as const;
 
-/** Writes every token onto :root as --color-*, --font-*, --layout-*, --motion-*. */
-export function applyTokens(root: HTMLElement = document.documentElement): void {
+/** Tokens that change while fluid runs: the accent (chosen, or following the app), and the
+ *  sizes of a row on the wheel (for the icon size chosen). */
+const RUNTIME_TOKENS: readonly string[] = [
+	'--color-accent',
+	'--layout-app-icon',
+	'--layout-app-icon-radius',
+	'--layout-wheel-row-height',
+	'--layout-wheel-gap',
+	'--layout-wheel-gap-rest'
+];
+
+/** Every token as its CSS custom property: --color-*, --font-*, --layout-*, --motion-*. */
+function tokenValues(): Record<string, string> {
 	const groups: Record<string, Record<string, string | number>> = {
 		color: COLOR,
 		font: FONT,
 		layout: LAYOUT,
 		motion: MOTION
 	};
+	const properties: Record<string, string> = {};
 	for (const group in groups) {
 		const values = groups[group];
 		for (const key in values) {
 			const value = values[key];
 			const unit =
 				typeof value === 'number' && !/scale|opacity|columns/i.test(key) ? (key.endsWith('Ms') ? 'ms' : 'px') : '';
-			root.style.setProperty(`--${group}-${kebab(key)}`, `${value}${unit}`);
+			properties[`--${group}-${kebab(key)}`] = `${value}${unit}`;
 		}
 	}
+	return properties;
+}
+
+/** Writes the tokens that change while fluid runs onto :root; the others are in the
+ *  stylesheet already. */
+export function applyTokens(root: HTMLElement = document.documentElement): void {
+	const properties = tokenValues();
+	for (const name of RUNTIME_TOKENS) root.style.setProperty(name, properties[name]);
+}
+
+/** The stylesheet with the value of every token written in, but for those that change while
+ *  fluid runs. Run when building: on the TV every custom property used by a rule costs at each
+ *  style calculation of an element it applies to, on every key press. A name that is no token
+ *  stops the build rather than leaving a rule without its value. */
+export function inlineTokens(css: string): string {
+	const properties = tokenValues();
+	return css.replace(/var\((--[a-z0-9-]+)\)/g, (use, name: string) => {
+		if (RUNTIME_TOKENS.indexOf(name) !== -1) return use;
+		if (properties[name] === undefined) throw new Error(`The stylesheet names ${name}, which is no design token.`);
+		return properties[name];
+	});
 }
 
 function kebab(s: string): string {
