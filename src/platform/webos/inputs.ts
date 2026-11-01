@@ -4,7 +4,6 @@
 // uses for each port. fluid draws its own glyph for that name (see inputGlyph in
 // lib/tiles.ts); LG's images are not shipped.
 
-import {APP_ID} from '../../config/constants';
 import {type InputSource, LIVE_TV_ID} from '../types';
 import {LUNA, SYSTEM_APP} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
@@ -43,8 +42,7 @@ export function listInputs(): Promise<InputSource[]> {
 function listExternalInputs(): Promise<InputSource[]> {
 	return lunaCall<EimResponse>(LUNA.inputStatus, {}).then((r) =>
 		(r.devices || [])
-			// fluid is an input of the TV too, but no source to switch to from within fluid
-			.filter((d) => d.appId && d.label && d.appId !== APP_ID)
+			.filter((d) => d.appId && d.label)
 			.sort((a, b) => a.port - b.port)
 			.map((d) => ({
 				id: d.id,

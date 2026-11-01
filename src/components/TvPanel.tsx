@@ -47,15 +47,15 @@ export function TvPanel({homeKey, active, onExit, onClose, onPointer}: Props) {
 			toggle: homeKey.toggle
 		}
 	];
-	if (homeKey.known?.state === 'on') {
+	if (homeKey.known?.state === 'on' && homeKey.known.start !== 'unsupported') {
 		rows.push({
 			option: {
-				id: 'input',
-				label: t('tv.input'),
-				description: t('tv.inputDescription'),
-				value: homeKey.known.isInput
+				id: 'start',
+				label: t('tv.start'),
+				description: t('tv.startDescription'),
+				value: homeKey.known.start === 'yes'
 			},
-			toggle: homeKey.toggleInput
+			toggle: homeKey.toggleStart
 		});
 	}
 	const focus = clamp(selected, 0, rows.length - 1);

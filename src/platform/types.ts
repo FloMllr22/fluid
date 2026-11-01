@@ -80,11 +80,15 @@ export const HOME_KEY_STATES = ['on', 'off', 'gave-up', 'unsupported'] as const;
 
 export type HomeKeyState = (typeof HOME_KEY_STATES)[number];
 
+/** Whether the TV starts with fluid when it is switched on, whatever was on last. `unsupported`:
+ *  it cannot be told so. */
+export const START_STATES = ['yes', 'no', 'unsupported'] as const;
+
+export type StartState = (typeof START_STATES)[number];
+
 export interface HomeKey {
 	state: HomeKeyState;
-	/** fluid is an input of the TV, next to HDMI: the TV then starts with fluid, unless an HDMI
-	 *  input was on last. */
-	isInput: boolean;
+	start: StartState;
 }
 
 /** Shorter queries find nothing, so they are not sent. */
@@ -115,8 +119,8 @@ export interface Platform {
 	 *  Resolves with how that turned out. Should fluid then not come up when the key is pressed,
 	 *  LG Home opens instead, and after several times the key stays with LG Home. */
 	setHomeKey(open: boolean): Promise<HomeKey>;
-	/** Whether fluid is an input of the TV, see HomeKey. */
-	setIsInput(isInput: boolean): Promise<HomeKey>;
+	/** Whether the TV starts with fluid, see HomeKey; from the next time it is switched on. */
+	setStartsWithFluid(start: boolean): Promise<HomeKey>;
 	/** The user has been told that the Home key went back to LG Home (`gave-up`). */
 	acknowledgeHomeKey(): Promise<void>;
 	/** Calls back when the Home key is pressed while it opens fluid, whichever app was in front.

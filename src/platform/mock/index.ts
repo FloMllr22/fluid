@@ -12,6 +12,7 @@ import {
 	PLACE_QUERY_MIN_LENGTH,
 	PLACE_SEARCH_LIMIT,
 	type Platform,
+	type StartState,
 	type Weather
 } from '../types';
 import {
@@ -74,8 +75,8 @@ function homeKeyFromUrl(): HomeKeyState {
 export function createMockPlatform(): Platform {
 	const uninstalled: string[] = [];
 	let homeKey = homeKeyFromUrl();
-	let isInput = false;
-	const homeKeyNow = (): Promise<HomeKey> => Promise.resolve({state: homeKey, isInput});
+	let start: StartState = 'no';
+	const homeKeyNow = (): Promise<HomeKey> => Promise.resolve({state: homeKey, start});
 	const failing = () =>
 		urlParam('home-key') === 'failed'
 			? Promise.reject(new PlatformError('rejected', '[mock] could not change the Home key'))
@@ -109,12 +110,12 @@ export function createMockPlatform(): Platform {
 		setHomeKey: (open) => {
 			if (homeKey !== 'unsupported' && !failing()) {
 				homeKey = open ? 'on' : 'off';
-				isInput = open;
+				start = open ? 'yes' : 'no';
 			}
 			return failing() || homeKeyNow();
 		},
-		setIsInput: (next) => {
-			if (!failing()) isInput = next;
+		setStartsWithFluid: (next) => {
+			if (!failing()) start = next ? 'yes' : 'no';
 			return failing() || homeKeyNow();
 		},
 		acknowledgeHomeKey: () => {

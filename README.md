@@ -96,18 +96,26 @@ Off until you turn it on, in Settings → TV:
 - **Home key opens fluid**: the remote's Home key opens fluid instead of LG Home, from any app or
   input, without LG Home showing first. LG Home stays one press away on the **LG** button; it
   takes a few seconds to come up, as it no longer waits in the background.
-- **TV starts with fluid** (only with the first): fluid joins the TV's list of inputs. The TV
-  starts with what was on last: with fluid, unless an HDMI input was on last.
+- **TV starts with fluid** (on with the first, and can be turned off by itself): when the TV is
+  switched on with the remote or its own button, or restarts, fluid opens first: not LG Home, and not
+  the last input. This counts from the next time the TV is switched on. A phone casting to the TV,
+  HDMI-CEC and timers go where they ask, as LG has it.
 
-**What it changes.** No file of the firmware and no setting of the TV. A bind mount in RAM puts a
-small script over LG Home's program, so that the TV's app manager runs that script as Home; a file
-in `/var/lib/webosbrew/init.d` puts it there again at every start, about 40 seconds after the TV
-is on (until then LG Home answers the key). Without that file, or without root after a firmware
-update, the TV is as it was.
+**What it changes.** No file of the firmware and no setting of the TV. For the key, a bind mount in
+RAM puts a small script over LG Home's program, so that the TV's app manager runs that script as
+Home; a file in `/var/lib/webosbrew/init.d` puts it there again at every start, about 40 seconds
+after the TV is on, and fluid does so itself as soon as it is up (until then LG Home answers the
+key). For the start, the file `/var/luna/preferences/bootd.json`: webOS reads this copy of its own
+`/etc/palm/bootd.json` when there is one, and in the copy fluid is what opens first. Should fluid
+not be there, the TV opens its last input.
 
-**If fluid does not start.** Should fluid not come up when the key is pressed, LG Home opens
-instead. After three times in a row the Home key goes back to LG Home for good and fluid is taken
-off the inputs; fluid tells you so when it next runs.
+**If fluid does not start.** Should fluid not come up when the key is pressed or the TV starts, LG
+Home opens instead. After three times in a row the Home key goes back to LG Home for good and the
+TV starts as it used to; fluid tells you so when it next runs.
+
+**Before a firmware update**, turn it off and restart the TV once. An update usually takes root
+away, and without root the copy stays, even should it no longer fit the new firmware: only a factory
+reset would clear it then.
 
 **To undo it**, turn it off in Settings → TV. From a computer, with `ssh root@<tv-ip>`:
 
@@ -115,10 +123,10 @@ off the inputs; fluid tells you so when it next runs.
 sh /var/lib/webosbrew/fluid-home/home-hook.sh disable
 ```
 
-Should that not work, delete the file in `init.d` and restart the TV:
+Should that not work, delete both files and restart the TV:
 
 ```sh
-rm -f /var/lib/webosbrew/init.d/60-fluid-home
+rm -f /var/lib/webosbrew/init.d/60-fluid-home /var/luna/preferences/bootd.json
 reboot
 ```
 
@@ -126,8 +134,9 @@ Uninstalling fluid takes it all back as well, by itself. What happened is in
 `/var/lib/webosbrew/fluid-home/home-hook.log`.
 
 So far this is tested on webOS 6.5 only. Before it turns on, fluid checks that the TV really runs
-its script in place of LG Home, and otherwise leaves everything as it was and says that it is not
-possible on this TV. That will be so on newer TVs, where LG Home is no program of its own.
+its script in place of LG Home and that it reads that copy, and otherwise leaves everything as it
+was and says that it is not possible on this TV. That will be so on newer TVs, where LG Home is no
+program of its own.
 
 **Your own pictures** come from a USB drive or from `/media/developer/pictures` in the TV's
 storage (copy them there over SSH: `scp photo.jpg root@<tv-ip>:/media/developer/pictures/`). JPEG,
@@ -319,6 +328,10 @@ typefaces (SIL OFL 1.1), and the tools used to build fluid, are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), as is the data the weather shows: weather
 data by [Open-Meteo.com](https://open-meteo.com) and place data by
 [GeoNames](https://www.geonames.org), both under CC BY 4.0.
+
+Two ways of taking LG Home's place come from other launchers, without their code: the bind mount from
+[CleanYourTV](https://github.com/lasharor/cleanyourtv-WebOS), and the copy of bootd's file from
+[Hearth](https://github.com/rudra-avatar/Hearth).
 
 fluid ships no third-party logos. This project is not affiliated with LG Electronics or
 any app publisher; "LG" and "webOS" are trademarks of LG Electronics.

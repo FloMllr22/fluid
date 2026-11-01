@@ -15,6 +15,14 @@ import {ROOT, readAppInfo} from './tv.mjs';
 const SCRIPT = readFileSync(join(ROOT, 'public', 'home-hook.sh'), 'utf8');
 const FLUID = readAppInfo().id;
 const LG_HOME = 'com.webos.app.home';
+/** The parts of LG's file for the start of the TV that matter here, and one that must stay. */
+const LG_START_FILE = {
+	inputApps: {HDMI_1: 'com.webos.app.hdmi1'},
+	common: {
+		firstApp: {firstAppInNormal: '{LAST_INPUT_APP}', firstAppInHome: LG_HOME},
+		firstAppByPowerOnReason: {remoteKey: '{LAST_APP}', localKey: '{LAST_APP}', upDownKey: '{LAST_APP}'}
+	}
+};
 const shell = spawnSync('sh', ['-c', 'command -v mkfifo'], {encoding: 'utf8'});
 const hasShell = shell.status === 0 && (process.platform !== 'win32' || process.env.FLUID_HOOK_TESTS === '1');
 
@@ -49,7 +57,11 @@ function makeTv() {
 	const dir = mkdtempSync(join(tmpdir(), 'fluid-hook-'));
 	const path = (...parts) => join(dir, ...parts);
 	const sh = (...parts) => posix(path(...parts));
-	for (const folder of ['bin', 'app', 'lg-home', 'state', 'run', 'init.d', 'usr-bin', 'calls']) mkdirSync(path(folder));
+	for (const folder of ['bin', 'app', 'lg-home', 'state', 'run', 'init.d', 'usr-bin', 'calls', 'prefs']) {
+		mkdirSync(path(folder));
+	}
+	writeFileSync(path('bootd'), sh('prefs', 'bootd.json'));
+	writeFileSync(path('lg-bootd.json'), JSON.stringify(LG_START_FILE, null, 4));
 	writeFileSync(path('app', 'appinfo.json'), '{}');
 	writeFileSync(path('usr-bin', 'home'), 'the real program');
 	writeFileSync(path('mounts'), '');
@@ -81,9 +93,6 @@ case "$*" in
 	grep -c usr-bin "${sh('mounts')}" >"${sh('mounted-at-close')}"
 	echo "" >"${sh('front')}"
 	;;
-*getAllInputStatus*) cat "${sh('inputs')}" 2>/dev/null || echo '{ "returnValue": true, "devices": [ ] }' ;;
-*addDevice*) echo '{ "returnValue": true, "devices": [ { "id": "MVPD_IP-${FLUID}", "appId": "${FLUID}" } ] }' >"${sh('inputs')}" ;;
-*deleteDevice*) rm -f "${sh('inputs')}" ;;
 esac`
 	);
 	tool('mount', `echo "$*" >>"${sh('calls', 'mount')}"; echo "x $3 ext4 rw 0 0" >>"${sh('mounts')}"`);
@@ -92,6 +101,8 @@ esac`
 	tool('sleep', 'exit 0'); // no waiting in a test
 	tool('sync', 'exit 0');
 	tool('setsid', '"$@"');
+	// the real one; on Windows it takes paths as Windows has them, which the shell turns them into
+	tool('node', `unset MSYS_NO_PATHCONV; exec "${posix(process.execPath)}" "$@"`);
 
 	const script = SCRIPT.replace(/^APP_DIR=.*$/m, `APP_DIR=${sh('app')}`)
 		.replace(/^LG_HOME_DIR=.*$/m, `LG_HOME_DIR=${sh('lg-home')}`)
@@ -99,6 +110,9 @@ esac`
 		.replace(/^STATE=.*$/m, `STATE=${sh('state')}`)
 		.replace(/^RUN=.*$/m, `RUN=${sh('run')}`)
 		.replace(/^BOOT_FILE=.*$/m, `BOOT_FILE=${sh('init.d', '60-fluid-home')}`)
+		.replace(/^BOOTD=.*$/m, `BOOTD=${sh('bootd')}`)
+		.replace(/^LG_START_FILE=.*$/m, `LG_START_FILE=${sh('lg-bootd.json')}`)
+		.replace(/^START_FILE=.*$/m, `START_FILE=${sh('prefs', 'bootd.json')}`)
 		.replace(/^VERIFY_SECONDS=.*$/m, 'VERIFY_SECONDS=2')
 		.replace(/^BOOT_VERIFY_SECONDS=.*$/m, 'BOOT_VERIFY_SECONDS=2')
 		// the wait for the user to leave LG Home: here the user leaves at once
@@ -124,6 +138,8 @@ esac`
 		mounted: () => readFileSync(path('mounts'), 'utf8').includes(sh('usr-bin', 'home')),
 		has: (...parts) => existsSync(path(...parts)),
 		failures: () => readFileSync(path('state', 'failures'), 'utf8').trim(),
+		startFile: () => JSON.parse(readFileSync(path('prefs', 'bootd.json'), 'utf8')),
+		startsWithFluid: () => existsSync(path('prefs', 'bootd.json')),
 		remove: () => rmSync(dir, {recursive: true, force: true})
 	};
 }
@@ -171,11 +187,11 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 		expect(tv.has(...BOOT_FILE)).toBe(false);
 	});
 
-	it('turned on: covers LG Home, with a boot file, and makes fluid an input', () => {
+	it('turned on: covers LG Home, with a boot file, and the TV starts with fluid', () => {
 		expect(enable().out).toEqual(['on', 'yes']);
 		expect(tv.mounted()).toBe(true);
 		expect(tv.has(...BOOT_FILE)).toBe(true);
-		expect(tv.calls('luna')).toContain('addDevice');
+		expect(tv.startsWithFluid()).toBe(true);
 	});
 
 	it('keeps what runs as root in its own folder, not in the writable app folder', () => {
@@ -190,7 +206,7 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 		expect(tv.run('enable').out[0]).toBe('unsupported');
 		expect(tv.mounted()).toBe(false);
 		expect(tv.has(...BOOT_FILE)).toBe(false);
-		expect(tv.calls('luna')).not.toContain('addDevice');
+		expect(tv.startsWithFluid()).toBe(false);
 		expect(tv.front()).toBe(FLUID); // the check may have brought up LG Home
 	});
 
@@ -201,7 +217,7 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 		expect(tv.has(...BOOT_FILE)).toBe(false);
 		expect(tv.has('state', 'home-hook.sh')).toBe(false);
 		expect(tv.has('state', 'stand-in')).toBe(false);
-		expect(tv.calls('luna')).toContain('deleteDevice');
+		expect(tv.startsWithFluid()).toBe(false);
 	});
 
 	it('can be turned on, off and on again', () => {
@@ -211,30 +227,67 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 		expect(tv.mounted()).toBe(true);
 	});
 
-	it('makes fluid an input, or no longer', () => {
-		enable();
-		expect(tv.run('input', 'no').out).toEqual(['on', 'no']);
-		expect(tv.run('input', 'yes').out).toEqual(['on', 'yes']);
-	});
+	describe('the TV starts with fluid', () => {
+		it("by a copy of LG's file, in which only what opens first has changed", () => {
+			enable();
+			const copy = tv.startFile();
+			expect(copy.common.firstApp.firstAppInHome).toBe(FLUID);
+			expect(copy.common.firstApp.firstAppInNormal).toBe('{LAST_INPUT_APP}');
+			expect(copy.common.firstAppByPowerOnReason).toEqual({
+				remoteKey: FLUID,
+				localKey: FLUID,
+				upDownKey: FLUID,
+				micomPower: FLUID
+			});
+			expect(copy.inputApps).toEqual(LG_START_FILE.inputApps);
+		});
 
-	it('reads the list of inputs with or without spaces in its JSON', () => {
-		enable();
-		writeFileSync(tv.path('inputs'), `{"returnValue":true,"devices":[{"appId":"${FLUID}"}]}`);
-		expect(tv.run('status').out).toEqual(['on', 'yes']);
-		writeFileSync(tv.path('inputs'), `{ "returnValue": true, "devices": [ { "appId": "${FLUID}" } ] }`);
-		expect(tv.run('status').out).toEqual(['on', 'yes']);
-	});
+		it('can be turned off and on again while the Home key opens fluid', () => {
+			enable();
+			expect(tv.run('start', 'no').out).toEqual(['on', 'no']);
+			expect(tv.startsWithFluid()).toBe(false);
+			expect(tv.run('start', 'yes').out).toEqual(['on', 'yes']);
+			expect(tv.startsWithFluid()).toBe(true);
+		});
 
-	it('being asked for its state makes fluid an input again: an update of fluid takes that away', () => {
-		enable();
-		rmSync(tv.path('inputs'));
-		expect(tv.run('status').out).toEqual(['on', 'yes']);
-	});
+		it('stays off while LG Home has the Home key: nothing would look after fluid', () => {
+			expect(tv.run('start', 'yes').out).toEqual(['off', 'no']);
+			expect(tv.startsWithFluid()).toBe(false);
+		});
 
-	it('leaves fluid out of the inputs if the user took it out', () => {
-		enable();
-		tv.run('input', 'no');
-		expect(tv.run('status').out).toEqual(['on', 'no']);
+		it('stays off if the user turned it off, also when asked for the state', () => {
+			enable();
+			tv.run('start', 'no');
+			expect(tv.run('status').out).toEqual(['on', 'no']);
+		});
+
+		it('leaves alone a copy that is not its own', () => {
+			writeFileSync(tv.path('prefs', 'bootd.json'), '{"someone":"else"}');
+			expect(enable().out).toEqual(['on', 'unsupported']);
+			expect(tv.startFile()).toEqual({someone: 'else'});
+			tv.run('disable');
+			expect(tv.startFile()).toEqual({someone: 'else'});
+		});
+
+		it('is not offered where bootd does not read a copy', () => {
+			writeFileSync(tv.path('bootd'), 'another bootd');
+			expect(tv.run('status').out).toEqual(['off', 'unsupported']);
+			expect(enable().out).toEqual(['on', 'unsupported']);
+			expect(tv.startsWithFluid()).toBe(false);
+		});
+
+		it("is not offered where LG's file has no table of reasons", () => {
+			writeFileSync(tv.path('lg-bootd.json'), '{"common":{}}');
+			expect(enable().out).toEqual(['on', 'unsupported']);
+			expect(tv.startsWithFluid()).toBe(false);
+		});
+
+		it('writes nothing from an LG file it cannot read, and leaves nothing half done', () => {
+			writeFileSync(tv.path('lg-bootd.json'), '"firstAppByPowerOnReason" and no JSON');
+			expect(enable().out[0]).toBe('on');
+			expect(tv.startsWithFluid()).toBe(false);
+			expect(tv.has('prefs', 'bootd.json.new')).toBe(false);
+		});
 	});
 
 	it('being asked for its state covers LG Home again, if that is not so yet', () => {
@@ -296,7 +349,7 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 			expect(tv.has(...BOOT_FILE)).toBe(false);
 			expect(tv.mounted()).toBe(false);
 			expect(tv.front()).toBe(LG_HOME);
-			expect(tv.calls('luna')).toContain('deleteDevice');
+			expect(tv.startsWithFluid()).toBe(false);
 			expect(tv.run('status').out[0]).toBe('gave-up');
 			tv.run('ack');
 			expect(tv.run('status').out[0]).toBe('off');
@@ -375,7 +428,7 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 			expect(tv.has(...BOOT_FILE)).toBe(false);
 			expect(tv.mounted()).toBe(false);
 			expect(tv.front()).toBe(LG_HOME);
-			expect(tv.calls('luna')).toContain('deleteDevice');
+			expect(tv.startsWithFluid()).toBe(false);
 		});
 
 		it('refused at once by the app manager: LG Home, even over another app', async () => {
@@ -416,12 +469,77 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 			await eventually(() => expect(tv.has('state', 'failures')).toBe(true));
 		});
 
-		it('its boot file removes itself and all else once fluid is gone', () => {
-			enable();
-			rmSync(tv.path('app', 'appinfo.json'));
-			expect(runInShell(tv.path('bin'), tv.path(...BOOT_FILE), []).status).toBe(0);
-			expect(tv.has(...BOOT_FILE)).toBe(false);
-			expect(tv.has('state')).toBe(false);
+		it('does not open fluid again if the TV started on it: that would close what the user has opened', async () => {
+			afterRestart(FLUID);
+			writeFileSync(tv.path('run', 'alive'), '');
+			writeFileSync(tv.path('calls', 'luna'), '');
+			tv.run('boot-job');
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			expect(tv.calls('luna')).not.toContain('homeKey');
+			expect(tv.has('state', 'failures')).toBe(false);
+		});
+
+		it("writes its copy anew once a firmware update has changed LG's file", () => {
+			afterRestart(FLUID);
+			writeFileSync(tv.path('run', 'alive'), '');
+			writeFileSync(tv.path('lg-bootd.json'), JSON.stringify({...LG_START_FILE, inputApps: {HDMI_9: 'new'}}));
+			tv.run('boot-job');
+			expect(tv.startFile().inputApps).toEqual({HDMI_9: 'new'});
+			expect(tv.startFile().common.firstApp.firstAppInHome).toBe(FLUID);
+			expect(tv.run('status').out).toEqual(['on', 'yes']);
+		});
+
+		it("removes its copy if LG's file has become one it does not know", () => {
+			afterRestart(FLUID);
+			writeFileSync(tv.path('run', 'alive'), '');
+			writeFileSync(tv.path('lg-bootd.json'), '{"common":{}}');
+			tv.run('boot-job');
+			expect(tv.startsWithFluid()).toBe(false);
+		});
+
+		it('leaves the copy alone once someone else has changed it', () => {
+			afterRestart(FLUID);
+			writeFileSync(tv.path('run', 'alive'), '');
+			writeFileSync(tv.path('prefs', 'bootd.json'), '{"someone":"else"}');
+			tv.run('boot-job');
+			expect(tv.startFile()).toEqual({someone: 'else'});
+			expect(tv.run('status').out).toEqual(['on', 'unsupported']);
+		});
+
+		describe('once fluid is gone, its boot file', () => {
+			const bootWithoutFluid = () => {
+				rmSync(tv.path('app', 'appinfo.json'));
+				expect(runInShell(tv.path('bin'), tv.path(...BOOT_FILE), []).status).toBe(0);
+			};
+
+			it('removes itself and all else', () => {
+				enable();
+				bootWithoutFluid();
+				expect(tv.has(...BOOT_FILE)).toBe(false);
+				expect(tv.has('state')).toBe(false);
+				expect(tv.startsWithFluid()).toBe(false);
+			});
+
+			it('opens LG Home if the TV is left in front of nothing', () => {
+				enable();
+				tv.setFront('');
+				bootWithoutFluid();
+				expect(tv.front()).toBe(LG_HOME);
+			});
+
+			it('stays behind what the TV has opened by itself', () => {
+				enable();
+				tv.setFront('com.webos.app.hdmi3');
+				bootWithoutFluid();
+				expect(tv.front()).toBe('com.webos.app.hdmi3');
+			});
+
+			it('leaves a copy alone that is not its own', () => {
+				enable();
+				writeFileSync(tv.path('prefs', 'bootd.json'), '{"someone":"else"}');
+				bootWithoutFluid();
+				expect(tv.startFile()).toEqual({someone: 'else'});
+			});
 		});
 	});
 });

@@ -14,15 +14,17 @@
 # Should fluid not come up (it says so with the file `alive`), LG Home is opened instead. After
 # MAX_FAILURES in a row the hook turns itself off for good, and fluid says so when it next runs.
 #
-# fluid is also an input of the TV, next to HDMI: the TV starts with its last input, which is fluid
-# unless an HDMI input was on last, and without waiting for the boot scripts. The TV keeps track of
-# that itself, and goes back to its last real input when fluid stops being one.
+# The TV can also start with fluid. What it opens first is up to bootd, long before any boot script
+# runs: by a file of LG's (LG_START_FILE), or by a copy of that if there is one (START_FILE). The
+# copy names fluid where LG Home and the last input would be. Nothing runs for it, and should fluid
+# not be there the TV opens its last input. bootd reads it when it starts, so it counts from the next
+# time the TV is switched on. Turning this off, or fluid not coming up, removes the copy again.
 #
-#   home-hook.sh status        on | off | gave-up | unsupported, and on a second line whether
-#                              fluid is an input of the TV (yes | no)
+#   home-hook.sh status        on | off | gave-up | unsupported, and on a second line whether the
+#                              TV starts with fluid (yes | no | unsupported)
 #   home-hook.sh enable        as status, or failed
 #   home-hook.sh disable       as status
-#   home-hook.sh input yes|no  fluid is an input of the TV, or no longer; as status
+#   home-hook.sh start yes|no  the TV starts with fluid, or no longer; as status
 #   home-hook.sh open-lg       LG Home itself, until the user leaves it
 #   home-hook.sh ack           fluid has told the user that the hook gave up
 #   (boot, stand-in, watch, lg-session and forget are for this script itself)
@@ -38,6 +40,10 @@ STATE=/var/lib/webosbrew/fluid-home
 # in RAM, gone with a restart
 RUN=/run/fluid-home
 BOOT_FILE=/var/lib/webosbrew/init.d/60-fluid-home
+# bootd, and what it reads when the TV starts: START_FILE in place of LG's own, if it is there
+BOOTD=/usr/sbin/bootd
+LG_START_FILE=/etc/palm/bootd.json
+START_FILE=/var/luna/preferences/bootd.json
 
 # How long fluid has to say that it is up, in seconds: when it is opened, and at a cold start of
 # the TV, when everything takes its time.
@@ -61,8 +67,8 @@ luna() {
 	luna-send -n 1 "luna://$1" "$2" 2>/dev/null
 }
 
-# Services differ in how they write JSON (the one for inputs with spaces, the app manager without):
-# without any spaces, a reply can be matched.
+# Services differ in how they write JSON (some with spaces, the app manager without): without any
+# spaces, a reply can be matched.
 compact() {
 	printf '%s' "$1" | tr -d ' 	'
 }
@@ -166,36 +172,95 @@ write_boot_file() {
 	mkdir -p "$(dirname "$BOOT_FILE")"
 	cat >"$STATE/boot.new" <<EOF || return 1
 #!/bin/sh
-# fluid: the Home key opens fluid (Settings, TV). To undo: delete this file and restart the TV.
+# fluid: the Home key opens fluid, and the TV may start with it (Settings, TV). To undo: delete this
+# file and $START_FILE, and restart the TV.
 if [ -f "$STATE/home-hook.sh" ] && [ -f "$APP_DIR/appinfo.json" ]; then
 	exec sh "$STATE/home-hook.sh" boot
 fi
+# fluid is gone: nothing of this stays, and the TV is not left in front of nothing
+if [ -f "$START_FILE" ] && grep -qx "\$(md5sum "$START_FILE" | cut -d' ' -f1)" "$STATE/start-file.md5"; then
+	rm -f "$START_FILE"
+fi
 rm -rf "$STATE"
 rm -f "\$0"
+case "\$(luna-send -n 1 luna://com.webos.applicationManager/getForegroundAppInfo '{}' 2>/dev/null)" in
+*'"appId":""'*) luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"$LG_HOME_ID"}' >/dev/null 2>&1 ;;
+esac
 EOF
 	chmod 755 "$STATE/boot.new" && mv -f "$STATE/boot.new" "$BOOT_FILE"
 }
 
-add_input() {
-	luna com.webos.service.eim/addDevice "{\"appId\":\"$APP_ID\",\"pigImage\":\"\",\"mvpdIcon\":\"\",\"type\":\"MVPD_IP\",\"showPopup\":false,\"label\":\"fluid\",\"description\":\"\"}" >/dev/null
+md5_of() {
+	md5sum "$1" 2>/dev/null | cut -d' ' -f1
 }
 
-remove_input() {
-	luna com.webos.service.eim/deleteDevice "{\"appId\":\"$APP_ID\"}" >/dev/null
+# Does bootd on this TV read a copy, and is LG's file the kind this script knows?
+can_start_with_fluid() {
+	grep -q "$START_FILE" "$BOOTD" 2>/dev/null && grep -q firstAppByPowerOnReason "$LG_START_FILE" 2>/dev/null
 }
 
-is_input() {
-	compact "$(luna com.webos.service.eim/getAllInputStatus '{}')" | grep -q "\"appId\":\"$APP_ID\""
+# A copy is ours if its sum is noted here. Anyone else's is left alone.
+start_file_is_ours() {
+	[ -f "$START_FILE" ] && grep -qx "$(md5_of "$START_FILE")" "$STATE/start-file.md5" 2>/dev/null
 }
 
-# The TV takes a moment to list a new input, and the state read next should be right.
-add_input_and_wait() {
-	add_input
-	n=0
-	while [ "$n" -lt 3 ] && ! is_input; do
-		sleep 1
-		n=$((n + 1))
-	done
+# LG's file with fluid where LG Home and the last input would be: when the TV is switched on with the
+# remote or its own button, and after a restart or a power cut. Why else it may start (a phone casting
+# to it, HDMI-CEC, a timer) stays as it is. bootd reads this file early in every start, so it is
+# written aside, read back and moved into place in one step.
+write_start_file() {
+	can_start_with_fluid || return 1
+	if [ -e "$START_FILE" ] && ! start_file_is_ours; then
+		log "$START_FILE is not fluid's: left alone"
+		return 1
+	fi
+	node -e '
+		var fs = require("fs");
+		var config = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+		var app = process.argv[3];
+		["remoteKey", "localKey", "upDownKey", "micomPower"].forEach(function (reason) {
+			config.common.firstAppByPowerOnReason[reason] = app;
+		});
+		if (config.common.firstApp && config.common.firstApp.firstAppInHome) config.common.firstApp.firstAppInHome = app;
+		fs.writeFileSync(process.argv[2], JSON.stringify(config, null, 4) + "\n");
+		JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+	' "$LG_START_FILE" "$START_FILE.new" "$APP_ID" 2>/dev/null || {
+		log "cannot write $START_FILE"
+		rm -f "$START_FILE.new"
+		return 1
+	}
+	# both sums while it changes, so that a power cut at any moment leaves a copy known to be ours
+	mkdir -p "$STATE"
+	md5_of "$START_FILE.new" >>"$STATE/start-file.md5"
+	md5_of "$LG_START_FILE" >"$STATE/lg-start-file.md5"
+	sync
+	mv -f "$START_FILE.new" "$START_FILE" || return 1
+	md5_of "$START_FILE" >"$STATE/start-file.md5"
+	sync
+	log "the TV starts with fluid"
+}
+
+remove_start_file() {
+	if start_file_is_ours; then
+		rm -f "$START_FILE"
+		log "the TV starts as it did before"
+	fi
+	rm -f "$STATE/start-file.md5" "$STATE/lg-start-file.md5"
+	sync
+}
+
+# A firmware update may bring a new file of LG's: an old copy must not hide it. And a copy someone
+# else has changed or removed is theirs from then on.
+refresh_start_file() {
+	[ -f "$STATE/start-file.md5" ] || return 0
+	if ! start_file_is_ours; then
+		log "$START_FILE is not fluid's any more: left alone"
+		rm -f "$STATE/start-file.md5" "$STATE/lg-start-file.md5"
+		return 0
+	fi
+	[ "$(md5_of "$LG_START_FILE")" = "$(cat "$STATE/lg-start-file.md5" 2>/dev/null)" ] && return 0
+	log "LG's file for the start of the TV has changed: writing fluid's copy anew"
+	write_start_file || remove_start_file
 }
 
 open_lg_home() {
@@ -264,8 +329,8 @@ fluid_failed() {
 		echo fluid-not-starting >"$STATE/gave-up"
 		sync
 		release
-		rm -f "$STATE/stand-in" "$STATE/home-hook.sh" "$STATE/wants-input"
-		remove_input
+		rm -f "$STATE/stand-in" "$STATE/home-hook.sh"
+		remove_start_file
 		[ "$close_fluid" = yes ] && close_fluid
 		[ "$show_lg" = yes ] && open_lg_home
 		return 0
@@ -344,23 +409,26 @@ forget() {
 	log "fluid is gone"
 	rm -f "$BOOT_FILE"
 	release
-	remove_input
+	remove_start_file
 	open_lg_home
 	rm -rf "$STATE" "$RUN"
 }
 
-# At every start of the TV, from BOOT_FILE. LG Home is up by now, and in front unless the TV started
-# on an input. fluid comes first and LG Home goes after, so that nothing goes dark in between. If
-# the TV started on fluid, this is the first time that anyone looks whether fluid is really up.
+# At every start of the TV, from BOOT_FILE. If the TV started with fluid, this is the first time that
+# anyone looks whether fluid is really up; it says so by itself, and opening it again would close
+# whatever the user has opened by now. Otherwise LG Home is up by now, and in front unless the TV
+# started on an input. fluid comes first and LG Home goes after, so that nothing goes dark in between.
 boot_job() {
 	front=$(front_app)
 	log "boot, $(cut -d' ' -f1 /proc/uptime) s after the start of the TV: $front in front"
+	refresh_start_file
 	cover || {
 		log "cannot stand in at boot: LG Home stays"
 		return 0
 	}
 	case "$front" in
-	"$LG_HOME_ID" | "" | "$APP_ID")
+	"$APP_ID") detach sh "$SELF" watch "$BOOT_VERIFY_SECONDS" ;;
+	"$LG_HOME_ID" | "")
 		open_fluid "$BOOT_VERIFY_SECONDS"
 		n=0
 		while [ "$n" -lt 10 ] && [ "$(front_app)" != "$APP_ID" ]; do
@@ -382,7 +450,13 @@ state() {
 	else
 		echo off
 	fi
-	is_input && echo yes || echo no
+	if start_file_is_ours; then
+		echo yes
+	elif can_start_with_fluid && [ ! -e "$START_FILE" ]; then
+		echo no
+	else
+		echo unsupported
+	fi
 }
 
 status() {
@@ -392,12 +466,11 @@ status() {
 		# after an update of fluid, its newer script takes over at the next press of the key
 		if [ "$SELF" = "$APP_DIR/home-hook.sh" ] && ! cmp -s "$SELF" "$STATE/home-hook.sh"; then
 			install_files
+			write_boot_file
 			stop_process "$RUN/stand-in.pid" stand-in
 		fi
 		# not at boot yet, or fluid opened by hand before that
 		[ -e "$RUN/lg-session" ] || take_over
-		# an update of fluid takes it off the TV's inputs
-		[ -e "$STATE/wants-input" ] && ! is_input && add_input_and_wait
 	fi
 	state
 }
@@ -441,8 +514,7 @@ enable() {
 		echo failed
 		return 0
 	}
-	touch "$STATE/wants-input"
-	add_input_and_wait
+	write_start_file
 	sync
 	log "on"
 	state
@@ -452,20 +524,19 @@ disable() {
 	rm -f "$BOOT_FILE"
 	stop_process "$RUN/lg-session.pid" lg-session
 	release
-	remove_input
+	remove_start_file
 	rm -rf "$RUN"
-	rm -f "$STATE/gave-up" "$STATE/failures" "$STATE/stand-in" "$STATE/home-hook.sh" "$STATE/boot.new" "$STATE/wants-input"
+	rm -f "$STATE/gave-up" "$STATE/failures" "$STATE/stand-in" "$STATE/home-hook.sh" "$STATE/boot.new"
 	log "off"
 	state
 }
 
-set_input() {
+# Only while the Home key opens fluid: that is what looks after fluid not coming up.
+set_start() {
 	if [ "$1" = no ]; then
-		rm -f "$STATE/wants-input"
-		remove_input
-	else
-		touch "$STATE/wants-input"
-		add_input_and_wait
+		remove_start_file
+	elif [ -f "$BOOT_FILE" ]; then
+		write_start_file
 	fi
 	state
 }
@@ -474,7 +545,7 @@ case "$1" in
 status) status ;;
 enable) enable ;;
 disable) disable ;;
-input) set_input "$2" ;;
+start) set_start "$2" ;;
 open-lg)
 	if [ -f "$BOOT_FILE" ]; then
 		detach sh "$SELF" lg-session

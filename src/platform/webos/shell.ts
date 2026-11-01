@@ -128,7 +128,7 @@ export function readPictureFolder(path: string): Promise<string> {
 
 /** What fluid may ask of its script for the Home key (public/home-hook.sh, shipped next to
  *  index.html). */
-export type HomeHookCommand = 'status' | 'enable' | 'disable' | 'input yes' | 'input no' | 'open-lg' | 'ack';
+export type HomeHookCommand = 'status' | 'enable' | 'disable' | 'start yes' | 'start no' | 'open-lg' | 'ack';
 
 /** The script behind homeHook. */
 export function homeHookScript(command: HomeHookCommand): string {

@@ -13,7 +13,7 @@ export interface HomeKey {
 	/** it went back to LG Home by itself since fluid last ran */
 	gaveUp: boolean;
 	toggle: () => void;
-	toggleInput: () => void;
+	toggleStart: () => void;
 }
 
 /** What the Home key opens, and changing that. Asked at the start, which also tells the TV that
@@ -70,10 +70,10 @@ export function useHomeKey(showToast: (text: string, kind?: ToastMessage['kind']
 		change(platform.setHomeKey(known.state !== 'on'));
 	}, [busy, known, showToast]);
 
-	const toggleInput = useCallback(() => {
-		if (busy || !known || known.state !== 'on') return;
-		change(platform.setIsInput(!known.isInput));
+	const toggleStart = useCallback(() => {
+		if (busy || !known || known.state !== 'on' || known.start === 'unsupported') return;
+		change(platform.setStartsWithFluid(known.start !== 'yes'));
 	}, [busy, known, showToast]);
 
-	return {known, problem, busy, gaveUp, toggle, toggleInput};
+	return {known, problem, busy, gaveUp, toggle, toggleStart};
 }
