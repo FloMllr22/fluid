@@ -100,7 +100,10 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
 		window.clearTimeout(toastTimer.current);
 		setToast({text, kind});
-		toastTimer.current = window.setTimeout(() => setToast(null), TIMING.toastMs);
+		toastTimer.current = window.setTimeout(
+			() => setToast(null),
+			kind === 'error' ? TIMING.toastErrorMs : TIMING.toastMs
+		);
 	}, []);
 
 	const homeKey = useHomeKey(showToast);

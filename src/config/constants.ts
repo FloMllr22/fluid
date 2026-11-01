@@ -19,6 +19,7 @@ export const KEY = {
 
 export const TIMING = {
 	toastMs: 2200,
+	toastErrorMs: 6000, // what went wrong, and why, takes longer to read from the sofa
 	clockTickMs: 1000,
 	longPressMs: 600, // OK held this long enters/leaves re-order mode
 	appColorSettleMs: 150, // the wheel stands still this long before its colours follow the app
