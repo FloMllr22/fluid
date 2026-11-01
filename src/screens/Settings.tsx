@@ -41,6 +41,8 @@ interface Props {
 	panels: SettingsPanel[];
 	options: OptionItem[];
 	active: boolean;
+	/** another screen is in front: stays mounted, keeping its focus, but is not drawn */
+	hidden?: boolean;
 	/** OK on an item: add or remove it, or on a tab for picking, pick it */
 	onToggle: (tabId: string, key: string, order: string[]) => void;
 	onReorder: (tabId: string, keys: string[]) => void;
@@ -67,7 +69,7 @@ const COLS = LAYOUT.settingsGridColumns;
  *  OK picks an item up, arrows move it, OK puts it down. Hold OK or press Done to leave.
  *  Background tab: previews of every background; OK picks one, which shows at once.
  *  Panels: their own content, which takes the keys while focus is in it. */
-export function Settings({tabs, panels, options, active, onToggle, onReorder, onOption, onClose}: Props) {
+export function Settings({tabs, panels, options, active, hidden, onToggle, onReorder, onOption, onClose}: Props) {
 	const [tabIndex, setTabIndex] = useState(0);
 	const [zone, setZone] = useState<Zone>('tabs');
 	const [optionIndex, setOptionIndex] = useState(0);
@@ -206,7 +208,7 @@ export function Settings({tabs, panels, options, active, onToggle, onReorder, on
 	const toolbar = tab !== undefined && grid.canReorder;
 
 	return (
-		<div class="screen settings">
+		<div class={hidden ? 'screen settings screen--hidden' : 'screen settings'}>
 			<h1 class="settings__title">{t('settings.title')}</h1>
 			<SettingsClock />
 			<nav class="settings__tabs">

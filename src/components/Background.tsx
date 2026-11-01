@@ -1,7 +1,8 @@
 import {useEffect, useRef, useState} from 'preact/hooks';
 import {useInFront} from '../hooks/useInFront';
 import {useSlideshow} from '../hooks/useSlideshow';
-import type {Photo} from '../lib/backgrounds';
+import {backgroundKey, type Photo} from '../lib/backgrounds';
+import {platform} from '../platform';
 import type {Background as BackgroundChoice} from '../state/settings';
 import {COLOR_BACKGROUNDS, DUSK_LAYERS, DUSK_SKY} from '../theme/backgrounds';
 
@@ -37,24 +38,49 @@ export function Background({background, photos, onError}: Props) {
 	const reportError = useRef(onError);
 	reportError.current = onError;
 
+	// A failure is said once per choice until a photo loads: a slideshow from a drive that was
+	// pulled out would say it with every slide.
+	const told = useRef(false);
+	const choice = backgroundKey(background);
+	useEffect(() => {
+		told.current = false;
+	}, [choice]);
+
 	useEffect(() => {
 		if (!url) {
 			setLayers([]);
 			return;
 		}
 		let current = true;
-		const image = new Image();
-		// The new photo goes on top; the one below stays until the next comes, so the fade
-		// never shows the colour underneath.
-		image.onload = () => {
-			if (current) setLayers((shown) => shown.slice(-1).concat({url, n: ++count.current}));
+		let failed = false;
+		let stopTrying = () => {};
+		const load = () => {
+			const image = new Image();
+			// The new photo goes on top; the one below stays until the next comes, so the fade
+			// never shows the colour underneath.
+			image.onload = () => {
+				if (!current) return;
+				told.current = false;
+				stopTrying();
+				setLayers((shown) => shown.slice(-1).concat({url, n: ++count.current}));
+			};
+			image.onerror = () => {
+				if (!current) return;
+				failed = true;
+				if (!told.current) reportError.current();
+				told.current = true;
+			};
+			image.src = url;
 		};
-		image.onerror = () => {
-			if (current) reportError.current();
-		};
-		image.src = url;
+		// A USB drive may be mounted later than fluid starts, or plugged in meanwhile: what failed
+		// is tried again whenever fluid comes to the front.
+		stopTrying = platform.onForeground(() => {
+			if (failed) load();
+		});
+		load();
 		return () => {
 			current = false;
+			stopTrying();
 		};
 	}, [url]);
 

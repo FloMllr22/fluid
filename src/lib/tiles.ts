@@ -4,9 +4,10 @@ import type {GlyphName} from '../components/Glyph';
 import type {TileModel} from '../components/Tile';
 import {type MessageKey, t} from '../i18n';
 import {type AppEntry, type InputSource, LIVE_TV_ID} from '../platform';
-import {BACKGROUND_COLORS, type BackgroundColor} from '../state/settings';
+import {BACKGROUND_COLORS, type Background, type BackgroundColor} from '../state/settings';
 import {COLOR_BACKGROUNDS} from '../theme/backgrounds';
 import {backgroundKey, type Photo} from './backgrounds';
+import {baseName} from './pictures';
 
 /** EIM's icon names (LG's images, which fluid does not ship) → fluid's own glyphs.
  *  Anything not listed, such as HDMI_1 … HDMI_4, AV, USB, gets the generic input glyph. */
@@ -65,9 +66,14 @@ export function photoName(id: string): string {
 	return t(`background.photo.${id}` as MessageKey);
 }
 
-/** The choices of the Background tab: the colours, each photo, and a slideshow when
- *  there are two photos or more. Each tile is a preview. */
-export function backgroundTiles(photos: Photo[]): TileModel[] {
+/** The two tiles that open the choice of a picture or a folder from the TV. */
+export const PICK_PICTURE = 'pick:picture';
+export const PICK_FOLDER = 'pick:folder';
+
+/** The choices of the Background tab: the colours, each photo, a slideshow when there are two
+ *  photos or more, what the user has chosen from the TV, and the tiles to choose that. Each tile
+ *  is a preview. */
+export function backgroundTiles(photos: Photo[], own?: {background: Background; url?: string}): TileModel[] {
 	const tiles: TileModel[] = BACKGROUND_COLORS.map((color) => ({
 		key: backgroundKey({kind: 'color', color}),
 		label: t(COLOR_NAMES[color]),
@@ -81,6 +87,16 @@ export function backgroundTiles(photos: Photo[]): TileModel[] {
 		});
 	if (photos.length > 1)
 		tiles.push({key: backgroundKey({kind: 'slideshow'}), label: t('background.slideshow'), glyph: 'slideshow'});
+	if (own && (own.background.kind === 'picture' || own.background.kind === 'folder')) {
+		tiles.push({
+			key: backgroundKey(own.background),
+			label: baseName(own.background.path),
+			imageUrl: own.url,
+			glyph: own.background.kind === 'folder' ? 'slideshow' : 'picture'
+		});
+	}
+	tiles.push({key: PICK_PICTURE, label: t('background.pickPicture'), glyph: 'picture'});
+	tiles.push({key: PICK_FOLDER, label: t('background.pickFolder'), glyph: 'folder'});
 	return tiles;
 }
 

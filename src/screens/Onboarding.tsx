@@ -21,6 +21,8 @@ interface Props {
 	/** the last step is done: store the settings and show Home */
 	onFinish: () => void;
 	active: boolean;
+	/** another screen is in front: stays mounted, keeping its place, but is not drawn */
+	hidden?: boolean;
 }
 
 const STEPS = ['language', 'apps', 'background'] as const;
@@ -56,7 +58,8 @@ export function Onboarding({
 	onToggle,
 	onReorder,
 	onFinish,
-	active
+	active,
+	hidden
 }: Props) {
 	const [step, setStep] = useState(0);
 	const [zone, setZone] = useState<Zone>('buttons');
@@ -177,7 +180,7 @@ export function Onboarding({
 				: tab?.reorderLabel || '';
 
 	return (
-		<div class="screen onboarding">
+		<div class={hidden ? 'screen onboarding screen--hidden' : 'screen onboarding'}>
 			<div class="onboarding__brand">{t('onboarding.brand')}</div>
 			<div class="onboarding__step">{t('onboarding.step', {step: step + 1, count: STEPS.length})}</div>
 			<div class={`onboarding__main onboarding__main--${name}`}>

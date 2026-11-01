@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import type {Background} from '../state/settings';
+import {type Background, defaultBackground} from '../state/settings';
 import {backgroundFromKey, backgroundKey, lightLayer, photosFrom, shownBackground, slideOrder} from './backgrounds';
 
 const dark: Background = {kind: 'color', color: 'dark'};
@@ -50,6 +50,30 @@ describe('background keys', () => {
 	it('know no other keys', () => {
 		for (const key of ['', 'color:pink', 'photo:', 'colour:dark', 'com.example.movies'])
 			expect(backgroundFromKey(key), key).toBeNull();
+	});
+});
+
+describe('own pictures', () => {
+	it('have keys that lead back to them, whatever is in the path', () => {
+		for (const background of [
+			{kind: 'picture', path: '/tmp/usb/sda/sda1/Mama: am Meer.jpg'},
+			{kind: 'folder', path: '/media/developer/pictures/Urlaub'}
+		] as Background[]) {
+			expect(backgroundFromKey(backgroundKey(background))).toEqual(background);
+		}
+	});
+
+	it('show like the photos of fluid, once they are found', () => {
+		const picture: Background = {kind: 'picture', path: '/a/b.jpg'};
+		expect(shownBackground(picture, [], ['/a/b.jpg'])).toEqual({kind: 'photo', id: '/a/b.jpg'});
+		const folder: Background = {kind: 'folder', path: '/a'};
+		expect(shownBackground(folder, [], ['/a/b.jpg', '/a/c.jpg'])).toEqual({kind: 'slideshow'});
+		expect(shownBackground(folder, [], ['/a/b.jpg'])).toEqual({kind: 'photo', id: '/a/b.jpg'});
+	});
+
+	it('leave the default until then, and when the drive is not there', () => {
+		expect(shownBackground({kind: 'picture', path: '/a/b.jpg'}, [], [])).toEqual(defaultBackground());
+		expect(shownBackground({kind: 'folder', path: '/a'}, [], [])).toEqual(defaultBackground());
 	});
 });
 

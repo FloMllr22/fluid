@@ -47,6 +47,8 @@ export function lightLayer(light: Light): {left: number; top: number; width: num
 export function backgroundKey(background: Background): string {
 	if (background.kind === 'color') return `color:${background.color}`;
 	if (background.kind === 'photo') return `photo:${background.id}`;
+	if (background.kind === 'picture') return `picture:${background.path}`;
+	if (background.kind === 'folder') return `folder:${background.path}`;
 	return 'slideshow';
 }
 
@@ -56,14 +58,23 @@ export function backgroundFromKey(key: string): Background | null {
 	if (kind === 'color' && BACKGROUND_COLORS.indexOf(value as BackgroundColor) !== -1)
 		return {kind, color: value as BackgroundColor};
 	if (kind === 'photo' && value) return {kind, id: value};
+	if ((kind === 'picture' || kind === 'folder') && value) return {kind, path: value};
 	if (key === 'slideshow') return {kind: 'slideshow'};
 	return null;
 }
 
-/** What to draw for the stored background, given the photos this fluid has: a photo that
- *  is gone falls back to the default, a slideshow needs two photos (one is shown as
- *  itself, none falls back to the default). */
-export function shownBackground(background: Background, photoIds: string[]): Background {
+/** What to draw for the stored background, given the photos this fluid has, and the pictures of
+ *  the user's own that it could find, by path: the same as photos that come with fluid. A photo
+ *  that is gone falls back to the default, a slideshow needs two photos (one is shown as itself,
+ *  none falls back to the default). */
+export function shownBackground(background: Background, photoIds: string[], ownPaths: string[] = []): Background {
+	if (background.kind === 'picture') {
+		return ownPaths.indexOf(background.path) === -1 ? defaultBackground() : {kind: 'photo', id: background.path};
+	}
+	if (background.kind === 'folder') {
+		if (ownPaths.length === 0) return defaultBackground();
+		return ownPaths.length === 1 ? {kind: 'photo', id: ownPaths[0]} : {kind: 'slideshow'};
+	}
 	if (background.kind === 'photo' && photoIds.indexOf(background.id) === -1) return defaultBackground();
 	if (background.kind === 'slideshow' && photoIds.length < 2)
 		return photoIds.length === 1 ? {kind: 'photo', id: photoIds[0]} : defaultBackground();

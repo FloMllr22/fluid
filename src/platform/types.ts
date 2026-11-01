@@ -2,6 +2,10 @@
 // interface, through `platform` from ./index: webos/ talks to the TV, mock/ stands in for
 // it in a desktop browser and in unit tests.
 
+import type {PictureFolder} from '../lib/pictures';
+
+export type {PictureFolder};
+
 /** An app that can be shown on the home screen. */
 export interface AppEntry {
 	id: string;
@@ -61,6 +65,12 @@ export interface Weather {
 	code: number;
 	/** daytime at the place (the sun rather than the moon) */
 	isDay: boolean;
+}
+
+/** A place on the TV with pictures of the user's. */
+export interface PicturePlace {
+	kind: 'internal' | 'usb';
+	path: string;
 }
 
 /** What the Home key opens. `on`: fluid. `off`: LG Home. `gave-up`: LG Home again, since fluid
@@ -125,6 +135,14 @@ export interface Platform {
 	/** Calls back whenever fluid leaves the foreground (another app or input in front, or
 	 *  the screen off), so timers can pause. Returns a function that stops it. */
 	onBackground(callback: () => void): () => void;
+	/** The TV's own folder for pictures, and each USB drive plugged in. */
+	listPicturePlaces(): Promise<PicturePlace[]>;
+	/** What is in a folder of one of those places, for showing pictures. */
+	listPictures(path: string): Promise<PictureFolder>;
+	/** Gets ready to draw pictures with pictureUrl, as an update of fluid may have undone that. */
+	preparePictures(): Promise<void>;
+	/** A URL an image can be drawn from, for a picture in one of those places; '' for any other. */
+	pictureUrl(path: string): string;
 	/** Places whose name matches `query`, best first, named in `language` ("de"). Asks
 	 *  Open-Meteo's place search over the network, sending the query and the language.
 	 *  Resolves with none for a query shorter than PLACE_QUERY_MIN_LENGTH, without asking.

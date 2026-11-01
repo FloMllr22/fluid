@@ -17,7 +17,8 @@ greeting with the date, the time and (if you like) the weather.
 - **Home key** (optional, off until you turn it on): the remote's Home key opens fluid instead of
   LG Home, and the TV can start with fluid (see [The Home key](#the-home-key))
 - **Background**: dark, OLED black, calm blue or dusk (an evening sky, still or alive with
-  drifting clouds, shooting stars and light on the sea)
+  drifting clouds, shooting stars and light on the sea), or your own: a picture or a folder of
+  pictures as a slideshow, from a USB drive or the TV's storage
 - **Appearance**: an accent colour of its own or taken from the app in the middle of the
   wheel, an optional glow in that app's colour behind the wheel, three icon sizes, and a
   switch to reduce motion
@@ -61,7 +62,8 @@ reports (TV model, webOS version, firmware version) are welcome.
 | Settings | Hold OK (or the **Re-order** button) | Enter or leave re-order mode |
 | Re-order mode | OK, arrows, OK | Pick up a tile, move it, put it down |
 | Re-order mode | Back | Cancel the move or leave re-order mode |
-| Settings, Background tab | OK | Use that background (it changes at once) |
+| Settings, Background tab | OK | Use that background (it changes at once), or open the choice of a picture or a folder |
+| Choosing a picture or folder | ↑ ↓, OK | Choose a row, open it or use it (Back goes up a level, and out) |
 | Settings, Appearance tab | ↑ ↓, ← → | Choose a row, change its value (it changes at once); OK goes on to the next value or turns the switch; ← on the first value back to the tabs |
 | Settings, Weather tab | OK | Turn the weather on or off, open the keyboard to search for a place, or use the place found |
 | Typing a place | OK | Search at once (the search also starts when you pause typing) |
@@ -126,6 +128,11 @@ Uninstalling fluid takes it all back as well, by itself. What happened is in
 So far this is tested on webOS 6.5 only. Before it turns on, fluid checks that the TV really runs
 its script in place of LG Home, and otherwise leaves everything as it was and says that it is not
 possible on this TV. That will be so on newer TVs, where LG Home is no program of its own.
+
+**Your own pictures** come from a USB drive or from `/media/developer/pictures` in the TV's
+storage (copy them there over SSH: `scp photo.jpg root@<tv-ip>:/media/developer/pictures/`). JPEG,
+PNG, WebP, BMP and GIF, up to 16 MB each. A picture on a drive that is not plugged in leaves the
+dark background until the drive is back.
 
 ## Privacy
 

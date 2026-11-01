@@ -220,6 +220,12 @@ export const LAYOUT = {
 	placeHeight: 76, // a place found by the search
 	pillHeight: 80, // a language choice in Settings
 	pillHeightLarge: 104, // a language choice in the onboarding
+	// choosing a picture: the list on the left, the picture with focus on the right
+	pickerRowHeight: 72,
+	pickerListWidth: 920,
+	pickerListHeight: 648,
+	pickerPreviewWidth: 720,
+	pickerPreviewHeight: 405,
 	onboardingTop: 180, // the title of the Apps and Background steps
 	onboardingWelcomeTop: 300, // the title of the first step
 	onboardingGridHeight: 500, // two rows of tiles, and the room around them

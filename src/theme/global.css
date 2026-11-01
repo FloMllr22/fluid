@@ -1702,6 +1702,73 @@ body {
 	}
 }
 
+/* ---------- choosing a picture ---------- */
+
+.picker {
+	background: var(--color-screen-dim);
+}
+.picker__where {
+	position: absolute;
+	left: var(--layout-safe-x);
+	top: 156px;
+	margin: 0;
+	font-size: var(--font-option-description);
+	color: var(--color-text-secondary);
+}
+.picker__list {
+	position: absolute;
+	left: var(--layout-safe-x);
+	top: var(--layout-settings-top);
+	width: var(--layout-picker-list-width);
+	height: var(--layout-picker-list-height);
+}
+.picker__row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: var(--layout-picker-row-height);
+	padding: 0 28px;
+	border-radius: 20px;
+	font-size: var(--font-settings-button);
+	color: var(--color-text-primary);
+	white-space: nowrap;
+}
+.picker__row--focused {
+	background: var(--color-focus-fill);
+	color: var(--color-focus-text);
+}
+.picker__glyph {
+	flex: 0 0 auto;
+	width: 32px;
+	height: 32px;
+	margin-right: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.picker__label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.picker__note {
+	margin: 20px 28px 0;
+	font-size: var(--font-option-description);
+	line-height: 1.35;
+	color: var(--color-text-secondary);
+}
+.picker__preview {
+	position: absolute;
+	right: var(--layout-safe-x);
+	top: var(--layout-settings-top);
+	width: var(--layout-picker-preview-width);
+	height: var(--layout-picker-preview-height);
+	border-radius: 20px;
+	object-fit: cover;
+	box-shadow: 0 24px 60px var(--color-menu-shadow);
+}
+
 /* ---------- reduced motion ---------- */
 
 /* Where the user (Settings → Appearance) or the TV asks for less motion, everything

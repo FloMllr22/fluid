@@ -4,6 +4,7 @@
 // validated here before it becomes part of a command.
 
 import {APP_ID} from '../../config/constants';
+import {LISTING_DIVIDER, PICTURE_MAX_MB} from '../../lib/pictures';
 import {LUNA} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
 
@@ -81,6 +82,48 @@ export function removeAppScript(appId: string): string {
 /** Command 4: starts uninstalling an app. It takes its time after the answer. */
 export function removeApp(appId: string): Promise<string> {
 	return exec(removeAppScript(appId), 8000);
+}
+
+/** Where pictures of the user's are: USB drives appear below the first as /<disk>/<partition>; the
+ *  second is fluid's own folder in the TV's storage. */
+export const USB_PICTURES = '/tmp/usb';
+export const INTERNAL_PICTURES = '/media/developer/pictures';
+
+/** Paths in those places, from what a USB drive holds, so any name a file can have: only line
+ *  ends and going up are refused, and the name is quoted on its way to the shell. */
+export function isPicturePath(path: string): boolean {
+	const within =
+		path === INTERNAL_PICTURES || path.startsWith(`${INTERNAL_PICTURES}/`) || /^\/tmp\/usb\/[^/]+\/[^/]+/.test(path);
+	return within && !/[\r\n\0]/.test(path) && path.split('/').indexOf('..') === -1;
+}
+
+/** The script behind linkPicturePlaces. */
+export function linkPicturesScript(): string {
+	const folder = quotePath(`/media/developer/apps/usr/palm/applications/${APP_ID}/pictures`);
+	return (
+		`mkdir -p ${quotePath(INTERNAL_PICTURES)} ${folder} && ` +
+		`ln -sfn ${quotePath(USB_PICTURES)} ${folder}/usb && ` +
+		`ln -sfn ${quotePath(INTERNAL_PICTURES)} ${folder}/internal && ` +
+		`{ ls -d ${USB_PICTURES}/*/* 2>/dev/null || true; }`
+	);
+}
+
+/** Command 7: makes the links in fluid's own folder that lead to the places with pictures (see
+ *  pictures.ts), and lists the USB drives, one per line. */
+export function linkPicturePlaces(): Promise<string> {
+	return exec(linkPicturesScript(), 8000);
+}
+
+/** The script behind readPictureFolder: what is in a folder, then those of its files too large to
+ *  offer. Throws on a path outside the places with pictures. */
+export function pictureFolderScript(path: string): string {
+	if (!isPicturePath(path)) throw new Error(`Refusing path outside the pictures: ${path}`);
+	return `cd ${shellQuote(path)} && ls -1p && echo ${LISTING_DIVIDER} && find . -maxdepth 1 -type f -size +${PICTURE_MAX_MB * 1024}k`;
+}
+
+/** Command 8: reads a folder of pictures. */
+export function readPictureFolder(path: string): Promise<string> {
+	return exec(pictureFolderScript(path), 10000);
 }
 
 /** What fluid may ask of its script for the Home key (public/home-hook.sh, shipped next to

@@ -20,6 +20,8 @@ export type GlyphName =
 	| 'phone'
 	| 'camera'
 	| 'slideshow'
+	| 'picture'
+	| 'folder'
 	| 'sun'
 	| 'moon'
 	| 'cloud-sun'
@@ -50,6 +52,14 @@ const SHAPES: Record<GlyphName, () => ComponentChildren> = {
 	// a bin: uninstall an app
 	uninstall: () => <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
 	close: () => <path d="M6 6l12 12M18 6 6 18" />,
+	// a frame with hills and a sun: a picture
+	picture: () => (
+		<>
+			<rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+			<path d="M3.5 16.5l5-5 4 4 2.5-2.5 5.5 5.5M15.5 9.5h.01" />
+		</>
+	),
+	folder: () => <path d="M3 7.5A2 2 0 0 1 5 5.5h4.2l2 2.5H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
 	// a screen with an antenna: Live TV, aerial, satellite
 	tv: () => (
 		<>

@@ -4,6 +4,7 @@ import type {Platform} from '../types';
 import {listApps, uninstallApp} from './apps';
 import {acknowledgeHomeKey, getHomeKey, sayAliveFromNowOn, setHomeKey, setIsInput} from './home-key';
 import {listInputs} from './inputs';
+import {listPicturePlaces, listPictures, pictureUrl, preparePictures} from './pictures';
 import {hidePointer, onBackground, onForeground, onHomeKey} from './pointer';
 import {getLocale, getTimeFormat, launch, launchLgHome} from './system';
 import {getWeather, searchPlaces} from './weather';
@@ -29,6 +30,10 @@ export function createWebOSPlatform(): Platform {
 		hidePointer,
 		onForeground,
 		onBackground,
+		listPicturePlaces,
+		listPictures,
+		preparePictures,
+		pictureUrl,
 		searchPlaces,
 		getWeather
 	};

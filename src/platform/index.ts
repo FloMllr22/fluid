@@ -17,6 +17,8 @@ export {
 	type HomeKeyState,
 	type InputSource,
 	LIVE_TV_ID,
+	type PictureFolder,
+	type PicturePlace,
 	PLACE_QUERY_MIN_LENGTH,
 	PLACE_SEARCH_LIMIT,
 	type Place,

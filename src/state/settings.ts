@@ -36,9 +36,15 @@ export interface Appearance {
 }
 
 /** What is behind the screens: a colour, one of the photos that come with fluid (by its
- *  ID), or a slideshow of all of them. A photo that a later fluid no longer ships is
- *  stored as it is; whoever draws the background falls back to the default. */
-export type Background = {kind: 'color'; color: BackgroundColor} | {kind: 'photo'; id: string} | {kind: 'slideshow'};
+ *  ID), a slideshow of all of them, or the user's own from the TV: a picture, or the pictures in
+ *  a folder, by path. Something that a later fluid no longer has, or a USB drive that is not
+ *  plugged in, stays stored as it is; whoever draws the background falls back to the default. */
+export type Background =
+	| {kind: 'color'; color: BackgroundColor}
+	| {kind: 'photo'; id: string}
+	| {kind: 'slideshow'}
+	| {kind: 'picture'; path: string}
+	| {kind: 'folder'; path: string};
 
 /** The language fluid speaks: the TV's ("tv"), or one fluid has. */
 export type LanguageChoice = 'tv' | Language;
@@ -241,11 +247,12 @@ function isCoordinate(value: unknown, limit: number): value is number {
 /** A copy of a stored background, or null for anything that is not one. */
 function backgroundOf(value: unknown): Background | null {
 	if (!isObject(value)) return null;
-	const {kind, color, id} = value;
+	const {kind, color, id, path} = value;
 	if (kind === 'color' && BACKGROUND_COLORS.indexOf(color as BackgroundColor) !== -1)
 		return {kind, color: color as BackgroundColor};
 	if (kind === 'photo' && typeof id === 'string' && id !== '') return {kind, id};
 	if (kind === 'slideshow') return {kind};
+	if ((kind === 'picture' || kind === 'folder') && typeof path === 'string' && path !== '') return {kind, path};
 	return null;
 }
 

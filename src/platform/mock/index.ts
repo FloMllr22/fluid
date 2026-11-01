@@ -14,7 +14,16 @@ import {
 	type Platform,
 	type Weather
 } from '../types';
-import {MOCK_APPS, MOCK_INPUTS, MOCK_PLACES, MOCK_WEATHER} from './data';
+import {
+	MOCK_APPS,
+	MOCK_INPUTS,
+	MOCK_PICTURE_FOLDERS,
+	MOCK_PICTURES_INTERNAL,
+	MOCK_PICTURES_USB,
+	MOCK_PLACES,
+	MOCK_WEATHER,
+	mockPictureUrl
+} from './data';
 
 /** A parameter from the page address, e.g. `?lang=de`; null outside a browser. */
 function urlParam(name: string): string | null {
@@ -137,6 +146,18 @@ export function createMockPlatform(): Platform {
 			document.addEventListener('visibilitychange', onHidden);
 			return () => document.removeEventListener('visibilitychange', onHidden);
 		},
+		// ?pictures-error=<code> makes it fail, to see how fluid explains it
+		listPicturePlaces: () => {
+			const code = PLATFORM_ERROR_CODES.find((c) => c === urlParam('pictures-error'));
+			if (code) return Promise.reject(new PlatformError(code, `[mock] no pictures: ${code}`));
+			return Promise.resolve([
+				{kind: 'internal', path: MOCK_PICTURES_INTERNAL},
+				{kind: 'usb', path: MOCK_PICTURES_USB}
+			]);
+		},
+		listPictures: (path) => Promise.resolve(MOCK_PICTURE_FOLDERS[path] || {folders: [], pictures: [], tooLarge: 0}),
+		preparePictures: () => Promise.resolve(),
+		pictureUrl: mockPictureUrl,
 		searchPlaces: (query) => {
 			const code = errorFromUrl('weather-error');
 			if (code) return Promise.reject(new PlatformError(code, `[mock] place search failed: ${code}`));

@@ -10,17 +10,19 @@ import {TvPanel} from './components/TvPanel';
 import {WeatherPanel} from './components/WeatherPanel';
 import {TIMING} from './config/constants';
 import {useHomeKey} from './hooks/useHomeKey';
+import {useOwnPictures} from './hooks/useOwnPictures';
 import {useWeather} from './hooks/useWeather';
 import {errorMessage, localeFor, setLocale, t, tn} from './i18n';
 import {sameApps, withNewApps} from './lib/apps';
 import {backgroundFromKey, backgroundKey, shownBackground} from './lib/backgrounds';
 import {favoritesFirst, setFavorite, swapNeighbour, toggleId} from './lib/order';
-import {appTile, backgroundTiles, inputTile, pickInOrder} from './lib/tiles';
+import {appTile, backgroundTiles, inputTile, PICK_FOLDER, PICK_PICTURE, pickInOrder} from './lib/tiles';
 import {temperatureUnit} from './lib/weather';
 import {markFrame} from './perf';
 import {type AppEntry, type InputSource, type Place, PlatformError, platform} from './platform';
 import {Home, type MovingApp} from './screens/Home';
 import {Onboarding} from './screens/Onboarding';
+import {type PickerMode, PicturePicker} from './screens/PicturePicker';
 import {Settings, type SettingsPanel, type SettingsTab} from './screens/Settings';
 import {
 	type Appearance,
@@ -81,6 +83,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	/** the app whose menu is open (OK held on it) */
 	const [menuAppId, setMenuAppId] = useState<string | null>(null);
 	const [moving, setMoving] = useState<Moving | null>(null);
+	/** choosing a picture or a folder from the TV */
+	const [picker, setPicker] = useState<PickerMode | null>(null);
 	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
 	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
 	const [inputs, setInputs] = useState<InputSource[]>([]);
@@ -145,6 +149,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				setScreen('home');
 				setMenuAppId(null);
 				setMoving(null);
+				setPicker(null);
 			}),
 		[]
 	);
@@ -236,10 +241,35 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	// Live TV is named in the user's language, again when it changes
 	const homeSources = useMemo(() => shownInputs.map(inputTile), [shownInputs, settings.language]);
 
+	// what the user chose from the TV, if so, and with it all the photos to draw
+	const onOwnPicturesError = useCallback(
+		(error: unknown) => showToast(failure(t('background.ownFailed'), error), 'error'),
+		[showToast]
+	);
+	const ownPictures = useOwnPictures(settings.background, onOwnPicturesError);
+	const photos = useMemo(() => PHOTOS.concat(ownPictures), [ownPictures]);
 	// the stored background as it can be drawn: a photo this fluid lacks falls back
-	const background = useMemo(() => shownBackground(settings.background, PHOTO_IDS), [settings.background]);
+	const background = useMemo(
+		() =>
+			shownBackground(
+				settings.background,
+				PHOTO_IDS,
+				ownPictures.map((picture) => picture.id)
+			),
+		[settings.background, ownPictures]
+	);
 	// named in the user's language, again when it changes
-	const backgroundChoices = useMemo(() => backgroundTiles(PHOTOS), [settings.language]);
+	const backgroundChoices = useMemo(
+		() =>
+			backgroundTiles(PHOTOS, {
+				background: settings.background,
+				url: ownPictures.length > 0 ? ownPictures[0].thumbUrl : undefined
+			}),
+		[settings.language, settings.background, ownPictures]
+	);
+	/** an own picture stays chosen while it cannot be drawn, for when the drive is plugged in again */
+	const chosenBackground =
+		settings.background.kind === 'picture' || settings.background.kind === 'folder' ? settings.background : background;
 
 	const tabs: SettingsTab[] = useMemo(
 		() => [
@@ -264,7 +294,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				id: TAB.background,
 				label: t('settings.background'),
 				items: backgroundChoices,
-				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(background)),
+				shown: backgroundChoices.filter((tile) => tile.key === backgroundKey(chosenBackground)),
 				emptyText: t('rows.empty') // never: the colours are always there
 			}
 		],
@@ -277,7 +307,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			settings.favoriteIds,
 			favoriteCount,
 			backgroundChoices,
-			background,
+			chosenBackground,
 			settings.language
 		]
 	);
@@ -308,6 +338,10 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	const onToggle = useCallback(
 		(tabId: string, key: string, order: string[]) => {
 			if (tabId === TAB.background) {
+				if (key === PICK_PICTURE || key === PICK_FOLDER) {
+					setPicker(key === PICK_PICTURE ? 'picture' : 'folder');
+					return;
+				}
 				const picked = backgroundFromKey(key);
 				if (picked) updateSettings({...settings, background: picked});
 			} else if (tabId === TAB.apps) {
@@ -322,6 +356,11 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 		},
 		[settings, apps, inputs, updateSettings]
 	);
+
+	const onPicked = (path: string) => {
+		if (picker) updateSettings({...settings, background: {kind: picker, path}});
+		setPicker(null);
+	};
 
 	const onBackgroundError = useCallback(() => showToast(t('background.loadFailed'), 'error'), [showToast]);
 
@@ -468,7 +507,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 
 	return (
 		<div class={background.kind === 'color' ? 'app' : 'app app--photo'}>
-			<Background background={background} photos={PHOTOS} onError={onBackgroundError} />
+			<Background background={background} photos={photos} onError={onBackgroundError} />
 			{/* Home stays mounted under Settings so it keeps its focus position. */}
 			<Home
 				apps={homeApps}
@@ -503,7 +542,8 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					onToggle={onToggle}
 					onReorder={onReorder}
 					onFinish={finishOnboarding}
-					active
+					active={!picker}
+					hidden={picker !== null}
 				/>
 			)}
 			{screen === 'settings' && (
@@ -511,13 +551,15 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 					tabs={tabs}
 					panels={panels}
 					options={OPTIONS}
-					active
+					active={!picker}
+					hidden={picker !== null}
 					onToggle={onToggle}
 					onReorder={onReorder}
 					onOption={onOption}
 					onClose={() => setScreen('home')}
 				/>
 			)}
+			{picker && <PicturePicker mode={picker} active onPick={onPicked} onClose={() => setPicker(null)} />}
 			<Toast message={toast} />
 		</div>
 	);
