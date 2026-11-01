@@ -9,10 +9,13 @@ const photoOf = (path: string): Photo => {
 	return {id: path, url, thumbUrl: url};
 };
 
+const samePhotos = (a: Photo[], b: Photo[]) => a.length === b.length && a.every((photo, i) => photo.id === b[i].id);
+
 /** The pictures of the background the user chose from the TV: the picture, or those in the folder.
- *  None until they are known, and none for any other background. A folder is read again whenever
- *  fluid comes back to the front: pictures come and go, and so do USB drives. A failure is reported
- *  through `onError`, once until reading works again, and the default background shows meanwhile. */
+ *  None until they are known, and none for any other background. They are looked for again whenever
+ *  fluid comes back to the front: pictures come and go, so do USB drives, and just after the TV has
+ *  started the Homebrew Channel may not answer yet. A failure is reported through `onError`, once
+ *  until reading works again, and the default background shows meanwhile. */
 export function useOwnPictures(background: Background, onError: (error: unknown) => void): Photo[] {
 	const [photos, setPhotos] = useState<Photo[]>([]);
 	const path = background.kind === 'picture' || background.kind === 'folder' ? background.path : undefined;
@@ -33,7 +36,7 @@ export function useOwnPictures(background: Background, onError: (error: unknown)
 				(next) => {
 					if (!current) return;
 					told = false;
-					setPhotos(next);
+					setPhotos((shown) => (samePhotos(shown, next) ? shown : next));
 				},
 				(error: unknown) => {
 					if (!current) return;
@@ -44,10 +47,10 @@ export function useOwnPictures(background: Background, onError: (error: unknown)
 			);
 		};
 		read();
-		const stop = background.kind === 'folder' ? platform.onForeground(read) : undefined;
+		const stop = platform.onForeground(read);
 		return () => {
 			current = false;
-			if (stop) stop();
+			stop();
 		};
 	}, [background.kind, path]);
 
