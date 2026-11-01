@@ -4,7 +4,7 @@ import {clamp, type NavKey, useKeys} from '../hooks/useKeys';
 import {useOkPress} from '../hooks/useOkPress';
 import {useSettled} from '../hooks/useSettled';
 import {errorMessage, t, tn} from '../i18n';
-import {baseName, joinPath, PICTURE_MAX_MB} from '../lib/pictures';
+import {joinPath, PICTURE_MAX_MB} from '../lib/pictures';
 import {platform} from '../platform';
 import {LAYOUT} from '../theme/tokens';
 
@@ -41,14 +41,16 @@ interface Listing {
 const PREVIEW_SETTLE_MS = 250;
 
 /** How many rows show at a time, and the room above and below the one with focus. */
-const ROWS_SHOWN = Math.floor(LAYOUT.pickerListHeight / LAYOUT.pickerRowHeight);
+const ROWS_SHOWN = Math.floor(
+	(LAYOUT.pickerListHeight + LAYOUT.pickerRowGap) / (LAYOUT.pickerRowHeight + LAYOUT.pickerRowGap)
+);
 
 /** Choosing a picture or a folder from a USB drive or the TV's own storage, with the remote or the
  *  pointer: ↑ ↓ move, OK or → go in or choose, ← or Back go up, and from the top back to where it
  *  was opened. A picture shows beside the list once focus rests on it. */
 export function PicturePicker({mode, active, onPick, onClose}: Props) {
-	/** the folders gone into, and the row each was reached from */
-	const [trail, setTrail] = useState<{path: string; focus: number}[]>([]);
+	/** the folders gone into: what each is called, and the row it was reached from */
+	const [trail, setTrail] = useState<{path: string; label: string; focus: number}[]>([]);
 	const [listing, setListing] = useState<Listing | undefined>(undefined);
 	const [problem, setProblem] = useState<string | undefined>(undefined);
 	const [focus, setFocus] = useState(0);
@@ -130,7 +132,7 @@ export function PicturePicker({mode, active, onPick, onClose}: Props) {
 		if (!target) return;
 		if (target.action === 'choose') onPick(target.path);
 		else {
-			setTrail(trail.concat({path: target.path, focus: at}));
+			setTrail(trail.concat({path: target.path, label: target.label, focus: at}));
 			setFocus(0);
 		}
 	};
@@ -165,7 +167,7 @@ export function PicturePicker({mode, active, onPick, onClose}: Props) {
 	return (
 		<div class="screen picker">
 			<h1 class="settings__title">{t(mode === 'picture' ? 'pictures.titlePicture' : 'pictures.titleFolder')}</h1>
-			<p class="picker__where">{here === undefined ? t('pictures.lead') : baseName(here)}</p>
+			<p class="picker__where">{trail.length > 0 ? trail[trail.length - 1].label : t('pictures.lead')}</p>
 			<div class="picker__list">
 				{problem && (
 					<p class="settings__empty">

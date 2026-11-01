@@ -222,6 +222,7 @@ export const LAYOUT = {
 	pillHeightLarge: 104, // a language choice in the onboarding
 	// choosing a picture: the list on the left, the picture with focus on the right
 	pickerRowHeight: 72,
+	pickerRowGap: 14,
 	pickerListWidth: 920,
 	pickerListHeight: 648,
 	pickerPreviewWidth: 720,

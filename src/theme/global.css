@@ -1149,6 +1149,7 @@ body {
 .settings__tab--focused,
 .settings__button--focused,
 .option--focused,
+.picker__row--focused,
 .pill--focused {
 	text-shadow: none;
 }
@@ -1727,15 +1728,24 @@ body {
 	flex-direction: row;
 	align-items: center;
 	height: var(--layout-picker-row-height);
-	padding: 0 28px;
-	border-radius: 20px;
-	font-size: var(--font-settings-button);
+	margin-bottom: var(--layout-picker-row-gap);
+	padding: 0 36px 0 28px;
+	border-radius: var(--layout-option-radius);
+	background: var(--color-surface);
+	font-size: var(--font-option-label);
+	font-weight: 500;
 	color: var(--color-text-primary);
 	white-space: nowrap;
 }
 .picker__row--focused {
 	background: var(--color-focus-fill);
+	font-weight: 600;
 	color: var(--color-focus-text);
+	box-shadow: 0 24px 56px var(--color-focus-shadow);
+}
+/* no column of tabs here: the hint stands under the list */
+.picker .settings__hint {
+	left: var(--layout-safe-x);
 }
 .picker__glyph {
 	flex: 0 0 auto;
