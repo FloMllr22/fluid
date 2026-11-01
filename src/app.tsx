@@ -86,7 +86,11 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	/** choosing a picture or a folder from the TV */
 	const [picker, setPicker] = useState<PickerMode | null>(null);
 	const [settings, setSettings] = useState<UserSettings>(loaded.settings);
-	const [appsState, setAppsState] = useState<AppsState>({status: 'loading'});
+	// the apps of the last time until the TV has answered, which takes seconds just after it started
+	const [appsState, setAppsState] = useState<AppsState>(() => {
+		const cached = platform.cachedApps();
+		return cached ? {status: 'ready', apps: cached} : {status: 'loading'};
+	});
 	const [inputs, setInputs] = useState<InputSource[]>([]);
 	const [toast, setToast] = useState<ToastMessage | null>(null);
 	/** the first start: the onboarding runs, and the settings are a draft until it is done */
@@ -164,7 +168,11 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 	// reading that changes nothing is not drawn again, so icons that still fail are not
 	// reported again either; one that fails while apps are shown leaves them, and says so.
 	useEffect(() => {
-		let shown: AppEntry[] | undefined;
+		let shown = appsState.status === 'ready' ? appsState.apps : undefined;
+		if (shown) markFrame('appsShown');
+		// with the apps of the last time on screen, the service may take its time to start
+		let patience = shown ? TIMING.appsRetries : 0;
+		let retry = 0;
 		let reading = false;
 		const load = () => {
 			if (reading) return;
@@ -172,6 +180,7 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 			platform.listApps().then(
 				(list) => {
 					reading = false;
+					patience = 0;
 					if (shown && sameApps(shown, list.apps)) return;
 					shown = list.apps;
 					setAppsState({status: 'ready', apps: list.apps});
@@ -182,14 +191,21 @@ export function App({loaded}: {loaded: LoadedSettings}) {
 				},
 				(error: unknown) => {
 					reading = false;
-					if (shown) showToast(failure(t('apps.refreshFailed'), error), 'error');
+					if (patience > 0) {
+						patience--;
+						retry = window.setTimeout(load, TIMING.appsRetryMs);
+					} else if (shown) showToast(failure(t('apps.refreshFailed'), error), 'error');
 					else setAppsState({status: 'failed', error});
 				}
 			);
 		};
 		reloadApps.current = load;
 		load();
-		return platform.onForeground(load);
+		const stop = platform.onForeground(load);
+		return () => {
+			stop();
+			window.clearTimeout(retry);
+		};
 	}, [showToast]);
 
 	// An app installed since the list was last read joins Home (see withNewApps).

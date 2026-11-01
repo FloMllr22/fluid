@@ -103,6 +103,9 @@ export interface Platform {
 	/** Every app on the TV's launcher, read through the Homebrew Channel (root). Rejects
 	 *  with `no-homebrew` or `no-root` when that is why it failed. */
 	listApps(): Promise<AppList>;
+	/** The apps as they were last listed, at once, or undefined if there are none: just after the
+	 *  TV has started, listing them takes several seconds. */
+	cachedApps(): AppEntry[] | undefined;
 	/** Live TV (when the TV has a tuner) and the external inputs, in port order */
 	listInputs(): Promise<InputSource[]>;
 	/** Opens an app, or switches to an input */

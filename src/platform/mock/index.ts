@@ -89,6 +89,8 @@ export function createMockPlatform(): Platform {
 			const apps = appsFromUrl().filter((app) => uninstalled.indexOf(app.id) === -1);
 			return Promise.resolve({apps, failedIcons: 0});
 		},
+		// listing them takes no time here
+		cachedApps: () => undefined,
 		listInputs: () => Promise.resolve(MOCK_INPUTS.slice()),
 		launch: (appId) => {
 			console.info(`[mock] would launch ${appId}`);

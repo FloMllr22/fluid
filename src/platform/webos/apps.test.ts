@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {APP_ID} from '../../config/constants';
 import {PlatformError} from '../errors';
-import {batchIcons, ICON_BATCH_BYTES, listApps} from './apps';
+import {batchIcons, cachedApps, ICON_BATCH_BYTES, listApps} from './apps';
 import {HOMEBREW_APP, LUNA} from './constants';
 import {lunaCall} from './luna';
 
@@ -117,6 +117,26 @@ describe('listApps', () => {
 			],
 			failedIcons: 0
 		});
+	});
+
+	it('keeps the list, so that the next start can draw it at once, the same as listing it', async () => {
+		tv.files = {'/icons/a.png': 30};
+		tv.launchPoints = [
+			{id: 'com.example.a', title: 'Alpha', largeIcon: '/icons/a.png', removable: true},
+			{id: 'com.example.b', title: 'Bravo'},
+			{id: APP_ID, title: 'fluid'}
+		];
+		expect(cachedApps()).toBeUndefined();
+		const {apps} = await listApps();
+		expect(apps[0].iconUrl).toContain('data:image');
+		expect(cachedApps()).toEqual(apps);
+	});
+
+	it('draws nothing at once from a list it cannot read', () => {
+		storage['fluid-apps-cache-v1'] = 'not JSON';
+		expect(cachedApps()).toBeUndefined();
+		storage['fluid-apps-cache-v1'] = '[{"title":"no id"}]';
+		expect(cachedApps()).toBeUndefined();
 	});
 
 	it('offers to remove what the TV lets be removed, but never the Homebrew Channel', async () => {

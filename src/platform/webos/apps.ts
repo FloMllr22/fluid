@@ -6,7 +6,7 @@
 
 import {APP_ID} from '../../config/constants';
 import {PlatformError} from '../errors';
-import type {AppList} from '../types';
+import type {AppEntry, AppList} from '../types';
 import {HOMEBREW_APP, LUNA} from './constants';
 import {type LunaResponse, lunaCall} from './luna';
 import {isSafePath, readFileSizes, readIcons, readLaunchPoints, removeApp} from './shell';
@@ -36,6 +36,10 @@ const ICON_CACHE_KEY = 'fluid-icon-cache-v1';
  *  batches that each stay well below the limit. */
 export const ICON_BATCH_BYTES = 150 * 1024;
 
+/** The launch points as last read, without what else the TV says of them: reading them takes
+ *  several seconds just after the TV has started, so Home draws these until then. */
+const APPS_CACHE_KEY = 'fluid-apps-cache-v1';
+
 /** Room for "<index> " and the newline around each icon's base64. */
 const ICON_LINE_BYTES = 8;
 
@@ -44,19 +48,44 @@ export function listApps(): Promise<AppList> {
 		.catch(explainFailure)
 		.then(parseLaunchPoints)
 		.then((points) =>
-			loadIcons(points).then(
-				({icons, failed}): AppList => ({
-					// fluid cannot do without the Homebrew Channel, so it does not offer to remove it
-					apps: points.map((p) => ({
-						id: p.id,
-						title: p.title,
-						iconUrl: icons[p.id],
-						removable: p.removable === true && p.id !== HOMEBREW_APP
-					})),
-					failedIcons: failed
-				})
-			)
+			loadIcons(points).then(({icons, failed}): AppList => {
+				writeAppsCache(points);
+				return {apps: points.map((p) => appEntry(p, icons[p.id])), failedIcons: failed};
+			})
 		);
+}
+
+function appEntry(p: LaunchPoint, iconUrl: string | undefined): AppEntry {
+	return {
+		id: p.id,
+		title: p.title,
+		iconUrl,
+		// fluid cannot do without the Homebrew Channel, so it does not offer to remove it
+		removable: p.removable === true && p.id !== HOMEBREW_APP
+	};
+}
+
+export function cachedApps(): AppEntry[] | undefined {
+	try {
+		const points: LaunchPoint[] = JSON.parse(localStorage.getItem(APPS_CACHE_KEY) || '[]');
+		if (!Array.isArray(points) || !points.length || !points.every((p) => p.id && p.title)) return undefined;
+		const icons = readIconCache();
+		return points.map((p) => appEntry(p, (p.largeIcon && icons[p.largeIcon]) || undefined));
+	} catch {
+		return undefined;
+	}
+}
+
+function writeAppsCache(points: LaunchPoint[]): void {
+	const kept = points.map((p): LaunchPoint => {
+		const path = p.largeIcon || p.icon;
+		return {id: p.id, title: p.title, largeIcon: path && isSafePath(path) ? path : undefined, removable: p.removable};
+	});
+	try {
+		localStorage.setItem(APPS_CACHE_KEY, JSON.stringify(kept));
+	} catch {
+		/* quota exceeded: Home waits for the list at the next start */
+	}
 }
 
 export function uninstallApp(appId: string): Promise<void> {

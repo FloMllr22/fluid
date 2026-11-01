@@ -1,7 +1,7 @@
 // The platform on an LG webOS TV.
 
 import type {Platform} from '../types';
-import {listApps, uninstallApp} from './apps';
+import {cachedApps, listApps, uninstallApp} from './apps';
 import {acknowledgeHomeKey, getHomeKey, sayAliveFromNowOn, setHomeKey, setStartsWithFluid} from './home-key';
 import {listInputs} from './inputs';
 import {listPicturePlaces, listPictures, pictureUrl, preparePictures} from './pictures';
@@ -16,6 +16,7 @@ export function createWebOSPlatform(): Platform {
 	return {
 		kind: 'webos',
 		listApps,
+		cachedApps,
 		listInputs,
 		launch,
 		uninstallApp,
