@@ -527,6 +527,13 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 				expect(tv.front()).toBe(LG_HOME);
 			});
 
+			it("opens LG Home over LG's page that says the app is not there", () => {
+				enable();
+				tv.setFront('com.webos.app.discovery');
+				bootWithoutFluid();
+				expect(tv.front()).toBe(LG_HOME);
+			});
+
 			it('stays behind what the TV has opened by itself', () => {
 				enable();
 				tv.setFront('com.webos.app.hdmi3');

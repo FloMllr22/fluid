@@ -16,9 +16,9 @@
 #
 # The TV can also start with fluid. What it opens first is up to bootd, long before any boot script
 # runs: by a file of LG's (LG_START_FILE), or by a copy of that if there is one (START_FILE). The
-# copy names fluid where LG Home and the last input would be. Nothing runs for it, and should fluid
-# not be there the TV opens its last input. bootd reads it when it starts, so it counts from the next
-# time the TV is switched on. Turning this off, or fluid not coming up, removes the copy again.
+# copy names fluid where LG Home and the last input would be, and nothing runs for it. bootd reads it
+# when it starts, so it counts from the next time the TV is switched on. Turning this off, or fluid not
+# coming up or being gone, removes the copy again.
 #
 #   home-hook.sh status        on | off | gave-up | unsupported, and on a second line whether the
 #                              TV starts with fluid (yes | no | unsupported)
@@ -177,14 +177,17 @@ write_boot_file() {
 if [ -f "$STATE/home-hook.sh" ] && [ -f "$APP_DIR/appinfo.json" ]; then
 	exec sh "$STATE/home-hook.sh" boot
 fi
-# fluid is gone: nothing of this stays, and the TV is not left in front of nothing
+# fluid is gone: nothing of this stays, and the TV is not left in front of nothing, or of the page
+# of LG's that says that the app it was to open is not there
 if [ -f "$START_FILE" ] && grep -qx "\$(md5sum "$START_FILE" | cut -d' ' -f1)" "$STATE/start-file.md5"; then
 	rm -f "$START_FILE"
 fi
 rm -rf "$STATE"
 rm -f "\$0"
 case "\$(luna-send -n 1 luna://com.webos.applicationManager/getForegroundAppInfo '{}' 2>/dev/null)" in
-*'"appId":""'*) luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"$LG_HOME_ID"}' >/dev/null 2>&1 ;;
+*'"appId":""'* | *'"appId":"com.webos.app.discovery"'*)
+	luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"$LG_HOME_ID"}' >/dev/null 2>&1
+	;;
 esac
 EOF
 	chmod 755 "$STATE/boot.new" && mv -f "$STATE/boot.new" "$BOOT_FILE"

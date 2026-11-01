@@ -106,8 +106,7 @@ RAM puts a small script over LG Home's program, so that the TV's app manager run
 Home; a file in `/var/lib/webosbrew/init.d` puts it there again at every start, about 40 seconds
 after the TV is on, and fluid does so itself as soon as it is up (until then LG Home answers the
 key). For the start, the file `/var/luna/preferences/bootd.json`: webOS reads this copy of its own
-`/etc/palm/bootd.json` when there is one, and in the copy fluid is what opens first. Should fluid
-not be there, the TV opens its last input.
+`/etc/palm/bootd.json` when there is one, and in the copy fluid is what opens first.
 
 **If fluid does not start.** Should fluid not come up when the key is pressed or the TV starts, LG
 Home opens instead. After three times in a row the Home key goes back to LG Home for good and the
@@ -130,8 +129,9 @@ rm -f /var/lib/webosbrew/init.d/60-fluid-home /var/luna/preferences/bootd.json
 reboot
 ```
 
-Uninstalling fluid takes it all back as well, by itself. What happened is in
-`/var/lib/webosbrew/fluid-home/home-hook.log`.
+Uninstalling fluid takes it all back as well, by itself: at the next press of the Home key, or at the
+next start of the TV, which may show a page of LG's saying that an app is not available until LG Home
+replaces it. What happened is in `/var/lib/webosbrew/fluid-home/home-hook.log`.
 
 So far this is tested on webOS 6.5 only. Before it turns on, fluid checks that the TV really runs
 its script in place of LG Home and that it reads that copy, and otherwise leaves everything as it
