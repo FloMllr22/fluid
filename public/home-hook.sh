@@ -61,6 +61,12 @@ luna() {
 	luna-send -n 1 "luna://$1" "$2" 2>/dev/null
 }
 
+# Services differ in how they write JSON (the one for inputs with spaces, the app manager without):
+# without any spaces, a reply can be matched.
+compact() {
+	printf '%s' "$1" | tr -d ' 	'
+}
+
 # Without waiting, and with nothing left open for whoever called this script to wait for.
 detach() {
 	if command -v setsid >/dev/null 2>&1; then
@@ -179,7 +185,7 @@ remove_input() {
 }
 
 is_input() {
-	luna com.webos.service.eim/getAllInputStatus '{}' | grep -q "\"appId\":\"$APP_ID\""
+	compact "$(luna com.webos.service.eim/getAllInputStatus '{}')" | grep -q "\"appId\":\"$APP_ID\""
 }
 
 # The TV takes a moment to list a new input, and the state read next should be right.
@@ -205,7 +211,7 @@ open_fluid() {
 	mkdir -p "$RUN"
 	rm -f "$RUN/alive"
 	reply=$(luna com.webos.applicationManager/launch "{\"id\":\"$APP_ID\",\"params\":{\"homeKey\":true}}")
-	case "$reply" in
+	case "$(compact "$reply")" in
 	*'"returnValue":true'*) detach sh "$SELF" watch "$1" ;;
 	*)
 		log "launching fluid refused: $reply"
@@ -290,7 +296,7 @@ lg_session() {
 	) &
 	timer=$!
 	while IFS= read -r report; do
-		case "$report" in
+		case "$(compact "$report")" in
 		*"\"appId\":\"$LG_HOME_ID\""*)
 			touch "$RUN/lg-seen"
 			;;
@@ -305,7 +311,7 @@ lg_session() {
 
 # Home asked for, in the words of the app manager.
 home_asked() {
-	case "$1" in
+	case "$(compact "$1")" in
 	*'"reason":"preload"'* | *'"snapshot":true'*) ;;
 	*'"fluidCheck"'*) touch "$RUN/checked" ;;
 	*) open_fluid "$VERIFY_SECONDS" ;;
@@ -324,7 +330,7 @@ stand_in() {
 	registration=$!
 	trap 'kill "$registration" 2>/dev/null; rm -f "$events"; exit 0' TERM INT
 	while IFS= read -r event; do
-		case "$event" in
+		case "$(compact "$event")" in
 		*'"event":"relaunch"'*) home_asked "$event" ;;
 		*'"event":"close"'*) break ;;
 		esac

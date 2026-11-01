@@ -81,8 +81,8 @@ case "$*" in
 	grep -c usr-bin "${sh('mounts')}" >"${sh('mounted-at-close')}"
 	echo "" >"${sh('front')}"
 	;;
-*getAllInputStatus*) cat "${sh('inputs')}" 2>/dev/null || echo '{"devices":[]}' ;;
-*addDevice*) echo '{"devices":[{"appId":"${FLUID}"}]}' >"${sh('inputs')}" ;;
+*getAllInputStatus*) cat "${sh('inputs')}" 2>/dev/null || echo '{ "returnValue": true, "devices": [ ] }' ;;
+*addDevice*) echo '{ "returnValue": true, "devices": [ { "id": "MVPD_IP-${FLUID}", "appId": "${FLUID}" } ] }' >"${sh('inputs')}" ;;
 *deleteDevice*) rm -f "${sh('inputs')}" ;;
 esac`
 	);
@@ -217,6 +217,14 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 		expect(tv.run('input', 'yes').out).toEqual(['on', 'yes']);
 	});
 
+	it('reads the list of inputs with or without spaces in its JSON', () => {
+		enable();
+		writeFileSync(tv.path('inputs'), `{"returnValue":true,"devices":[{"appId":"${FLUID}"}]}`);
+		expect(tv.run('status').out).toEqual(['on', 'yes']);
+		writeFileSync(tv.path('inputs'), `{ "returnValue": true, "devices": [ { "appId": "${FLUID}" } ] }`);
+		expect(tv.run('status').out).toEqual(['on', 'yes']);
+	});
+
 	it('being asked for its state makes fluid an input again: an update of fluid takes that away', () => {
 		enable();
 		rmSync(tv.path('inputs'));
@@ -345,6 +353,18 @@ describe.skipIf(!hasShell)('home-hook.sh on a TV', {timeout: 120000}, () => {
 			tv.setFront('netflix');
 			tv.standIn('{"event":"launch","reason":"undefined","parameters":{"snapshot":true}}');
 			expect(tv.front()).toBe('netflix');
+		});
+
+		it('understands the app manager with spaces in its JSON too', async () => {
+			enable();
+			tv.setFront('netflix');
+			tv.standIn('{ "event": "launch", "reason": "preload", "parameters": { } }');
+			expect(tv.front()).toBe('netflix');
+			writeFileSync(tv.path('launch-reply'), '{ "returnValue": true }');
+			tv.standIn('{ "event": "launch", "reason": "hotKey", "parameters": { } }');
+			expect(tv.front()).toBe(FLUID);
+			expect(tv.has('state', 'failures')).toBe(false);
+			expect(readFileSync(tv.path('state', 'home-hook.log'), 'utf8')).not.toContain('refused');
 		});
 
 		it('with fluid uninstalled: gives everything back, and leaves nothing behind', async () => {
